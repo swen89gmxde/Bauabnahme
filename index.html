@@ -28,6 +28,11 @@
   break-inside: avoid;
 }
 
+.pagebreak {
+  page-break-before: always;
+  break-before: page;
+}
+
 </style>
 </head>
 <body>
@@ -71,7 +76,7 @@
 <legend>📄 5. Abnahme</legend>
 <select name="Abnahme"><option>Ohne Vorbehalt</option><option>Unter Vorbehalt</option><option>Abnahme verweigert</option></select>
 </fieldset>
-<fieldset>
+<fieldset class="pagebreak">
 <legend>✍️ 6. Unterschriften</legend>
 <div class="row"><div><label>Ort</label><input name="Ort" type="text"></div><div><label>Datum</label><input name="Datum" type="date"></div></div>
 
@@ -117,7 +122,7 @@ async function generatePDF() {
   const pdf = new jsPDF('p', 'mm', 'a4');
 
   const input = document.querySelector('.container');
-  const canvas = await html2canvas(input, { scale: 1.5 });
+  const canvas = await html2canvas(input, { scale: 1 });
   const img = canvas.toDataURL('image/png');
 
   const imgWidth = 210;
