@@ -22,6 +22,12 @@
  .smallbtn{background:#999;padding:6px 14px;border-radius:6px;color:white;margin:5px 0;cursor:pointer;font-size:14px;border:none}
  button.main{background:#0a3d62;color:white;padding:16px;border:none;font-size:18px;border-radius:10px;cursor:pointer;width:100%;margin-top:20px}
  button.main:hover{background:#0f548e}
+ 
+.nobreak {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
 </style>
 </head>
 <body>
@@ -68,7 +74,14 @@
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
 <div class="row"><div><label>Ort</label><input name="Ort" type="text"></div><div><label>Datum</label><input name="Datum" type="date"></div></div>
-<label>Unterschrift Auftraggeber</label><canvas id="sig1"></canvas><button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button><input type="hidden" id="sig1data" name="Unterschrift_Auftraggeber">
+
+<div class="nobreak">
+  <label>Unterschrift Auftraggeber</label>
+  <canvas id="sig1"></canvas>
+  <button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button>
+  <input type="hidden" id="sig1data" name="Unterschrift_Auftraggeber">
+</div>
+
 <label>Unterschrift Auftragnehmer</label>
 <img src="images/unterschrift_auftragnehmer.jpg.jpg" alt="Unterschrift Auftragnehmer" style="width:100%;border:2px dashed #0a3d62;border-radius:10px;">
 </fieldset>
@@ -104,7 +117,7 @@ async function generatePDF() {
   const pdf = new jsPDF('p', 'mm', 'a4');
 
   const input = document.querySelector('.container');
-  const canvas = await html2canvas(input, { scale: 2 });
+  const canvas = await html2canvas(input, { scale: 1.5 });
   const img = canvas.toDataURL('image/png');
 
   const imgWidth = 210;
