@@ -100,53 +100,54 @@
 </form>
 </div>
 <script>
-const canvas1 = document.getElementById('sig1');
-const signaturePad1 = new SignaturePad(canvas1, { backgroundColor: 'white' });
-
-function resizeCanvas(canvas, pad) {
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas.width = canvas.offsetWidth * ratio;
-  canvas.height = canvas.offsetHeight * ratio;
-  canvas.getContext('2d').scale(ratio, ratio);
-  pad.clear();
-}
-
-resizeCanvas(canvas1, signaturePad1);
-
-window.onresize = () => {
-  resizeCanvas(canvas1, signaturePad1);
-};
-
-function saveSigs() {
-  document.getElementById('sig1data').value = signaturePad1.toDataURL();
-}
-
 async function generatePDF() {
-  saveSigs();
-
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pdf = new jsPDF('p','mm','a4');
 
-  const input = document.querySelector('.container');
-  const canvas = await html2canvas(input, { scale: 1 });
-  const img = canvas.toDataURL('image/png');
+  /* ===== Seite 1 ===== */
+  const container = document.querySelector('.container');
+  const splitPoint = document.getElementById('page1-end');
 
-  const imgWidth = 210;
-  const pageHeight = 297;
-  const imgHeight = canvas.height * imgWidth / canvas.width;
+  const page1 = container.cloneNode(true);
 
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(img, 'PNG', 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
-
-  while (heightLeft > 0) {
-    pdf.addPage();
-    position = heightLeft - imgHeight;
-    pdf.addImage(img, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+  // alles NACH splitPoint entfernen
+  while (page1.querySelector('#page1-end')?.nextSibling) {
+    page1.querySelector('#page1-end').nextSibling.remove();
   }
+
+  page1.querySelector('#page1-end')?.remove();
+
+  document.body.appendChild(page1);
+  page1.style.width = container.offsetWidth + 'px';
+
+  const canvas1 = await html2canvas(page1, { scale: 1 });
+  const img1 = canvas1.toDataURL('image/jpeg', 0.8);
+
+  pdf.addImage(img1, 'JPEG', 0, 0, 210, canvas1.height * 210 / canvas1.width);
+
+  document.body.removeChild(page1);
+
+  /* ===== Seite 2 (nur Unterschriften) ===== */
+  const page2 = container.cloneNode(true);
+
+  // alles VOR splitPoint entfernen
+  while (page2.firstChild && page2.firstChild.id !== 'page1-end') {
+    page2.firstChild.remove();
+  }
+
+  page2.querySelector('#page1-end')?.remove();
+
+  document.body.appendChild(page2);
+  page2.style.width = container.offsetWidth + 'px';
+
+  pdf.addPage();
+
+  const canvas2 = await html2canvas(page2, { scale: 1 });
+  const img2 = canvas2.toDataURL('image/jpeg', 0.8);
+
+  pdf.addImage(img2, 'JPEG', 0, 0, 210, canvas2.height * 210 / canvas2.width);
+
+  document.body.removeChild(page2);
 
   pdf.save('Bauabnahme_modern.pdf');
 }
