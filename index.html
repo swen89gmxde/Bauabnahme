@@ -1,80 +1,38 @@
 <!DOCTYPE html>
 <html lang="de">
-<head> 
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll Sichtwerk</title>
 
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<!-- ✅ BENÖTIGTE LIBRARIES (KORREKT!) -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.cript>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
-.container{max-width:900px;margin:30px auto;background:white;padding:30px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
-h2{text-align:center;color:#0a3d62;font-size:26px;margin-top:0}
-fieldset{border:none;padding:20px 0;margin-bottom:25px;border-bottom:1px solid #e3e3e3}
-legend{font-weight:600;color:#0a3d62;font-size:18px}
-label{display:block;margin-top:14px;font-weight:500}
-input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #cfcfcf;font-size:15px;margin-top:6px;background:#fafafa}
-.row{display:flex;gap:15px;flex-wrap:wrap}
-.row div{flex:1}
-canvas{border:2px dashed #0a3d62;border-radius:10px;background:white;width:100%;height:180px}
-.smallbtn{background:#999;padding:6px 14px;border-radius:6px;color:white;margin-top:5px;border:none}
-button.main{background:#0a3d62;color:white;padding:16px;border:none;font-size:18px;border-radius:10px;cursor:pointer;width:100%;margin-top:20px}
+.container{max-width:900px;margin:30px auto;background:#fff;padding:30px;border-radius:14px}
+canvas{border:2px dashed #0a3d62;border-radius:10px;width:100%;height:180px}
+button{margin-top:10px}
 </style>
 </head>
 
 <body>
 <div class="container">
-<h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
+<h2>Bauabnahmeprotokoll – Sichtwerk</h2>
 
-<form>
-<fieldset>
-<legend>👤 Projekt- und Kundendaten</legend>
-<label>Kunde</label><input>
-<label>Adresse</label><input>
-<label>Telefon / E-Mail</label><input>
-<div class="row">
-  <div><label>Auftragsnr.</label><input></div>
-  <div><label>Montagedatum</label><input type="date"></div>
-</div>
-<label>Objektadresse</label><input>
-</fieldset>
-
-<fieldset>
-<legend>🛠️ Leistungsbeschreibung</legend>
-<select>
-<option>Fenster</option>
-<option>Türen</option>
-<option>Fenster & Türen</option>
-<option>Rollos</option>
-<option>Nachjustierung</option>
-<option>Sonstiges</option>
-</select>
-<div class="row">
-  <div><label>Anzahl Fenster</label><input type="number"></div>
-  <div><label>Anzahl Türen</label><input type="number"></div>
-</div>
-</fieldset>
-
-<fieldset>
-<legend>⚠️ Dokumentierte Mängel</legend>
-<textarea rows="4"></textarea>
-</fieldset>
-
-<fieldset>
-<legend>✍️ Unterschriften</legend>
 <label>Unterschrift Auftraggeber</label>
 <canvas id="sig1"></canvas>
-<button class="smallbtn" type="button" onclick="sigPad1.clear()">Löschen</button>
+<button onclick="sigPad1.clear()">Löschen</button>
 
-<label>Unterschrift Auftragnehmer</label>
+<br><br>
+
+<label>Unterschrift Auftragnehmer (fest)</label>
 <canvas id="sig2"></canvas>
-</fieldset>
 
-<button type="button" class="main" onclick="generatePDF()">📄 PDF erstellen</button>
-</form>
+<br><br>
+<button onclick="generatePDF()">PDF erstellen</button>
 </div>
 
 <script>
@@ -84,45 +42,5 @@ const canvas2 = document.getElementById("sig2");
 const sigPad1 = new SignaturePad(canvas1,{backgroundColor:"white"});
 const sigPad2 = new SignaturePad(canvas2,{backgroundColor:"white"});
 
-/* ======== FESTE ORIGINAL-UNTERSCHRIFT AUFTRAGNEHMER ======== */
+/* ✅ DEINE FESTE ORIGINAL-UNTERSCHRIFT */
 const FIXED_SIGNATURE =
-"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAukAAAGMCAIAAADod6soAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2EkA0kISEhILEgC0JcG8GZC8nC0ZGFkYmBkZmRkZWVlZGRgYOBgYGBnYGRg4GNgYOHi4uLg5ODi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHwAAAP//AwAyvH0WAAABgklEQVR4nO3dMY7DMBBA0X7K//+Z7RgY0Uqs1F6UL6CqGqZ5B0Jk2r7y9Jr9tR5+v8fEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAf4jS6V7xPLU7yVn3mG+vZsPft9S9+0Qb1P5m7xFf3nk1zF5Dpj8G1l2v8k3x5n2wL7b6qZ0uX3m0zB9zZ5w9eR7nq8b7c6qWb0e2Z9rL8JxWZk1+9U0c6U8+u1F8rKX5J8m7t4m1q2y5Xz9T7L9+0qF1b9+P9XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwL+gF8rC9Q6gAAAABJRU5ErkJggg==";
-
-function resizeCanvas(canvas){
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas.width = canvas.offsetWidth * ratio;
-  canvas.height = canvas.offsetHeight * ratio;
-  canvas.getContext("2d").scale(ratio, ratio);
-}
-
-function loadFixedSignature(){
-  const img = new Image();
-  img.onload = () => {
-    const ctx = canvas2.getContext("2d");
-    const scale = canvas2.width / img.width;
-    const h = img.height * scale;
-    ctx.drawImage(img,0,(canvas2.height-h)/2,canvas2.width,h);
-    sigPad2.fromDataURL(canvas2.toDataURL());
-  };
-  img.src = FIXED_SIGNATURE;
-}
-
-resizeCanvas(canvas1);
-resizeCanvas(canvas2);
-loadFixedSignature();
-
-canvas2.style.pointerEvents="none";
-
-window.onresize=()=>{resizeCanvas(canvas1);resizeCanvas(canvas2);loadFixedSignature();};
-
-async function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
-  const c = await html2canvas(document.querySelector(".container"),{scale:2});
-  pdf.addImage(c.toDataURL("image/png"),"PNG",0,0,210,297);
-  pdf.save("Bauabnahme_Sichtwerk.pdf");
-}
-</script>
-
-</body>
-</html>
