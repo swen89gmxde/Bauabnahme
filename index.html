@@ -76,14 +76,56 @@
 </form>
 </div>
 <script>
-const canvas1=document.getElementById('sig1');const canvas2=document.getElementById('sig2');
-const signaturePad1=new SignaturePad(canvas1,{backgroundColor:'white'});
-const signaturePad2=new SignaturePad(canvas2,{backgroundColor:'white'});
-function resizeCanvas(canvas,pad){const ratio=Math.max(window.devicePixelRatio||1,1);canvas.width=canvas.offsetWidth*ratio;canvas.height=canvas.offsetHeight*ratio;canvas.getContext('2d').scale(ratio,ratio);pad.clear();}
-resizeCanvas(canvas1,signaturePad1);resizeCanvas(canvas2,signaturePad2);
-window.onresize=()=>{resizeCanvas(canvas1,signaturePad1);resizeCanvas(canvas2,signaturePad2);};
-function saveSigs(){document.getElementById('sig1data').value=signaturePad1.toDataURL();document.getElementById('sig2data').value=signaturePad2.toDataURL();}
-async function generatePDF(){saveSigs();const{jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');const input=document.querySelector('.container');const canvas=await html2canvas(input,{scale:2});const img=canvas.toDataURL('image/png');const imgWidth=210;const pageHeight=297;const imgHeight=canvas.height*imgWidth/canvas.width;let heightLeft=imgHeight;let position=0;pdf.addImage(img,'PNG',0,position,imgWidth,imgHeight);heightLeft-=pageHeight;while(heightLeft>0){pdf.addPage();position=heightLeft-imgHeight;pdf.addImage(img,'PNG',0,position,imgWidth,imgHeight);heightLeft-=pageHeight;}pdf.save('Bauabnahme_modern.pdf');}
+const canvas1 = document.getElementById('sig1');
+const signaturePad1 = new SignaturePad(canvas1, { backgroundColor: 'white' });
+
+function resizeCanvas(canvas, pad) {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext('2d').scale(ratio, ratio);
+  pad.clear();
+}
+
+resizeCanvas(canvas1, signaturePad1);
+
+window.onresize = () => {
+  resizeCanvas(canvas1, signaturePad1);
+};
+
+function saveSigs() {
+  document.getElementById('sig1data').value = signaturePad1.toDataURL();
+}
+
+async function generatePDF() {
+  saveSigs();
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+
+  const input = document.querySelector('.container');
+  const canvas = await html2canvas(input, { scale: 2 });
+  const img = canvas.toDataURL('image/png');
+
+  const imgWidth = 210;
+  const pageHeight = 297;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(img, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    pdf.addPage();
+    position = heightLeft - imgHeight;
+    pdf.addImage(img, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  pdf.save('Bauabnahme_modern.pdf');
+}
 </script>
 </body>
 </html>
