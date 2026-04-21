@@ -11,17 +11,81 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
-.container{max-width:900px;margin:30px auto;background:#fff;padding:30px;border-radius:14px}
-fieldset{border:none;padding:20px 0;margin-bottom:25px;border-bottom:1px solid #e3e3e3}
-legend{font-weight:600;color:#0a3d62;font-size:18px}
-label{display:block;margin-top:14px}
-input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #cfcfcf}
-.row{display:flex;gap:15px}
+body{
+  font-family:Segoe UI,Roboto,Arial,sans-serif;
+  background:#f3f4f6;
+  margin:0
+}
+.container{
+  max-width:900px;
+  margin:30px auto;
+  background:#fff;
+  padding:30px;
+  border-radius:14px
+}
+fieldset{
+  border:none;
+  padding:20px 0;
+  margin-bottom:25px;
+  border-bottom:1px solid #e3e3e3
+}
+legend{
+  font-weight:600;
+  color:#0a3d62;
+  font-size:18px
+}
+label{
+  display:block;
+  margin-top:14px
+}
+
+/* ✅ FIX: Inputs sauber darstellbar */
+input, select, textarea{
+  width:100%;
+  padding:10px;
+  height:44px;
+  box-sizing:border-box;
+  border-radius:8px;
+  border:1px solid #cfcfcf;
+}
+textarea{
+  min-height:80px;
+  height:auto;
+}
+
+.row{
+  display:flex;
+  gap:15px;
+}
 .row div{flex:1}
-canvas{width:100%;height:180px;border:2px dashed #0a3d62;border-radius:10px}
-button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18px;border-radius:10px;width:100%;cursor:pointer}
-.smallbtn{background:#999;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer}
+
+canvas{
+  width:100%;
+  height:180px;
+  border:2px dashed #0a3d62;
+  border-radius:10px;
+}
+
+button.main{
+  background:#0a3d62;
+  color:#fff;
+  padding:16px;
+  border:none;
+  font-size:18px;
+  border-radius:10px;
+  width:100%;
+  cursor:pointer;
+}
+
+.smallbtn{
+  background:#999;
+  color:#fff;
+  border:none;
+  padding:6px 14px;
+  border-radius:6px;
+  margin-top:8px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -48,24 +112,36 @@ button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18p
 <legend>🛠️ 2. Leistungsbeschreibung</legend>
 <label>Arbeiten durchgeführt:</label>
 <select>
-<option>Fenster</option><option>Türen</option><option>Fenster & Türen</option>
-<option>Rollo</option><option>Rollos</option><option>Nachjustierung</option>
+<option>Fenster</option>
+<option>Türen</option>
+<option>Fenster & Türen</option>
+<option>Rollo</option>
+<option>Rollos</option>
+<option>Nachjustierung</option>
 </select>
 </fieldset>
 
 <fieldset>
 <legend>✅ 3. Prüfung</legend>
-<select><option>Ja</option><option>Nein</option><option>Teilweise</option></select>
+<select>
+<option>Ja</option>
+<option>Nein</option>
+<option>Teilweise</option>
+</select>
 </fieldset>
 
 <fieldset>
 <legend>⚠️ 4. Dokumentierte Mängel</legend>
-<textarea rows="4"></textarea>
+<textarea></textarea>
 </fieldset>
 
 <fieldset>
 <legend>📄 5. Abnahme</legend>
-<select><option>Ohne Vorbehalt</option><option>Unter Vorbehalt</option></select>
+<select>
+<option>Ohne Vorbehalt</option>
+<option>Unter Vorbehalt</option>
+<option>Abnahme verweigert</option>
+</select>
 </fieldset>
 
 </div>
@@ -87,6 +163,7 @@ button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18p
 <label>Unterschrift Auftragnehmer</label>
 <img src="images/unterschrift_auftragnehmer.jpg.jpg"
      style="width:100%;border:2px dashed #0a3d62;border-radius:10px">
+
 </fieldset>
 </div>
 
@@ -112,29 +189,36 @@ async function generatePDF(){
   const form = document.getElementById("section-form");
   const sign = document.getElementById("section-sign");
 
-  /* Seiten 1–n: Formular */
+  /* ===== Seiten 1–n ===== */
   sign.style.display="none";
-  await addPages(pdf, await html2canvas(form,{scale:1}));
+  await addPages(pdf, await html2canvas(form, { scale:1.6 }));
 
-  /* Letzte Seite: Unterschriften */
+  /* ===== Letzte Seite ===== */
   sign.style.display="block";
   pdf.addPage();
-  const c2 = await html2canvas(sign,{scale:1});
+
+  const sigCanvas = await html2canvas(sign, { scale:1.6 });
   pdf.addImage(
-    c2.toDataURL("image/jpeg",0.9),
-    "JPEG",0,0,210,c2.height*210/c2.width
+    sigCanvas.toDataURL("image/jpeg",0.9),
+    "JPEG",
+    5, 5,               // ✅ Rand gegen Abschneiden
+    200,
+    sigCanvas.height * 200 / sigCanvas.width
   );
 
   pdf.save("Bauabnahme.pdf");
 }
 
 async function addPages(pdf,canvas){
-  const img=canvas.toDataURL("image/jpeg",0.9);
-  const w=210,h=canvas.height*w/canvas.width;
+  const img = canvas.toDataURL("image/jpeg",0.9);
+  const w=210;
+  const h=canvas.height*w/canvas.width;
   let y=0;
   pdf.addImage(img,"JPEG",0,y,w,h);
   while(h+y>297){
-    y-=297; pdf.addPage(); pdf.addImage(img,"JPEG",0,y,w,h);
+    y-=297;
+    pdf.addPage();
+    pdf.addImage(img,"JPEG",0,y,w,h);
   }
 }
 </script>
