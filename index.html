@@ -5,42 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll Sichtwerk</title>
 
-<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{
-  font-family:Segoe UI,Roboto,Arial,sans-serif;
-  background:#f3f4f6;
-  margin:0
-}
-.container{
-  max-width:900px;
-  margin:30px auto;
-  background:#fff;
-  padding:30px;
-  border-radius:14px
-}
-fieldset{
-  border:none;
-  padding:20px 0 30px;
-  margin-bottom:30px;
-  border-bottom:1px solid #e3e3e3
-}
-legend{
-  font-weight:600;
-  color:#0a3d62;
-  font-size:18px
-}
-label{
-  display:block;
-  margin-top:14px
-}
-input,
-select,
-textarea{
+body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
+.container{max-width:900px;margin:30px auto;background:#fff;padding:30px;border-radius:14px}
+fieldset{border:none;padding:20px 0 30px;margin-bottom:30px;border-bottom:1px solid #e3e3e3}
+legend{font-weight:600;color:#0a3d62;font-size:18px}
+label{display:block;margin-top:14px}
+input,select,textarea{
   width:100%;
   padding:10px;
   height:44px;
@@ -48,40 +23,12 @@ textarea{
   border-radius:8px;
   border:1px solid #cfcfcf;
 }
-textarea{
-  min-height:96px;
-  height:auto;
-}
-.row{
-  display:flex;
-  gap:15px;
-}
+textarea{min-height:90px;height:auto}
+.row{display:flex;gap:15px}
 .row div{flex:1}
-canvas{
-  width:100%;
-  height:200px;
-  border:2px dashed #0a3d62;
-  border-radius:10px
-}
-button.main{
-  background:#0a3d62;
-  color:#fff;
-  padding:16px;
-  border:none;
-  font-size:18px;
-  border-radius:10px;
-  width:100%;
-  cursor:pointer
-}
-.smallbtn{
-  background:#999;
-  color:#fff;
-  border:none;
-  padding:6px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-top:10px
-}
+canvas{width:100%;height:180px;border:2px dashed #0a3d62;border-radius:10px}
+button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18px;border-radius:10px;width:100%;cursor:pointer}
+.smallbtn{background:#999;color:#fff;border:none;padding:6px 14px;border-radius:6px;margin-top:10px;cursor:pointer}
 </style>
 </head>
 
@@ -89,31 +36,27 @@ button.main{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<!-- ===== FORMULAR 1–5 ===== -->
 <div id="formSection">
-
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
 <label>Kunde</label>
-<input id="kundeInput">
+<input id="kundeInput" value="Frank Heyder">
 <label>Adresse</label><input>
 <label>Telefon / E-Mail</label><input>
 <div class="row">
-  <div><label>Auftragsnr.</label><input></div>
-  <div><label>Montagedatum</label><input type="date"></div>
+<div><label>Auftragsnr.</label><input></div>
+<div><label>Montagedatum</label><input type="date"></div>
 </div>
 <label>Objektadresse</label><input>
 </fieldset>
 
 <fieldset>
 <legend>🛠️ 2. Leistungsbeschreibung</legend>
-<label>Arbeiten durchgeführt</label>
 <select>
 <option>Fenster</option>
 <option>Türen</option>
 <option>Fenster & Türen</option>
 <option>Rollos</option>
-<option>Nachjustierung</option>
 </select>
 </fieldset>
 
@@ -139,93 +82,77 @@ button.main{
 <option>Abnahme verweigert</option>
 </select>
 </fieldset>
-
 </div>
 
-<!-- ===== SIGNATUREN ===== -->
 <div id="signSection">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
-
 <div class="row">
 <div><label>Ort</label><input></div>
 <div><label>Datum</label><input type="date"></div>
 </div>
 
 <label>Unterschrift Auftraggeber</label>
-<canvas id="sigCanvas"></canvas>
+<canvas id="sig"></canvas>
 <button class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg"
-     style="width:100%;border:2px dashed #0a3d62;border-radius:10px;">
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;border:2px dashed #0a3d62;border-radius:10px">
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- ===== SIGNATURE PAD ===== -->
 <script>
-const canvas = document.getElementById("sigCanvas");
-const ratio = Math.max(window.devicePixelRatio || 1, 1);
-canvas.width = canvas.offsetWidth * ratio;
-canvas.height = canvas.offsetHeight * ratio;
-canvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
-const signaturePad = new SignaturePad(canvas,{backgroundColor:"white"});
+const canvas=document.getElementById("sig");
+const r=Math.max(window.devicePixelRatio||1,1);
+canvas.width=canvas.offsetWidth*r;
+canvas.height=canvas.offsetHeight*r;
+canvas.getContext("2d").setTransform(r,0,0,r,0,0);
+const signaturePad=new SignaturePad(canvas,{backgroundColor:"white"});
 </script>
 
-<!-- ===== PDF ===== -->
 <script>
 async function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF("p","mm","a4");
 
-  const form = document.getElementById("formSection");
-  const sigs = document.getElementById("signSection");
+  const form=document.getElementById("formSection");
+  const sign=document.getElementById("signSection");
 
-  sigs.style.display = "none";
-  const formCanvas = await html2canvas(form,{scale:2});
-  addPages(pdf,formCanvas);
+  sign.style.display="none";
+  await addPages(pdf,await html2canvas(form,{scale:1.25}));
 
-  sigs.style.display = "block";
+  sign.style.display="block";
   pdf.addPage();
-
-  const sigCanvas = await html2canvas(sigs,{scale:2});
-  pdf.addImage(
-    sigCanvas.toDataURL("image/jpeg",0.95),
-    "JPEG",
-    5,10,200,
-    sigCanvas.height*200/sigCanvas.width
-  );
-
-  const kunde = document.getElementById("kundeInput").value || "Unbekannt";
-  const filename = `Bauabnahmeprotokoll_${kunde.replace(/[^a-z0-9]/gi,"_")}.pdf`;
+  const sc=await html2canvas(sign,{scale:1.25});
+  pdf.addImage(sc.toDataURL("image/jpeg",0.9),"JPEG",10,10,190,sc.height*190/sc.width);
 
   addPageNumbers(pdf);
-  pdf.save(filename);
+
+  const kunde=document.getElementById("kundeInput").value.trim().replace(/[^a-z0-9]/gi,"_");
+  pdf.save(`Bauabnahmeprotokoll_${kunde}.pdf`);
 }
 
-function addPages(pdf,canvas){
-  const img = canvas.toDataURL("image/jpeg",0.95);
-  const w = 210;
-  const h = canvas.height*w/canvas.width;
-  let y = 0;
-
-  pdf.addImage(img,"JPEG",0,y,w,h);
-  while(h+y>297){
-    y -= 297;
+function addPages(pdf,c){
+  const img=c.toDataURL("image/jpeg",0.9);
+  const w=190,h=c.height*w/c.width;
+  let y=10;
+  pdf.addImage(img,"JPEG",10,y,w,h);
+  while(h+y>287){
+    y-=287;
     pdf.addPage();
-    pdf.addImage(img,"JPEG",0,y,w,h);
+    pdf.addImage(img,"JPEG",10,y,w,h);
   }
 }
 
 function addPageNumbers(pdf){
-  const count = pdf.getNumberOfPages();
-  for(let i=1;i<=count;i++){
+  const total=pdf.getNumberOfPages();
+  for(let i=1;i<=total;i++){
     pdf.setPage(i);
     pdf.setFontSize(10);
-    pdf.text(`Seite ${i} von ${count}`,200,292,{align:"right"});
+    pdf.text(`Seite ${i} von ${total}`,200,292,{align:"right"});
   }
 }
 </script>
