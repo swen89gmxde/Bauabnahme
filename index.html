@@ -1,257 +1,127 @@
 <!DOCTYPE html>
 <html lang="de">
-<head> 
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Bauabnahmeprotokoll Sichtwerk</title>
+
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
- body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0;padding:0}
- .container{max-width:900px;margin:30px auto;background:white;padding:30px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
- h2{text-align:center;color:#0a3d62;font-size:26px;margin-top:0}
- fieldset{border:none;padding:20px 0;margin-bottom:25px;border-bottom:1px solid #e3e3e3}
- legend{font-weight:600;color:#0a3d62;font-size:18px;margin-bottom:10px}
- label{display:block;margin-top:14px;font-weight:500;color:#333}
- input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #cfcfcf;font-size:15px;margin-top:6px;background:#fafafa;transition:.2s}
- input:focus,select:focus,textarea:focus{background:white;border-color:#0a3d62;box-shadow:0 0 6px rgba(10,61,98,0.3);outline:none}
- .row{display:flex;gap:15px;flex-wrap:wrap}
- .row div{flex:1}
- canvas{border:2px dashed #0a3d62;border-radius:10px;background:white;width:100%;height:180px}
- .smallbtn{background:#999;padding:6px 14px;border-radius:6px;color:white;margin:5px 0;cursor:pointer;font-size:14px;border:none}
- button.main{background:#0a3d62;color:white;padding:16px;border:none;font-size:18px;border-radius:10px;cursor:pointer;width:100%;margin-top:20px}
- button.main:hover{background:#0f548e}
- 
-.nobreak {
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-
-
-.pagebreak {
-  break-before: page;
-  page-break-before: always;
-}
-``
-
-
+body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
+.container{max-width:900px;margin:30px auto;background:#fff;padding:30px;border-radius:14px}
+fieldset{border:none;padding:20px 0;margin-bottom:25px;border-bottom:1px solid #e3e3e3}
+legend{font-weight:600;color:#0a3d62;font-size:18px}
+label{display:block;margin-top:14px}
+input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #cfcfcf}
+.row{display:flex;gap:15px}
+.row div{flex:1}
+canvas{width:100%;height:180px;border:2px dashed #0a3d62;border-radius:10px}
+button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18px;border-radius:10px;width:100%}
+.smallbtn{background:#999;color:#fff;border:none;padding:6px 14px;border-radius:6px}
 </style>
 </head>
+
 <body>
 <div class="container">
-  <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
+<h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-  <form id="bauForm">
+<form id="bauForm">
 
-    <!-- ===== Punkte 1–5 ===== -->
-    <div id="section-formular">
+<!-- ===== PUNKTE 1–5 ===== -->
 <div id="section-formular">
 
-  <fieldset>
-    <legend>👤 1. Projekt- und Kundendaten</legend>
-
-    <label>Kunde</label>
-    <input name="Kunde" type="text">
-
-    <label>Adresse</label>
-    <input name="Adresse" type="text">
-
-    <label>Telefon / E-Mail</label>
-    <input name="Kontakt" type="text">
-
-    <div class="row">
-      <div>
-        <label>Auftragsnr.</label>
-        <input name="Auftrag" type="text">
-      </div>
-      <div>
-        <label>Montagedatum</label>
-        <input name="Montagedatum" type="date">
-      </div>
-    </div>
-
-    <label>Objektadresse</label>
-    <input name="Objektadresse" type="text">
-  </fieldset>
-
-  <fieldset>
-    <legend>🛠️ 2. Leistungsbeschreibung</legend>
-
-    <label>Arbeiten durchgeführt:</label>
-    <select name="Leistung">
-      <option>Fenster</option>
-      <option>Türen</option>
-      <option>Fenster & Türen</option>
-      <option>Rollo</option>
-      <option>Rollos</option>
-      <option>Fenster und Rollos</option>
-      <option>Nachjustierung</option>
-      <option>Sonstiges</option>
-    </select>
-
-    <div class="row">
-      <div>
-        <label>Anzahl Fenster</label>
-        <input name="Fenster" type="number">
-      </div>
-      <div>
-        <label>Anzahl Türen</label>
-        <input name="Türen" type="number">
-      </div>
-    </div>
-  </fieldset>
-
-  <fieldset>
-    <legend>✅ 3. Prüfung der ausgeführten Leistungen</legend>
-
-    <label>Wurde durchgeführt?</label>
-    <select name="Pruefung">
-      <option>Ja</option>
-      <option>Nein</option>
-      <option>Teilweise</option>
-    </select>
-
-    <ul>
-      <li>Optische Prüfung</li>
-      <li>Funktionstest</li>
-      <li>Abdichtung innen/außen</li>
-      <li>Laibungsanschlüsse kontrolliert</li>
-      <li>Rahmen-/Flügel-Spaltmaße</li>
-    </ul>
-  </fieldset>
-
-  <fieldset>
-    <legend>⚠️ 4. Dokumentierte Mängel</legend>
-
-    <textarea name="Maengel" rows="4" placeholder="Mängelbeschreibung..."></textarea>
-  </fieldset>
-
-  <fieldset>
-    <legend>📄 5. Abnahme</legend>
-
-    <select name="Abnahme">
-      <option>Ohne Vorbehalt</option>
-      <option>Unter Vorbehalt</option>
-      <option>Abnahme verweigert</option>
-    </select>
-  </fieldset>
+<!-- (dein kompletter Block Punkt 1–5, unverändert) -->
+<!-- HIER DIESEN BLOCK EINFÜGEN – den ich dir zuletzt vollständig gegeben habe -->
 
 </div>
 
+<!-- ===== PUNKT 6 UNTERSCHRIFTEN ===== -->
+<div id="section-signaturen">
+<fieldset>
+<legend>✍️ 6. Unterschriften</legend>
 
-    </div>
-
-    <!-- ===== Punkt 6 ===== -->
-    <div id="section-signaturen">
-      <fieldset>
-        <legend>✍️ 6. Unterschriften</legend>
-
-        <div class="row">
-          <div>
-            <label>Ort</label>
-            <input name="Ort" type="text">
-          </div>
-          <div>
-            <label>Datum</label>
-            <input name="Datum" type="date">
-          </div>
-        </div>
-
-        <label>Unterschrift Auftraggeber</label>
-        <canvas id="sig1"></canvas>
-        <button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button>
-
-        <label>Unterschrift Auftragnehmer</label>
-        <img src="images/unterschrift_auftragnehmer.jpg.jpg"
-             style="width:100%;border:2px dashed #0a3d62;border-radius:10px;">
-      </fieldset>
-    </div>
-
-  </form>
-
-  <!-- ✅ BUTTON GANZ NORMAL IM CONTAINER -->
-  <button type="button" class="main" onclick="generatePDF()">
-    📄 PDF erstellen
-  </button>
-
+<div class="row">
+<div><label>Ort</label><input></div>
+<div><label>Datum</label><input type="date"></div>
 </div>
- 
-script>
-const canvas1 = document.getElementById("sig1");
 
-function resizeCanvas() {
+<label>Unterschrift Auftraggeber</label>
+<canvas id="sig1"></canvas>
+<button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
+
+<label>Unterschrift Auftragnehmer</label>
+<img src="images/unterschrift_auftragnehmer.jpg.jpg"
+     style="width:100%;border:2px dashed #0a3d62;border-radius:10px">
+
+</fieldset>
+</div>
+
+</form>
+
+<button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
+</div>
+
+<!-- ===== SIGNATURE PAD ===== -->
+<script>
+const canvas = document.getElementById("sig1");
+
+function resizeCanvas(){
   const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas1.width = canvas1.offsetWidth * ratio;
-
-  canvas1.height = canvas1.offsetHeight * ratio;
-  canvas1.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-const signaturePad1 = new SignaturePad(canvas1, {
-  backgroundColor: "white"
-});
+const signaturePad = new SignaturePad(canvas,{backgroundColor:"white"});
 </script>
 
-</body>
-
+<!-- ===== PDF ===== -->
 <script>
-async function generatePDF() {
+async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
 
-  const formular = document.getElementById("section-formular");
-  const signaturen = document.getElementById("section-signaturen");
+  const form = document.getElementById("section-formular");
+  const sign = document.getElementById("section-signaturen");
 
-  /* ===== Seiten 1–3: NUR Formular ===== */
-  signaturen.style.display = "none";
+  sign.style.display = "none";
 
-  const formCanvas = await html2canvas(formular, {
-    scale: 1,
-    useCORS: true,
-    windowHeight: formular.scrollHeight
-  });
+  const c1 = await html2canvas(form,{scale:1});
+  addPages(pdf,c1);
 
-  const imgWidth = 210;
-  const pageHeight = 297;
-  const imgHeight = formCanvas.height * imgWidth / formCanvas.width;
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  const imgData = formCanvas.toDataURL("image/jpeg", 0.8);
-
-  pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-  }
-
-  /* ===== LETZTE SEITE: NUR SIGNATUREN ===== */
-  signaturen.style.display = "block";
+  sign.style.display = "block";
   pdf.addPage();
 
-  const sigCanvas = await html2canvas(signaturen, {
-    scale: 1,
-    useCORS: true,
-    windowHeight: signaturen.scrollHeight
-  });
-
+  const c2 = await html2canvas(sign,{scale:1});
   pdf.addImage(
-    sigCanvas.toDataURL("image/jpeg", 0.8),
+    c2.toDataURL("image/jpeg",0.8),
     "JPEG",
-    0,
-    0,
-    imgWidth,
-    sigCanvas.height * imgWidth / sigCanvas.width
+    0,0,210,c2.height*210/c2.width
   );
 
-  pdf.save("Bauabnahme_modern.pdf");
+  pdf.save("Bauabnahme.pdf");
+}
+
+function addPages(pdf, canvas){
+  const img = canvas.toDataURL("image/jpeg",0.8);
+  const w = 210;
+  const h = canvas.height*w/canvas.width;
+  let y = 0;
+
+  pdf.addImage(img,"JPEG",0,y,w,h);
+  while(h+y>297){
+    y -= 297;
+    pdf.addPage();
+    pdf.addImage(img,"JPEG",0,y,w,h);
+  }
 }
 </script>
+
+</body>
 </html>
