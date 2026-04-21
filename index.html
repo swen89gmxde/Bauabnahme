@@ -101,6 +101,26 @@
 
   <label>Unterschrift Auftraggeber</label>
   <canvas id="sig1"></canvas>
+ <script>
+const canvas1 = document.getElementById('sig1');
+
+/* ✅ DAS ist entscheidend */
+function resizeCanvas() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas1.width  = canvas1.offsetWidth * ratio;
+  canvas1.height = canvas1.offsetHeight * ratio;
+  const ctx = canvas1.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+/* SignaturePad DANACH initialisieren */
+const signaturePad1 = new SignaturePad(canvas1, {
+  backgroundColor: "white"
+});
+</script>
   <button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button>
   <input type="hidden" id="sig1data" name="Unterschrift_Auftraggeber">
 
@@ -115,18 +135,25 @@
 <script>
 async function generatePDF() {
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF('p','mm','a4');
+  const pdf = new jsPDF("p", "mm", "a4");
 
-  const section1 = document.getElementById('section-1-5');
-  const section6 = document.getElementById('section-6');
+  const section1 = document.getElementById("section-1-5");
+  const section6 = document.getElementById("section-6");
 
   /* ===== Seite 1 ===== */
-  section6.style.display = 'none';
+  section6.style.display = "none";
 
-  const c1 = await html2canvas(section1, { scale: 1 });
+  const c1 = await html2canvas(section1, {
+    scale: 1,
+    useCORS: true,
+    windowWidth: section1.scrollWidth,
+    windowHeight: section1.scrollHeight,
+    height: section1.scrollHeight
+  });
+
   pdf.addImage(
-    c1.toDataURL('image/jpeg', 0.8),
-    'JPEG',
+    c1.toDataURL("image/jpeg", 0.8),
+    "JPEG",
     0,
     0,
     210,
@@ -134,15 +161,22 @@ async function generatePDF() {
   );
 
   /* ===== Seite 2 ===== */
-  section6.style.display = 'block';
-  section1.style.display = 'none';
+  section6.style.display = "block";
+  section1.style.display = "none";
 
   pdf.addPage();
 
-  const c2 = await html2canvas(section6, { scale: 1 });
+  const c2 = await html2canvas(section6, {
+    scale: 1,
+    useCORS: true,
+    windowWidth: section6.scrollWidth,
+    windowHeight: section6.scrollHeight,
+    height: section6.scrollHeight
+  });
+
   pdf.addImage(
-    c2.toDataURL('image/jpeg', 0.8),
-    'JPEG',
+    c2.toDataURL("image/jpeg", 0.8),
+    "JPEG",
     0,
     0,
     210,
@@ -150,10 +184,11 @@ async function generatePDF() {
   );
 
   /* Reset */
-  section1.style.display = 'block';
+  section1.style.display = "block";
 
-  pdf.save('Bauabnahme_modern.pdf');
+  pdf.save("Bauabnahme_modern.pdf");
 }
 </script>
+``
 </body>
 </html>
