@@ -107,11 +107,14 @@
          style="width:100%;border:2px dashed #0a3d62;border-radius:10
 
 
+    </fieldset>
+  </div>
 </form>
 
 <button type="button" class="main" onclick="generatePDF()">
   📄 PDF erstellen
 </button>
+
 
 </form>
 </div>
@@ -120,9 +123,11 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p", "mm", "a4");
 
-  // ✅ DAS ist Punkt 2:
-  // Wir erfassen IMMER den kompletten Formular-Container
   const container = document.querySelector(".container");
+  const signatures = document.getElementById("section-6");
+
+  /* ===== Seite 1–3: OHNE Unterschriften ===== */
+  signatures.style.display = "none";
 
   const canvas = await html2canvas(container, {
     scale: 1,
@@ -148,6 +153,26 @@ async function generatePDF() {
     pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
   }
+
+  /* ===== LETZTE SEITE: NUR Unterschriften ===== */
+  signatures.style.display = "block";
+
+  pdf.addPage();
+
+  const sigCanvas = await html2canvas(signatures, {
+    scale: 1,
+    useCORS: true,
+    windowHeight: signatures.scrollHeight
+  });
+
+  pdf.addImage(
+    sigCanvas.toDataURL("image/jpeg", 0.8),
+    "JPEG",
+    0,
+    0,
+    210,
+    sigCanvas.height * 210 / sigCanvas.width
+  );
 
   pdf.save("Bauabnahme_modern.pdf");
 }
