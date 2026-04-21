@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- ✅ KORREKT GELADENE BIBLIOTHEKEN -->
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2</script>
+<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
-.container{max-width:820px;margin:20px auto;background:#fff;padding:28px;border-radius:14px}
+.container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
 
-fieldset{border:none;padding:16px 0 26px;margin-bottom:26px;border-bottom:1px solid #e3e3e3}
+fieldset{border:none;padding:16px 0 22px;margin-bottom:22px;border-bottom:1px solid #e3e3e3}
 legend{font-weight:600;color:#0a3d62;font-size:16px}
 label{display:block;margin-top:10px;font-size:14px}
 
@@ -99,7 +100,7 @@ button.main{
 </select>
 </fieldset>
 
-<fieldset style="margin-bottom:34px">
+<fieldset style="margin-bottom:32px">
 <legend>✅ 3. Prüfung</legend>
 <select>
 <option>Ja</option>
@@ -144,7 +145,7 @@ button.main{
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- ===== SIGNATURE PAD ===== -->
+<!-- ✅ SIGNATURE PAD -->
 <script>
 const canvas=document.getElementById("sig");
 const r=Math.max(window.devicePixelRatio||1,1);
@@ -154,7 +155,7 @@ canvas.getContext("2d").setTransform(r,0,0,r,0,0);
 const signaturePad=new SignaturePad(canvas,{backgroundColor:"white"});
 </script>
 
-<!-- ===== PDF ===== -->
+<!-- ✅ PDF -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
@@ -168,8 +169,9 @@ async function generatePDF(){
 
   sign.style.display="block";
   pdf.addPage();
+
   const sc=await html2canvas(sign,{scale:1.6});
-  pdf.addImage(sc.toDataURL("image/jpeg",0.92),"JPEG",15,12,180,sc.height*180/sc.width);
+  pdf.addImage(sc.toDataURL("image/jpeg",0.95),"JPEG",15,12,180,sc.height*180/sc.width);
 
   addPageNumbers(pdf);
 
@@ -179,7 +181,7 @@ async function generatePDF(){
 }
 
 async function addPages(pdf,c){
-  const img=c.toDataURL("image/jpeg",0.92);
+  const img=c.toDataURL("image/jpeg",0.95);
   const w=180,pageH=268;
   let h=c.height*w/c.width;
   let y=15;
