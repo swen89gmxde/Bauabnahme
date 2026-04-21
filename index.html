@@ -82,7 +82,9 @@
 
 <!-- Trennpunkt PDF Seite 1 -->
 <div id="page1-end"></div>
-
+ 
+<div id="pdf-split"></div>
+ 
 <fieldset id="signatures">
   <legend>✍️ 6. Unterschriften</legend>
 
@@ -111,55 +113,64 @@
 </form>
 </div>
 <script>
+/* ===== SignaturePad Initialisierung (FEHLTE!) ===== */
+const canvas1 = document.getElementById('sig1');
+const signaturePad1 = new SignaturePad(canvas1, { backgroundColor: 'white' });
+
+function resizeCanvas() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas1.width = canvas1.offsetWidth * ratio;
+  canvas1.height = canvas1.offsetHeight * ratio;
+  canvas1.getContext('2d').scale(ratio, ratio);
+  signaturePad1.clear();
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+/* ===== PDF ===== */
 async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p','mm','a4');
 
   const container = document.querySelector('.container');
-  const split = document.getElementById('page1-end');
+  const split = document.getElementById('pdf-split');
   const signatures = document.getElementById('signatures');
 
   /* ===== Seite 1 ===== */
-  const page1 = container.cloneNode(true);
-  page1.querySelector('#signatures')?.remove();
-  page1.querySelector('#page1-end')?.remove();
+  signatures.style.display = 'none';
 
-  document.body.appendChild(page1);
-  page1.style.width = container.offsetWidth + 'px';
+  const canvasPage1 = await html2canvas(container, { scale: 1 });
+  const img1 = canvasPage1.toDataURL('image/jpeg', 0.8);
 
-  const c1 = await html2canvas(page1, { scale: 1 });
   pdf.addImage(
-    c1.toDataURL('image/jpeg', 0.8),
+    img1,
     'JPEG',
     0,
     0,
     210,
-    c1.height * 210 / c1.width
+    canvasPage1.height * 210 / canvasPage1.width
   );
 
-  document.body.removeChild(page1);
+  /* ===== Seite 2 ===== */
+  signatures.style.display = 'block';
+  split.style.display = 'none';
 
-  /* ===== Seite 2 (nur Unterschriften) ===== */
   pdf.addPage();
 
-  const page2 = document.createElement('div');
-  page2.className = 'container';
-  page2.appendChild(signatures.cloneNode(true));
+  const canvasPage2 = await html2canvas(container, { scale: 1 });
+  const img2 = canvasPage2.toDataURL('image/jpeg', 0.8);
 
-  document.body.appendChild(page2);
-  page2.style.width = container.offsetWidth + 'px';
-
-  const c2 = await html2canvas(page2, { scale: 1 });
   pdf.addImage(
-    c2.toDataURL('image/jpeg', 0.8),
+    img2,
     'JPEG',
     0,
     0,
     210,
-    c2.height * 210 / c2.width
+    canvasPage2.height * 210 / canvasPage2.width
   );
 
-  document.body.removeChild(page2);
+  /* Reset */
+  split.style.display = 'block';
 
   pdf.save('Bauabnahme_modern.pdf');
 }
