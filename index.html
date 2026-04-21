@@ -5,16 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
+<!-- ✅ KORREKTE SCRIPT-EINBINDUNG (entscheidend!) -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
-.container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
+body{
+  font-family:Segoe UI,Roboto,Arial,sans-serif;
+  background:#f3f4f6;margin:0
+}
+.container{
+  max-width:800px;
+  margin:20px auto;
+  background:#fff;
+  padding:26px;
+  border-radius:14px
+}
+h2{margin-top:0}
 
-fieldset{border:none;padding:16px 0 22px;margin-bottom:22px;border-bottom:1px solid #e3e3e3}
+fieldset{
+  border:none;
+  padding:16px 0 22px;
+  margin-bottom:22px;
+  border-bottom:1px solid #e3e3e3
+}
 legend{font-weight:600;color:#0a3d62;font-size:16px}
 label{display:block;margin-top:10px;font-size:14px}
 
@@ -28,7 +43,7 @@ input,select,textarea{
   border:1px solid #cfcfcf;
   font-size:14px;
 }
-textarea{min-height:70px;height:auto}
+textarea{min-height:80px;height:auto}
 
 .row{display:flex;gap:10px}
 .row div{flex:1}
@@ -49,24 +64,16 @@ canvas{
 }
 
 button.main{
-  background:#0a3d62;
-  color:white;
-  padding:14px;
-  border:none;
-  font-size:16px;
-  border-radius:10px;
-  width:100%;
-  cursor:pointer;
+  background:#0a3d62;color:#fff;
+  padding:14px;border:none;
+  font-size:16px;border-radius:10px;
+  width:100%;cursor:pointer
 }
-
 .smallbtn{
-  background:#999;
-  color:white;
-  border:none;
-  padding:6px 14px;
-  border-radius:6px;
-  margin-top:8px;
-  cursor:pointer;
+  background:#999;color:#fff;
+  border:none;padding:6px 14px;
+  border-radius:6px;margin-top:8px;
+  cursor:pointer
 }
 </style>
 </head>
@@ -75,6 +82,7 @@ button.main{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
+<!-- ===== FORMULAR (1–5) ===== -->
 <div id="formSection">
 
 <fieldset>
@@ -84,8 +92,8 @@ button.main{
 <label>Adresse</label><input>
 <label>Telefon / E-Mail</label><input>
 <div class="row">
-<div><label>Auftragsnr.</label><input></div>
-<div><label>Montagedatum</label><input type="date"></div>
+  <div><label>Auftragsnr.</label><input></div>
+  <div><label>Montagedatum</label><input type="date"></div>
 </div>
 <label>Objektadresse</label><input>
 </fieldset>
@@ -93,19 +101,20 @@ button.main{
 <fieldset>
 <legend>🛠️ 2. Leistungsbeschreibung</legend>
 <select>
-<option>Fenster</option>
-<option>Türen</option>
-<option>Fenster & Türen</option>
-<option>Rollos</option>
+  <option>Fenster</option>
+  <option>Türen</option>
+  <option>Fenster & Türen</option>
+  <option>Rollos</option>
+  <option>Nachjustierung</option>
 </select>
 </fieldset>
 
-<fieldset style="margin-bottom:32px">
+<fieldset style="margin-bottom:28px">
 <legend>✅ 3. Prüfung</legend>
 <select>
-<option>Ja</option>
-<option>Nein</option>
-<option>Teilweise</option>
+  <option>Ja</option>
+  <option>Nein</option>
+  <option>Teilweise</option>
 </select>
 </fieldset>
 
@@ -117,87 +126,96 @@ button.main{
 <fieldset>
 <legend>📄 5. Abnahme</legend>
 <select>
-<option>Ohne Vorbehalt</option>
-<option>Unter Vorbehalt</option>
-<option>Abnahme verweigert</option>
+  <option>Ohne Vorbehalt</option>
+  <option>Unter Vorbehalt</option>
+  <option>Abnahme verweigert</option>
 </select>
 </fieldset>
 </div>
 
+<!-- ===== UNTERSCHRIFTEN ===== -->
 <div id="signSection" style="padding-bottom:35mm">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
 
 <div class="row">
-<div><label>Ort</label><input></div>
-<div><label>Datum</label><input type="date"></div>
+  <div><label>Ort</label><input></div>
+  <div><label>Datum</label><input type="date"></div>
 </div>
 
 <label>Unterschrift Auftraggeber</label>
 <canvas id="sig"></canvas>
-<button class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
+<button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" class="signature-image">
+<img class="signature-image" src="images/unterschrift_auftragnehmer.jpg.jpg" alt="Unterschrift Auftragnehmer">
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- ✅ SIGNATURE PAD -->
+<!-- ===== SIGNATURE PAD ===== -->
 <script>
-const canvas=document.getElementById("sig");
-const r=Math.max(window.devicePixelRatio||1,1);
-canvas.width=canvas.offsetWidth*r;
-canvas.height=canvas.offsetHeight*r;
-canvas.getContext("2d").setTransform(r,0,0,r,0,0);
-const signaturePad=new SignaturePad(canvas,{backgroundColor:"white"});
+const sigCanvas = document.getElementById("sig");
+const ratio = Math.max(window.devicePixelRatio || 1, 1);
+sigCanvas.width = sigCanvas.offsetWidth * ratio;
+sigCanvas.height = sigCanvas.offsetHeight * ratio;
+sigCanvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
+const signaturePad = new SignaturePad(sigCanvas,{backgroundColor:"white"});
 </script>
 
-<!-- ✅ PDF -->
+<!-- ===== PDF ===== -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
 
-  const form=document.getElementById("formSection");
-  const sign=document.getElementById("signSection");
+  const form = document.getElementById("formSection");
+  const sign = document.getElementById("signSection");
 
-  sign.style.display="none";
-  await addPages(pdf, await html2canvas(form,{scale:1.6}));
+  // Seiten 1..n: Formular
+  sign.style.display = "none";
+  await addPages(pdf, await html2canvas(form,{ scale:1.6, useCORS:true }));
 
-  sign.style.display="block";
+  // Letzte Seite: Unterschriften (sicherer Rand, nichts abgeschnitten)
+  sign.style.display = "block";
   pdf.addPage();
-
-  const sc=await html2canvas(sign,{scale:1.6});
-  pdf.addImage(sc.toDataURL("image/jpeg",0.95),"JPEG",15,12,180,sc.height*180/sc.width);
+  const sc = await html2canvas(sign,{ scale:1.6, useCORS:true });
+  pdf.addImage(
+    sc.toDataURL("image/jpeg",0.95),
+    "JPEG",
+    15, 12, 180,
+    sc.height * 180 / sc.width
+  );
 
   addPageNumbers(pdf);
 
-  const kunde=document.getElementById("kundeInput").value.trim();
-  const safe=kunde?kunde.replace(/[^a-z0-9]/gi,"_"):"Unbekannt";
-  pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
+  const kunde = document.getElementById("kundeInput").value.trim();
+  const safeName = kunde ? kunde.replace(/[^a-z0-9]/gi,"_") : "Unbekannt";
+  pdf.save(`Bauabnahmeprotokoll_${safeName}.pdf`);
 }
 
-async function addPages(pdf,c){
-  const img=c.toDataURL("image/jpeg",0.95);
-  const w=180,pageH=268;
-  let h=c.height*w/c.width;
-  let y=15;
-  pdf.addImage(img,"JPEG",15,y,w,h);
+// Mehrseitiges Einfügen ohne leere Restseiten
+async function addPages(pdf, canvas){
+  const img = canvas.toDataURL("image/jpeg",0.95);
+  const w = 180;
+  const pageH = 268;
+  let h = canvas.height * w / canvas.width;
+  let y = 15;
 
-  while(h+y>pageH+18){
-    const rest=h+y-pageH;
-    if(rest<18) break;
-    y-=pageH;
+  pdf.addImage(img,"JPEG",15,y,w,h);
+  while (h + y > pageH + 18){
+    const rest = h + y - pageH;
+    if (rest < 18) break; // keine leere Seite erzeugen
+    y -= pageH;
     pdf.addPage();
     pdf.addImage(img,"JPEG",15,y,w,h);
   }
 }
 
 function addPageNumbers(pdf){
-  const n=pdf.getNumberOfPages();
+  const n = pdf.getNumberOfPages();
   for(let i=1;i<=n;i++){
     pdf.setPage(i);
     pdf.setFontSize(9);
