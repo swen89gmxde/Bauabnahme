@@ -113,64 +113,44 @@
 </form>
 </div>
 <script>
-/* ===== SignaturePad Initialisierung (FEHLTE!) ===== */
-const canvas1 = document.getElementById('sig1');
-const signaturePad1 = new SignaturePad(canvas1, { backgroundColor: 'white' });
-
-function resizeCanvas() {
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas1.width = canvas1.offsetWidth * ratio;
-  canvas1.height = canvas1.offsetHeight * ratio;
-  canvas1.getContext('2d').scale(ratio, ratio);
-  signaturePad1.clear();
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-/* ===== PDF ===== */
 async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p','mm','a4');
 
-  const container = document.querySelector('.container');
-  const split = document.getElementById('pdf-split');
-  const signatures = document.getElementById('signatures');
+  const section1 = document.getElementById('section-1-5');
+  const section6 = document.getElementById('section-6');
 
   /* ===== Seite 1 ===== */
-  signatures.style.display = 'none';
+  section6.style.display = 'none';
 
-  const canvasPage1 = await html2canvas(container, { scale: 1 });
-  const img1 = canvasPage1.toDataURL('image/jpeg', 0.8);
-
+  const c1 = await html2canvas(section1, { scale: 1 });
   pdf.addImage(
-    img1,
+    c1.toDataURL('image/jpeg', 0.8),
     'JPEG',
     0,
     0,
     210,
-    canvasPage1.height * 210 / canvasPage1.width
+    c1.height * 210 / c1.width
   );
 
   /* ===== Seite 2 ===== */
-  signatures.style.display = 'block';
-  split.style.display = 'none';
+  section6.style.display = 'block';
+  section1.style.display = 'none';
 
   pdf.addPage();
 
-  const canvasPage2 = await html2canvas(container, { scale: 1 });
-  const img2 = canvasPage2.toDataURL('image/jpeg', 0.8);
-
+  const c2 = await html2canvas(section6, { scale: 1 });
   pdf.addImage(
-    img2,
+    c2.toDataURL('image/jpeg', 0.8),
     'JPEG',
     0,
     0,
     210,
-    canvasPage2.height * 210 / canvasPage2.width
+    c2.height * 210 / c2.width
   );
 
   /* Reset */
-  split.style.display = 'block';
+  section1.style.display = 'block';
 
   pdf.save('Bauabnahme_modern.pdf');
 }
