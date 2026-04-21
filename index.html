@@ -34,8 +34,98 @@ button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18p
 <!-- ===== PUNKTE 1–5 ===== -->
 <div id="section-formular">
 
-<!-- (dein kompletter Block Punkt 1–5, unverändert) -->
-<!-- HIER DIESEN BLOCK EINFÜGEN – den ich dir zuletzt vollständig gegeben habe -->
+<div id="section-formular">
+
+  <fieldset>
+    <legend>👤 1. Projekt- und Kundendaten</legend>
+
+    <label>Kunde</label>
+    <input name="Kunde" type="text">
+
+    <label>Adresse</label>
+    <input name="Adresse" type="text">
+
+    <label>Telefon / E-Mail</label>
+    <input name="Kontakt" type="text">
+
+    <div class="row">
+      <div>
+        <label>Auftragsnr.</label>
+        <input name="Auftrag" type="text">
+      </div>
+      <div>
+        <label>Montagedatum</label>
+        <input name="Montagedatum" type="date">
+      </div>
+    </div>
+
+    <label>Objektadresse</label>
+    <input name="Objektadresse" type="text">
+  </fieldset>
+
+  <fieldset>
+    <legend>🛠️ 2. Leistungsbeschreibung</legend>
+
+    <label>Arbeiten durchgeführt:</label>
+    <select name="Leistung">
+      <option>Fenster</option>
+      <option>Türen</option>
+      <option>Fenster & Türen</option>
+      <option>Rollo</option>
+      <option>Rollos</option>
+      <option>Fenster und Rollos</option>
+      <option>Nachjustierung</option>
+      <option>Sonstiges</option>
+    </select>
+
+    <div class="row">
+      <div>
+        <label>Anzahl Fenster</label>
+        <input name="Fenster" type="number">
+      </div>
+      <div>
+        <label>Anzahl Türen</label>
+        <input name="Türen" type="number">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>✅ 3. Prüfung der ausgeführten Leistungen</legend>
+
+    <label>Wurde durchgeführt?</label>
+    <select name="Pruefung">
+      <option>Ja</option>
+      <option>Nein</option>
+      <option>Teilweise</option>
+    </select>
+
+    <ul>
+      <li>Optische Prüfung</li>
+      <li>Funktionstest</li>
+      <li>Abdichtung innen/außen</li>
+      <li>Laibungsanschlüsse kontrolliert</li>
+      <li>Rahmen-/Flügel-Spaltmaße</li>
+    </ul>
+  </fieldset>
+
+  <fieldset>
+    <legend>⚠️ 4. Dokumentierte Mängel</legend>
+
+    <textarea name="Maengel" rows="4" placeholder="Mängelbeschreibung..."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>📄 5. Abnahme</legend>
+
+    <select name="Abnahme">
+      <option>Ohne Vorbehalt</option>
+      <option>Unter Vorbehalt</option>
+      <option>Abnahme verweigert</option>
+    </select>
+  </fieldset>
+
+</div>
 
 </div>
 
