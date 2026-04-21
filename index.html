@@ -42,6 +42,10 @@
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 <form id="bauForm">
+ 
+<div id="section-1-5">
+``
+
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
 <label>Kunde</label><input name="Kunde" type="text">
@@ -79,55 +83,29 @@
 <legend>📄 5. Abnahme</legend>
 <select name="Abnahme"><option>Ohne Vorbehalt</option><option>Unter Vorbehalt</option><option>Abnahme verweigert</option></select>
 </fieldset>
+</div>
+<div id="section-6">
+  <fieldset>
+    <legend>✍️ 6. Unterschriften</legend>
 
-<!-- Trennpunkt PDF Seite 1 -->
-<div id="page1-end"></div>
- 
-<div id="pdf-split"></div>
- 
-<fieldset id="signatures">
-  <legend>✍️ 6. Unterschriften</legend>
-
-  <div class="row">
-    <div>
-      <label>Ort</label>
-      <input name="Ort" type="text">
+    <div class="row">
+      <div>
+        <label>Ort</label>
+        <input name="Ort" type="text">
+      </div>
+      <div>
+        <label>Datum</label>
+        <input name="Datum" type="date">
+      </div>
     </div>
-    <div>
-      <label>Datum</label>
-      <input name="Datum" type="date">
-    </div>
-  </div>
 
-  <label>Unterschrift Auftraggeber</label>
-  <canvas id="sig1"></canvas>
- <script>
-const canvas1 = document.getElementById('sig1');
+    <label>Unterschrift Auftraggeber</label>
+    <canvas id="sig1"></canvas>
+    <button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button>
 
-/* ✅ DAS ist entscheidend */
-function resizeCanvas() {
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas1.width  = canvas1.offsetWidth * ratio;
-  canvas1.height = canvas1.offsetHeight * ratio;
-  const ctx = canvas1.getContext("2d");
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-}
-
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
-
-/* SignaturePad DANACH initialisieren */
-const signaturePad1 = new SignaturePad(canvas1, {
-  backgroundColor: "white"
-});
-</script>
-  <button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button>
-  <input type="hidden" id="sig1data" name="Unterschrift_Auftraggeber">
-
-  <label>Unterschrift Auftragnehmer</label>
-  <img src="images/unterschrift_auftragnehmer.jpg.jpg"
-       style="width:100%;border:2px dashed #0a3d62;border-radius:10px;">
-</fieldset>
+    <label>Unterschrift Auftragnehmer</label>
+    <img src="images/unterschrift_auftragnehmer.jpg.jpg"
+         style="width:100%;border:2px dashed #0a3d62;border-radius:10
 
 <button type="button" class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </form>
@@ -137,18 +115,14 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p", "mm", "a4");
 
-  const section1 = document.getElementById("section-1-5");
-  const section6 = document.getElementById("section-6");
+  const part1 = document.getElementById("section-1-5");
+  const part2 = document.getElementById("section-6");
 
   /* ===== Seite 1 ===== */
-  section6.style.display = "none";
-
-  const c1 = await html2canvas(section1, {
+  const c1 = await html2canvas(part1, {
     scale: 1,
     useCORS: true,
-    windowWidth: section1.scrollWidth,
-    windowHeight: section1.scrollHeight,
-    height: section1.scrollHeight
+    windowHeight: part1.scrollHeight
   });
 
   pdf.addImage(
@@ -161,17 +135,12 @@ async function generatePDF() {
   );
 
   /* ===== Seite 2 ===== */
-  section6.style.display = "block";
-  section1.style.display = "none";
-
   pdf.addPage();
 
-  const c2 = await html2canvas(section6, {
+  const c2 = await html2canvas(part2, {
     scale: 1,
     useCORS: true,
-    windowWidth: section6.scrollWidth,
-    windowHeight: section6.scrollHeight,
-    height: section6.scrollHeight
+    windowHeight: part2.scrollHeight
   });
 
   pdf.addImage(
@@ -183,12 +152,24 @@ async function generatePDF() {
     c2.height * 210 / c2.width
   );
 
-  /* Reset */
-  section1.style.display = "block";
-
   pdf.save("Bauabnahme_modern.pdf");
 }
 </script>
-``
+ <script>
+const canvas1 = document.getElementById("sig1");
+
+function resizeCanvas() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas1.width = canvas1.offsetWidth * ratio;
+  canvas1.height = canvas1.offsetHeight * ratio;
+  canvas1.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const signaturePad1 = new SignaturePad(canvas1, {
+  backgroundColor: "white"
+});
+</script>
 </body>
 </html>
