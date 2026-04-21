@@ -80,22 +80,33 @@
 <select name="Abnahme"><option>Ohne Vorbehalt</option><option>Unter Vorbehalt</option><option>Abnahme verweigert</option></select>
 </fieldset>
 
+<!-- Trennpunkt PDF Seite 1 -->
 <div id="page1-end"></div>
-``
 
-<legend>✍️ 6. Unterschriften</legend>
-<div class="row"><div><label>Ort</label><input name="Ort" type="text"></div><div><label>Datum</label><input name="Datum" type="date"></div></div>
+<fieldset id="signatures">
+  <legend>✍️ 6. Unterschriften</legend>
 
-<div class="nobreak">
+  <div class="row">
+    <div>
+      <label>Ort</label>
+      <input name="Ort" type="text">
+    </div>
+    <div>
+      <label>Datum</label>
+      <input name="Datum" type="date">
+    </div>
+  </div>
+
   <label>Unterschrift Auftraggeber</label>
   <canvas id="sig1"></canvas>
   <button type="button" class="smallbtn" onclick="signaturePad1.clear()">Löschen</button>
   <input type="hidden" id="sig1data" name="Unterschrift_Auftraggeber">
-</div>
 
-<label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" alt="Unterschrift Auftragnehmer" style="width:100%;border:2px dashed #0a3d62;border-radius:10px;">
+  <label>Unterschrift Auftragnehmer</label>
+  <img src="images/unterschrift_auftragnehmer.jpg.jpg"
+       style="width:100%;border:2px dashed #0a3d62;border-radius:10px;">
 </fieldset>
+
 <button type="button" class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </form>
 </div>
@@ -104,48 +115,49 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p','mm','a4');
 
-  /* ===== Seite 1 ===== */
   const container = document.querySelector('.container');
-  const splitPoint = document.getElementById('page1-end');
+  const split = document.getElementById('page1-end');
+  const signatures = document.getElementById('signatures');
 
+  /* ===== Seite 1 ===== */
   const page1 = container.cloneNode(true);
-
-  // alles NACH splitPoint entfernen
-  while (page1.querySelector('#page1-end')?.nextSibling) {
-    page1.querySelector('#page1-end').nextSibling.remove();
-  }
-
+  page1.querySelector('#signatures')?.remove();
   page1.querySelector('#page1-end')?.remove();
 
   document.body.appendChild(page1);
   page1.style.width = container.offsetWidth + 'px';
 
-  const canvas1 = await html2canvas(page1, { scale: 1 });
-  const img1 = canvas1.toDataURL('image/jpeg', 0.8);
-
-  pdf.addImage(img1, 'JPEG', 0, 0, 210, canvas1.height * 210 / canvas1.width);
+  const c1 = await html2canvas(page1, { scale: 1 });
+  pdf.addImage(
+    c1.toDataURL('image/jpeg', 0.8),
+    'JPEG',
+    0,
+    0,
+    210,
+    c1.height * 210 / c1.width
+  );
 
   document.body.removeChild(page1);
 
   /* ===== Seite 2 (nur Unterschriften) ===== */
-  const page2 = container.cloneNode(true);
+  pdf.addPage();
 
-  // alles VOR splitPoint entfernen
-  while (page2.firstChild && page2.firstChild.id !== 'page1-end') {
-    page2.firstChild.remove();
-  }
-
-  page2.querySelector('#page1-end')?.remove();
+  const page2 = document.createElement('div');
+  page2.className = 'container';
+  page2.appendChild(signatures.cloneNode(true));
 
   document.body.appendChild(page2);
   page2.style.width = container.offsetWidth + 'px';
 
-  pdf.addPage();
-
-  const canvas2 = await html2canvas(page2, { scale: 1 });
-  const img2 = canvas2.toDataURL('image/jpeg', 0.8);
-
-  pdf.addImage(img2, 'JPEG', 0, 0, 210, canvas2.height * 210 / canvas2.width);
+  const c2 = await html2canvas(page2, { scale: 1 });
+  pdf.addImage(
+    c2.toDataURL('image/jpeg', 0.8),
+    'JPEG',
+    0,
+    0,
+    210,
+    c2.height * 210 / c2.width
+  );
 
   document.body.removeChild(page2);
 
