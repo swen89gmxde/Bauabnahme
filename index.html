@@ -44,7 +44,6 @@
 <form id="bauForm">
  
 <div id="section-1-5">
-``
 
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
@@ -107,7 +106,13 @@
     <img src="images/unterschrift_auftragnehmer.jpg.jpg"
          style="width:100%;border:2px dashed #0a3d62;border-radius:10
 
-<button type="button" class="main" onclick="generatePDF()">📄 PDF erstellen</button>
+
+</form>
+
+<button type="button" class="main" onclick="generatePDF()">
+  📄 PDF erstellen
+</button>
+
 </form>
 </div>
 <script>
@@ -115,42 +120,34 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p", "mm", "a4");
 
-  const part1 = document.getElementById("section-1-5");
-  const part2 = document.getElementById("section-6");
+  // ✅ DAS ist Punkt 2:
+  // Wir erfassen IMMER den kompletten Formular-Container
+  const container = document.querySelector(".container");
 
-  /* ===== Seite 1 ===== */
-  const c1 = await html2canvas(part1, {
+  const canvas = await html2canvas(container, {
     scale: 1,
     useCORS: true,
-    windowHeight: part1.scrollHeight
+    windowHeight: container.scrollHeight
   });
 
-  pdf.addImage(
-    c1.toDataURL("image/jpeg", 0.8),
-    "JPEG",
-    0,
-    0,
-    210,
-    c1.height * 210 / c1.width
-  );
+  const imgData = canvas.toDataURL("image/jpeg", 0.8);
 
-  /* ===== Seite 2 ===== */
-  pdf.addPage();
+  const imgWidth = 210;
+  const pageHeight = 297;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
 
-  const c2 = await html2canvas(part2, {
-    scale: 1,
-    useCORS: true,
-    windowHeight: part2.scrollHeight
-  });
+  let heightLeft = imgHeight;
+  let position = 0;
 
-  pdf.addImage(
-    c2.toDataURL("image/jpeg", 0.8),
-    "JPEG",
-    0,
-    0,
-    210,
-    c2.height * 210 / c2.width
-  );
+  pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
 
   pdf.save("Bauabnahme_modern.pdf");
 }
