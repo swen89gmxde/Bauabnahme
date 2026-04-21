@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Bauabnahmeprotokoll Sichtwerk</title>
 
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
@@ -29,105 +28,48 @@ button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18p
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<form id="bauForm">
+<form>
 
-<!-- ===== PUNKTE 1–5 ===== -->
 <div id="section-formular">
 
-  <fieldset>
-    <legend>👤 1. Projekt- und Kundendaten</legend>
+<fieldset>
+<legend>👤 1. Projekt- und Kundendaten</legend>
+<label>Kunde</label><input>
+<label>Adresse</label><input>
+<label>Telefon / E-Mail</label><input>
+<div class="row">
+<div><label>Auftragsnr.</label><input></div>
+<div><label>Montagedatum</label><input type="date"></div>
+</div>
+<label>Objektadresse</label><input>
+</fieldset>
 
-    <label>Kunde</label>
-    <input name="Kunde" type="text">
+<fieldset>
+<legend>🛠️ 2. Leistungsbeschreibung</legend>
+<label>Arbeiten durchgeführt:</label>
+<select>
+<option>Fenster</option><option>Türen</option><option>Fenster & Türen</option>
+<option>Rollo</option><option>Rollos</option><option>Nachjustierung</option>
+</select>
+</fieldset>
 
-    <label>Adresse</label>
-    <input name="Adresse" type="text">
+<fieldset>
+<legend>✅ 3. Prüfung der Leistungen</legend>
+<select><option>Ja</option><option>Nein</option><option>Teilweise</option></select>
+</fieldset>
 
-    <label>Telefon / E-Mail</label>
-    <input name="Kontakt" type="text">
+<fieldset>
+<legend>⚠️ 4. Dokumentierte Mängel</legend>
+<textarea rows="4"></textarea>
+</fieldset>
 
-    <div class="row">
-      <div>
-        <label>Auftragsnr.</label>
-        <input name="Auftrag" type="text">
-      </div>
-      <div>
-        <label>Montagedatum</label>
-        <input name="Montagedatum" type="date">
-      </div>
-    </div>
-
-    <label>Objektadresse</label>
-    <input name="Objektadresse" type="text">
-  </fieldset>
-
-  <fieldset>
-    <legend>🛠️ 2. Leistungsbeschreibung</legend>
-
-    <label>Arbeiten durchgeführt:</label>
-    <select name="Leistung">
-      <option>Fenster</option>
-      <option>Türen</option>
-      <option>Fenster & Türen</option>
-      <option>Rollo</option>
-      <option>Rollos</option>
-      <option>Fenster und Rollos</option>
-      <option>Nachjustierung</option>
-      <option>Sonstiges</option>
-    </select>
-
-    <div class="row">
-      <div>
-        <label>Anzahl Fenster</label>
-        <input name="Fenster" type="number">
-      </div>
-      <div>
-        <label>Anzahl Türen</label>
-        <input name="Türen" type="number">
-      </div>
-    </div>
-  </fieldset>
-
-  <fieldset>
-    <legend>✅ 3. Prüfung der ausgeführten Leistungen</legend>
-
-    <label>Wurde durchgeführt?</label>
-    <select name="Pruefung">
-      <option>Ja</option>
-      <option>Nein</option>
-      <option>Teilweise</option>
-    </select>
-
-    <ul>
-      <li>Optische Prüfung</li>
-      <li>Funktionstest</li>
-      <li>Abdichtung innen/außen</li>
-      <li>Laibungsanschlüsse kontrolliert</li>
-      <li>Rahmen-/Flügel-Spaltmaße</li>
-    </ul>
-  </fieldset>
-
-  <fieldset>
-    <legend>⚠️ 4. Dokumentierte Mängel</legend>
-
-    <textarea name="Maengel" rows="4" placeholder="Mängelbeschreibung..."></textarea>
-  </fieldset>
-
-  <fieldset>
-    <legend>📄 5. Abnahme</legend>
-
-    <select name="Abnahme">
-      <option>Ohne Vorbehalt</option>
-      <option>Unter Vorbehalt</option>
-      <option>Abnahme verweigert</option>
-    </select>
-  </fieldset>
+<fieldset>
+<legend>📄 5. Abnahme</legend>
+<select><option>Ohne Vorbehalt</option><option>Unter Vorbehalt</option></select>
+</fieldset>
 
 </div>
 
-</div>
-
-<!-- ===== PUNKT 6 UNTERSCHRIFTEN ===== -->
 <div id="section-signaturen">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
@@ -138,12 +80,11 @@ button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18p
 </div>
 
 <label>Unterschrift Auftraggeber</label>
-<canvas id="sig1"></canvas>
+<canvas id="sig"></canvas>
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg"
-     style="width:100%;border:2px dashed #0a3d62;border-radius:10px">
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;border:2px dashed #0a3d62;border-radius:10px">
 
 </fieldset>
 </div>
@@ -153,60 +94,42 @@ button.main{background:#0a3d62;color:#fff;padding:16px;border:none;font-size:18p
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- ===== SIGNATURE PAD ===== -->
 <script>
-const canvas = document.getElementById("sig1");
-
-function resizeCanvas(){
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas.width = canvas.offsetWidth * ratio;
-  canvas.height = canvas.offsetHeight * ratio;
-  canvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
-}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
-
+const canvas = document.getElementById("sig");
+const ratio = Math.max(window.devicePixelRatio || 1, 1);
+canvas.width = canvas.offsetWidth * ratio;
+canvas.height = canvas.offsetHeight * ratio;
+canvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
 const signaturePad = new SignaturePad(canvas,{backgroundColor:"white"});
 </script>
 
-<!-- ===== PDF ===== -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
 
   const form = document.getElementById("section-formular");
-  const sign = document.getElementById("section-signaturen");
+  const sigs = document.getElementById("section-signaturen");
 
-  sign.style.display = "none";
-
+  sigs.style.display="none";
   const c1 = await html2canvas(form,{scale:1});
   addPages(pdf,c1);
 
-  sign.style.display = "block";
+  sigs.style.display="block";
   pdf.addPage();
-
-  const c2 = await html2canvas(sign,{scale:1});
-  pdf.addImage(
-    c2.toDataURL("image/jpeg",0.8),
-    "JPEG",
-    0,0,210,c2.height*210/c2.width
-  );
+  const c2 = await html2canvas(sigs,{scale:1});
+  pdf.addImage(c2.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,c2.height*210/c2.width);
 
   pdf.save("Bauabnahme.pdf");
 }
 
-function addPages(pdf, canvas){
-  const img = canvas.toDataURL("image/jpeg",0.8);
-  const w = 210;
-  const h = canvas.height*w/canvas.width;
-  let y = 0;
-
+function addPages(pdf,canvas){
+  const img=canvas.toDataURL("image/jpeg",0.9);
+  const w=210,h=canvas.height*w/canvas.width;
+  let y=0;
   pdf.addImage(img,"JPEG",0,y,w,h);
   while(h+y>297){
-    y -= 297;
-    pdf.addPage();
-    pdf.addImage(img,"JPEG",0,y,w,h);
+    y-=297; pdf.addPage(); pdf.addImage(img,"JPEG",0,y,w,h);
   }
 }
 </script>
