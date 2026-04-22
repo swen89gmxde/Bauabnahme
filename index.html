@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
+<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -68,7 +69,6 @@ textarea{
   display:flex;
   gap:10px;
 }
-
 .row div{flex:1}
 
 canvas{
@@ -134,8 +134,10 @@ button.main{
 </select>
 </fieldset>
 
-<!-- ✅ PUNKT 3 BEGINNT IMMER AUF SEITE 2 -->
-<fieldset style="page-break-before:always">
+<!-- ✅ SAUBERER SEITENUMBRUCH VOR PUNKT 3 -->
+<div style="page-break-before:always"></div>
+
+<fieldset>
 <legend>✅ 3. Prüfung</legend>
 <select>
   <option>Ja</option>
@@ -174,13 +176,14 @@ button.main{
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="max-width:100%;height:auto;">
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain">
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
+<!-- SIGNATURE PAD -->
 <script>
 const sigCanvas=document.getElementById("sig");
 const r=Math.max(window.devicePixelRatio||1,1);
@@ -190,6 +193,7 @@ sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
 const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 </script>
 
+<!-- PDF -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
