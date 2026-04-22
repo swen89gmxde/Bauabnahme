@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -23,8 +22,6 @@ body{
   padding:26px;
   border-radius:14px;
 }
-
-h2{margin-top:0}
 
 fieldset{
   border:none;
@@ -58,10 +55,7 @@ textarea{
   font-size:14px;
 }
 
-/* ✅ Date-Feld NOCH flacher */
 input[type="date"]{
-  padding-top:4px;
-  padding-bottom:4px;
   height:28px;
 }
 
@@ -74,6 +68,7 @@ textarea{
   display:flex;
   gap:10px;
 }
+
 .row div{flex:1}
 
 canvas{
@@ -110,14 +105,12 @@ button.main{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<!-- ===== FORMULAR 1–5 ===== -->
 <div id="formSection">
 
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
 <label>Kunde</label>
 <input id="kundeInput">
-
 <label>Adresse</label><input>
 <label>Telefon / E-Mail</label><input>
 
@@ -127,7 +120,7 @@ button.main{
 </div>
 
 <label>Objektadresse</label><input>
-<div style="height:4px"></div> <!-- ✅ Abstand reduziert -->
+<div style="height:4px"></div>
 </fieldset>
 
 <fieldset style="page-break-inside:avoid">
@@ -141,7 +134,8 @@ button.main{
 </select>
 </fieldset>
 
-<fieldset style="margin-top:6px">
+<!-- ✅ PUNKT 3 BEGINNT IMMER AUF SEITE 2 -->
+<fieldset style="page-break-before:always">
 <legend>✅ 3. Prüfung</legend>
 <select>
   <option>Ja</option>
@@ -166,7 +160,6 @@ button.main{
 
 </div>
 
-<!-- ===== UNTERSCHRIFTEN ===== -->
 <div id="signSection" style="padding-bottom:30mm">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
@@ -181,24 +174,22 @@ button.main{
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;border-radius:8px">
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="max-width:100%;height:auto;">
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- ===== SIGNATURE PAD ===== -->
 <script>
 const sigCanvas=document.getElementById("sig");
-const ratio=Math.max(window.devicePixelRatio||1,1);
-sigCanvas.width=sigCanvas.offsetWidth*ratio;
-sigCanvas.height=sigCanvas.offsetHeight*ratio;
-sigCanvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
+const r=Math.max(window.devicePixelRatio||1,1);
+sigCanvas.width=sigCanvas.offsetWidth*r;
+sigCanvas.height=sigCanvas.offsetHeight*r;
+sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
 const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 </script>
 
-<!-- ===== PDF ===== -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
@@ -224,7 +215,7 @@ async function generatePDF(){
   addPageNumbers(pdf);
 
   const kunde=document.getElementById("kundeInput").value.trim();
-  const safe=kunde ? kunde.replace(/[^a-z0-9]/gi,"_") : "Unbekannt";
+  const safe=kunde?kunde.replace(/[^a-z0-9]/gi,"_"):"Unbekannt";
   pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
 }
 
