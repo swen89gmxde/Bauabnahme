@@ -5,23 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.jsscript>
-https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
-https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
+<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{
-  font-family:Segoe UI,Roboto,Arial,sans-serif;
-  background:#f3f4f6;
-  margin:0;
-}
-.container{
-  max-width:800px;
-  margin:20px auto;
-  background:#fff;
-  padding:26px;
-  border-radius:14px;
-}
+body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
+.container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
+
+h2{margin-top:0}
 
 fieldset{
   border:none;
@@ -29,22 +22,10 @@ fieldset{
   margin-bottom:18px;
   border-bottom:1px solid #e3e3e3;
 }
+legend{font-weight:600;color:#0a3d62;font-size:16px}
+label{display:block;margin-top:8px;font-size:14px}
 
-legend{
-  font-weight:600;
-  color:#0a3d62;
-  font-size:16px;
-}
-
-label{
-  display:block;
-  margin-top:8px;
-  font-size:14px;
-}
-
-input,
-select,
-textarea{
+input,select,textarea{
   width:100%;
   padding:5px 8px;
   height:30px;
@@ -54,25 +35,23 @@ textarea{
   border:1px solid #cfcfcf;
   font-size:14px;
 }
+input[type="date"]{height:28px}
+textarea{min-height:70px;height:auto}
 
-input[type="date"]{
-  height:28px;
-}
-
-textarea{
-  min-height:70px;
-  height:auto;
-}
-
-.row{
-  display:flex;
-  gap:10px;
-}
+.row{display:flex;gap:10px}
 .row div{flex:1}
 
 canvas{
   width:100%;
   height:140px;
+  border:2px dashed #0a3d62;
+  border-radius:8px;
+}
+
+.signature-image{
+  width:100%;
+  max-height:140px;
+  object-fit:contain;
   border:2px dashed #0a3d62;
   border-radius:8px;
 }
@@ -87,7 +66,6 @@ button.main{
   width:100%;
   cursor:pointer;
 }
-
 .smallbtn{
   background:#999;
   color:#fff;
@@ -98,9 +76,10 @@ button.main{
   cursor:pointer;
 }
 
-/* ✅ Fester Seitenfüller – erzwingt Seitenende nach Punkt 2 */
-.force-page-end{
-  height:220px;
+/* ✅ UNSICHTBARER, SICHERER SEITENUMBRUCH */
+.page-break{
+  height:0;
+  page-break-before:always;
 }
 </style>
 </head>
@@ -115,7 +94,6 @@ button.main{
 <legend>👤 1. Projekt- und Kundendaten</legend>
 <label>Kunde</label>
 <input id="kundeInput">
-
 <label>Adresse</label><input>
 <label>Telefon / E-Mail</label><input>
 
@@ -138,8 +116,8 @@ button.main{
 </select>
 </fieldset>
 
-<!-- ✅ Erzwingt neues Blatt NACH Punkt 2 -->
-<div class="force-page-end"></div>
+<!-- ✅ Verlässlicher Umbruch — nicht sichtbar -->
+<div class="page-break"></div>
 
 <fieldset>
 <legend>✅ 3. Prüfung</legend>
@@ -180,13 +158,14 @@ button.main{
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-images/unterschrift_auftragnehmer.jpg.jpg
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" class="signature-image">
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
+<!-- SIGNATURE PAD -->
 <script>
 const sigCanvas=document.getElementById("sig");
 const r=Math.max(window.devicePixelRatio||1,1);
@@ -196,6 +175,7 @@ sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
 const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 </script>
 
+<!-- PDF -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
