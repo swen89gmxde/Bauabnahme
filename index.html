@@ -5,10 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.jsscript>
+https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
+https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 
 <style>
 body{
@@ -98,6 +97,11 @@ button.main{
   margin-top:8px;
   cursor:pointer;
 }
+
+/* ✅ Fester Seitenfüller – erzwingt Seitenende nach Punkt 2 */
+.force-page-end{
+  height:220px;
+}
 </style>
 </head>
 
@@ -111,6 +115,7 @@ button.main{
 <legend>👤 1. Projekt- und Kundendaten</legend>
 <label>Kunde</label>
 <input id="kundeInput">
+
 <label>Adresse</label><input>
 <label>Telefon / E-Mail</label><input>
 
@@ -120,10 +125,9 @@ button.main{
 </div>
 
 <label>Objektadresse</label><input>
-<div style="height:4px"></div>
 </fieldset>
 
-<fieldset style="page-break-inside:avoid">
+<fieldset>
 <legend>🛠️ 2. Leistungsbeschreibung</legend>
 <select>
   <option>Fenster</option>
@@ -134,8 +138,8 @@ button.main{
 </select>
 </fieldset>
 
-<!-- ✅ SAUBERER SEITENUMBRUCH VOR PUNKT 3 -->
-<div style="page-break-before:always"></div>
+<!-- ✅ Erzwingt neues Blatt NACH Punkt 2 -->
+<div class="force-page-end"></div>
 
 <fieldset>
 <legend>✅ 3. Prüfung</legend>
@@ -176,14 +180,13 @@ button.main{
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain">
+images/unterschrift_auftragnehmer.jpg.jpg
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- SIGNATURE PAD -->
 <script>
 const sigCanvas=document.getElementById("sig");
 const r=Math.max(window.devicePixelRatio||1,1);
@@ -193,7 +196,6 @@ sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
 const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 </script>
 
-<!-- PDF -->
 <script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
