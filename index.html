@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- ✅ KORREKTE SCRIPT-EINBINDUNG -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,7 +12,6 @@
 <style>
 body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
 .container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
-
 h2{margin-top:0}
 
 fieldset{
@@ -48,14 +46,6 @@ canvas{
   border-radius:8px;
 }
 
-.signature-image{
-  width:100%;
-  max-height:140px;
-  object-fit:contain;
-  border:2px dashed #0a3d62;
-  border-radius:8px;
-}
-
 button.main{
   background:#0a3d62;
   color:#fff;
@@ -75,12 +65,6 @@ button.main{
   margin-top:8px;
   cursor:pointer;
 }
-
-/* ✅ UNSICHTBARER, SICHERER SEITENUMBRUCH */
-.page-break{
-  height:0;
-  page-break-before:always;
-}
 </style>
 </head>
 
@@ -88,20 +72,18 @@ button.main{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<div id="formSection">
+<!-- ===== SEITE 1: PUNKT 1 + 2 ===== -->
+<div id="page1">
 
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
-<label>Kunde</label>
-<input id="kundeInput">
+<label>Kunde</label><input id="kundeInput">
 <label>Adresse</label><input>
 <label>Telefon / E-Mail</label><input>
-
 <div class="row">
   <div><label>Auftragsnr.</label><input></div>
   <div><label>Montagedatum</label><input type="date"></div>
 </div>
-
 <label>Objektadresse</label><input>
 </fieldset>
 
@@ -116,8 +98,10 @@ button.main{
 </select>
 </fieldset>
 
-<!-- ✅ Verlässlicher Umbruch — nicht sichtbar -->
-<div class="page-break"></div>
+</div>
+
+<!-- ===== SEITE 2: PUNKT 3–5 ===== -->
+<div id="page2">
 
 <fieldset>
 <legend>✅ 3. Prüfung</legend>
@@ -144,6 +128,7 @@ button.main{
 
 </div>
 
+<!-- ===== SEITE 3: UNTERSCHRIFTEN ===== -->
 <div id="signSection" style="padding-bottom:30mm">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
@@ -158,14 +143,13 @@ button.main{
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" class="signature-image">
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain">
 </fieldset>
 </div>
 
 <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
 </div>
 
-<!-- SIGNATURE PAD -->
 <script>
 const sigCanvas=document.getElementById("sig");
 const r=Math.max(window.devicePixelRatio||1,1);
@@ -173,62 +157,39 @@ sigCanvas.width=sigCanvas.offsetWidth*r;
 sigCanvas.height=sigCanvas.offsetHeight*r;
 sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
 const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
-</script>
 
-<!-- PDF -->
-<script>
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
 
-  const form=document.getElementById("formSection");
+  const page1=document.getElementById("page1");
+  const page2=document.getElementById("page2");
   const sign=document.getElementById("signSection");
 
-  sign.style.display="none";
-  await addPages(pdf, await html2canvas(form,{ scale:1.6, useCORS:true }));
+  // Seite 1
+  let c1=await html2canvas(page1,{scale:1.6});
+  pdf.addImage(c1.toDataURL("image/jpeg",0.95),"JPEG",15,15,180,c1.height*180/c1.width);
 
-  sign.style.display="block";
+  // Seite 2
   pdf.addPage();
+  let c2=await html2canvas(page2,{scale:1.6});
+  pdf.addImage(c2.toDataURL("image/jpeg",0.95),"JPEG",15,15,180,c2.height*180/c2.width);
 
-  const sc=await html2canvas(sign,{ scale:1.6, useCORS:true });
-  pdf.addImage(
-    sc.toDataURL("image/jpeg",0.95),
-    "JPEG",
-    15,12,180,
-    sc.height*180/sc.width
-  );
-
-  addPageNumbers(pdf);
+  // Seite 3
+  pdf.addPage();
+  let c3=await html2canvas(sign,{scale:1.6});
+  pdf.addImage(c3.toDataURL("image/jpeg",0.95),"JPEG",15,15,180,c3.height*180/c3.width);
 
   const kunde=document.getElementById("kundeInput").value.trim();
   const safe=kunde?kunde.replace(/[^a-z0-9]/gi,"_"):"Unbekannt";
-  pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
-}
-
-async function addPages(pdf,c){
-  const img=c.toDataURL("image/jpeg",0.95);
-  const w=180,pageH=268;
-  let h=c.height*w/c.width;
-  let y=15;
-
-  pdf.addImage(img,"JPEG",15,y,w,h);
-
-  while(h+y>pageH+18){
-    const rest=h+y-pageH;
-    if(rest<18) break;
-    y-=pageH;
-    pdf.addPage();
-    pdf.addImage(img,"JPEG",15,y,w,h);
-  }
-}
-
-function addPageNumbers(pdf){
-  const n=pdf.getNumberOfPages();
-  for(let i=1;i<=n;i++){
+  const pages=pdf.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
     pdf.setPage(i);
     pdf.setFontSize(9);
-    pdf.text(`Seite ${i} von ${n}`,200,292,{align:"right"});
+    pdf.text(`Seite ${i} von ${pages}`,200,292,{align:"right"});
   }
+
+  pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
 }
 </script>
 
