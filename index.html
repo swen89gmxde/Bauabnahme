@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
+<!-- ✅ KORREKTE SCRIPT-TAGS -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,12 +15,7 @@ body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
 .container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
 h2{margin-top:0}
 
-fieldset{
-  border:none;
-  padding:16px 0 22px;
-  margin-bottom:18px;
-  border-bottom:1px solid #e3e3e3;
-}
+fieldset{border:none;padding:16px 0 22px;margin-bottom:18px;border-bottom:1px solid #e3e3e3}
 legend{font-weight:600;color:#0a3d62;font-size:16px}
 label{display:block;margin-top:8px;font-size:14px}
 
@@ -72,9 +68,8 @@ button.main{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<!-- ===== SEITE 1: PUNKT 1 + 2 ===== -->
+<!-- ================= SEITE 1 (Punkt 1–2) ================= -->
 <div id="page1">
-
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
 <label>Kunde</label><input id="kundeInput">
@@ -97,12 +92,10 @@ button.main{
   <option>Nachjustierung</option>
 </select>
 </fieldset>
-
 </div>
 
-<!-- ===== SEITE 2: PUNKT 3–5 ===== -->
+<!-- ================= SEITE 2 (Punkt 3–5) ================= -->
 <div id="page2">
-
 <fieldset>
 <legend>✅ 3. Prüfung</legend>
 <select>
@@ -125,14 +118,12 @@ button.main{
   <option>Abnahme verweigert</option>
 </select>
 </fieldset>
-
 </div>
 
-<!-- ===== SEITE 3: UNTERSCHRIFTEN ===== -->
+<!-- ================= SEITE 3 (Unterschriften) ================= -->
 <div id="signSection" style="padding-bottom:30mm">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
-
 <div class="row">
   <div><label>Ort</label><input></div>
   <div><label>Datum</label><input type="date"></div>
@@ -143,7 +134,7 @@ button.main{
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain">
+<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;border-radius:8px">
 </fieldset>
 </div>
 
@@ -160,28 +151,25 @@ const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
+  const pdf=new jsPDF("p","mm","a4");
 
-  const page1=document.getElementById("page1");
-  const page2=document.getElementById("page2");
-  const sign=document.getElementById("signSection");
+  const p1=document.getElementById("page1");
+  const p2=document.getElementById("page2");
+  const p3=document.getElementById("signSection");
 
-  // Seite 1
-  let c1=await html2canvas(page1,{scale:1.6});
+  const c1=await html2canvas(p1,{scale:1.6});
   pdf.addImage(c1.toDataURL("image/jpeg",0.95),"JPEG",15,15,180,c1.height*180/c1.width);
 
-  // Seite 2
   pdf.addPage();
-  let c2=await html2canvas(page2,{scale:1.6});
+  const c2=await html2canvas(p2,{scale:1.6});
   pdf.addImage(c2.toDataURL("image/jpeg",0.95),"JPEG",15,15,180,c2.height*180/c2.width);
 
-  // Seite 3
   pdf.addPage();
-  let c3=await html2canvas(sign,{scale:1.6});
+  const c3=await html2canvas(p3,{scale:1.6});
   pdf.addImage(c3.toDataURL("image/jpeg",0.95),"JPEG",15,15,180,c3.height*180/c3.width);
 
-  const kunde=document.getElementById("kundeInput").value.trim();
-  const safe=kunde?kunde.replace(/[^a-z0-9]/gi,"_"):"Unbekannt";
+  const name=document.getElementById("kundeInput").value.trim();
+  const safe=name?name.replace(/[^a-z0-9]/gi,"_"):"Unbekannt";
   const pages=pdf.getNumberOfPages();
   for(let i=1;i<=pages;i++){
     pdf.setPage(i);
@@ -195,3 +183,4 @@ async function generatePDF(){
 
 </body>
 </html>
+``
