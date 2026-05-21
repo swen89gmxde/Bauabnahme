@@ -267,7 +267,11 @@ async function buildPDF(){
 // speichern
 async function generatePDF(){
   const pdf=await buildPDF();
-  pdf.save("Bauabnahmeprotokoll.pdf");
+  const name = document.getElementById("kundeInput").value.trim();
+const safe = name ? name.replace(/[^a-z0-9]/gi, "_") : "Unbekannt";
+
+pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
+``
 }
 
 // teilen
