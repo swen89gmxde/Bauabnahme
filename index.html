@@ -74,7 +74,7 @@ button.share{
   cursor:pointer;
 }
 
-/* ✅ mehrzeilig Fix */
+/* ✅ Fix Mehrzeilen */
 #printMaengel{
   white-space:pre-wrap;
   display:none;
@@ -83,7 +83,7 @@ button.share{
   border-radius:6px;
 }
 
-/* ✅ Fotos */
+/* ✅ Bilder */
 #preview img{
   width:100%;
   max-height:140px;
@@ -98,38 +98,46 @@ button.share{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<!-- SEITE 1 -->
+<!-- ================= SEITE 1 ================= -->
 <div id="page1">
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
-
-<label>Kunde</label>
-<input id="kundeInput">
-
-<label>Adresse</label>
-<input>
-
-<label>Telefon / E-Mail</label>
-<input>
+<label>Kunde</label><input id="kundeInput">
+<label>Adresse</label><input>
+<label>Telefon / E-Mail</label><input>
 
 <div class="row">
-  <div>
-    <label>Auftragsnr.</label>
-    <input>
-  </div>
-  <div>
-    <label>Montagedatum</label>
-    <input type="date">
-  </div>
+  <div><label>Auftragsnr.</label><input></div>
+  <div><label>Montagedatum</label><input type="date"></div>
 </div>
 
-<label>Objektadresse</label>
-<input>
+<label>Objektadresse</label><input>
+</fieldset>
+
+<fieldset>
+<legend>🛠️ 2. Leistungsbeschreibung</legend>
+<select>
+<option>Fenster</option>
+<option>Türen</option>
+<option>Fenster & Türen</option>
+<option>Fenster & Rollos</option>
+<option>Rollos</option>
+<option>Nachjustierung</option>
+</select>
 </fieldset>
 </div>
 
-<!-- SEITE 2 -->
+<!-- ================= SEITE 2 ================= -->
 <div id="page2">
+<fieldset>
+<legend>✅ 3. Prüfung</legend>
+<select>
+<option>Ja</option>
+<option>Nein</option>
+<option>Teilweise</option>
+</select>
+</fieldset>
+
 <fieldset>
 <legend>⚠️ 4. Dokumentierte Mängel</legend>
 
@@ -141,20 +149,33 @@ button.share{
 <div id="preview"></div>
 
 </fieldset>
+
+<fieldset>
+<legend>📄 5. Abnahme</legend>
+<select>
+<option>Ohne Vorbehalt</option>
+<option>Unter Vorbehalt</option>
+<option>Abnahme verweigert</option>
+</select>
+</fieldset>
 </div>
 
-<!-- SEITE 3 -->
+<!-- ================= SEITE 3 ================= -->
 <div id="signSection" style="padding-bottom:30mm">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
+
+<div class="row">
+  <div><label>Ort</label><input></div>
+  <div><label>Datum</label><input type="date"></div>
+</div>
 
 <label>Unterschrift Auftraggeber</label>
 <canvas id="sig"></canvas>
 <button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 <label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg" 
-style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;border-radius:8px">
+<img src="images/unterschrift_auftragnehmer.jpg" style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;border-radius:8px">
 
 </fieldset>
 </div>
@@ -165,28 +186,27 @@ style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;
 </div>
 
 <script>
-let imageDataList = [];
+let imageDataList=[];
 
-// 📸 Bilder laden
+// Bilder
 function handleImages(event){
-  imageDataList = [];
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "";
+  imageDataList=[];
+  const preview=document.getElementById("preview");
+  preview.innerHTML="";
 
   for(let file of event.target.files){
-    const reader = new FileReader();
-    reader.onload = function(e){
+    const reader=new FileReader();
+    reader.onload=e=>{
       imageDataList.push(e.target.result);
-
-      const img = document.createElement("img");
-      img.src = e.target.result;
+      const img=document.createElement("img");
+      img.src=e.target.result;
       preview.appendChild(img);
     }
     reader.readAsDataURL(file);
   }
 }
 
-// ✅ SIGNATUR (funktioniert + löschen)
+// SIGNATUR
 const sigCanvas=document.getElementById("sig");
 const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 
@@ -198,7 +218,7 @@ function resizeCanvas(){
 }
 resizeCanvas();
 
-// ✅ PDF BAUEN
+// PDF BUILD
 async function buildPDF(){
 
   const input=document.getElementById("maengelInput");
@@ -208,28 +228,23 @@ async function buildPDF(){
   print.style.display="block";
   input.style.display="none";
 
-  const { jsPDF } = window.jspdf;
+  const { jsPDF }=window.jspdf;
   const pdf=new jsPDF("p","mm","a4");
 
-  const p1=document.getElementById("page1");
-  const p2=document.getElementById("page2");
-  const p3=document.getElementById("signSection");
-
-  const c1=await html2canvas(p1,{scale:2});
+  const c1=await html2canvas(page1,{scale:2});
   pdf.addImage(c1.toDataURL(),"JPEG",10,10,190,c1.height*190/c1.width);
 
   pdf.addPage();
-  const c2=await html2canvas(p2,{scale:2});
+  const c2=await html2canvas(page2,{scale:2});
   pdf.addImage(c2.toDataURL(),"JPEG",10,10,190,c2.height*190/c2.width);
 
-  // 📸 Bilder
   imageDataList.forEach(img=>{
     pdf.addPage();
     pdf.addImage(img,"JPEG",10,10,190,120);
   });
 
   pdf.addPage();
-  const c3=await html2canvas(p3,{scale:2});
+  const c3=await html2canvas(signSection,{scale:2});
   pdf.addImage(c3.toDataURL(),"JPEG",10,10,190,c3.height*190/c3.width);
 
   input.style.display="block";
@@ -238,25 +253,20 @@ async function buildPDF(){
   return pdf;
 }
 
-// ✅ PDF speichern
 async function generatePDF(){
-  const pdf = await buildPDF();
+  const pdf=await buildPDF();
   pdf.save("Bauabnahmeprotokoll.pdf");
 }
 
-// ✅ TEILEN (WhatsApp etc.)
 async function sharePDF(){
-  const pdf = await buildPDF();
-
-  const blob = pdf.output("blob");
-  const file = new File([blob], "Bauabnahmeprotokoll.pdf", { type: "application/pdf" });
+  const pdf=await buildPDF();
+  const blob=pdf.output("blob");
+  const file=new File([blob],"Bauabnahmeprotokoll.pdf",{type:"application/pdf"});
 
   if(navigator.share){
-    await navigator.share({
-      files: [file]
-    });
-  } else {
-    alert("Teilen auf diesem Gerät nicht möglich");
+    await navigator.share({files:[file]});
+  }else{
+    alert("Teilen nicht unterstützt");
   }
 }
 </script>
