@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- SCRIPTS -->
+<!-- ✅ Scripte korrekt -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -16,23 +16,25 @@ body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
 h2{margin-top:0}
 
 fieldset{border:none;padding:16px 0 22px;margin-bottom:18px;border-bottom:1px solid #e3e3e3}
-legend{font-weight:600;color:#0a3d62;font-size:16px}
-label{display:block;margin-top:8px;font-size:14px}
+legend{font-weight:600;color:#0a3d62}
+
+label{display:block;margin-top:8px}
 
 input,select,textarea{
   width:100%;
-  padding:5px 8px;
-  height:30px;
-  line-height:18px;
-  box-sizing:border-box;
+  padding:6px 8px;
   border-radius:6px;
-  border:1px solid #cfcfcf;
+  border:1px solid #ccc;
   font-size:14px;
 }
-input[type="date"]{height:28px}
-textarea{min-height:70px;height:auto}
 
-.row{display:flex;gap:10px}
+textarea{min-height:70px}
+
+/* ✅ Abstand verbessert */
+.row{
+  display:flex;
+  gap:15px;
+}
 .row div{flex:1}
 
 canvas{
@@ -47,7 +49,6 @@ button.main{
   color:#fff;
   padding:14px;
   border:none;
-  font-size:16px;
   border-radius:10px;
   width:100%;
   cursor:pointer;
@@ -57,30 +58,19 @@ button.share{
   color:#fff;
   padding:14px;
   border:none;
-  font-size:16px;
   border-radius:10px;
   width:100%;
   margin-top:10px;
   cursor:pointer;
 }
-.smallbtn{
-  background:#999;
-  color:#fff;
-  border:none;
-  padding:6px 14px;
-  border-radius:6px;
-  margin-top:8px;
-  cursor:pointer;
-}
 
-/* ✅ fix für mehrzeiligen Text */
+/* ✅ Mehrzeilig-Fix */
 #printMaengel{
   white-space: pre-wrap;
-  border:1px solid #cfcfcf;
+  border:1px solid #ccc;
   padding:8px;
   border-radius:6px;
   display:none;
-  min-height:70px;
 }
 
 /* ✅ Bilder */
@@ -88,8 +78,8 @@ button.share{
   width:100%;
   max-height:140px;
   object-fit:cover;
-  margin-top:6px;
   border-radius:8px;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -102,9 +92,30 @@ button.share{
 <div id="page1">
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
-<input id="kundeInput" placeholder="Kunde">
-<input placeholder="Adresse">
-<input placeholder="Telefon / E-Mail">
+
+<label>Kunde</label>
+<input id="kundeInput">
+
+<label>Adresse</label>
+<input>
+
+<label>Telefon / E-Mail</label>
+<input>
+
+<div class="row">
+  <div>
+    <label>Auftragsnr.</label>
+    <input>
+  </div>
+  <div>
+    <label>Montagedatum</label>
+    <input type="date">
+  </div>
+</div>
+
+<label>Objektadresse</label>
+<input>
+
 </fieldset>
 </div>
 
@@ -116,7 +127,6 @@ button.share{
 <textarea id="maengelInput"></textarea>
 <div id="printMaengel"></div>
 
-<!-- 📸 FOTO -->
 <label>📸 Fotos</label>
 <input type="file" accept="image/*" capture="environment" multiple onchange="handleImages(event)">
 <div id="preview"></div>
@@ -127,10 +137,14 @@ button.share{
 <!-- Seite 3 -->
 <div id="signSection">
 <fieldset>
-<legend>✍️ Unterschrift</legend>
+<legend>✍️ 6. Unterschriften</legend>
 
+<label>Unterschrift Auftraggeber</label>
 <canvas id="sig"></canvas>
-<button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
+
+<label>Unterschrift Auftragnehmer</label>
+<img src="images/unterschrift_auftragnehmer.jpg"
+     style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;border-radius:8px">
 
 </fieldset>
 </div>
@@ -143,10 +157,14 @@ button.share{
 <script>
 let imageDataList = [];
 
-// 📸 Bilder laden
+// 📸 Bilder sauber laden (kein doppelt!)
 function handleImages(event){
-  const files = event.target.files;
+  imageDataList = []; // ✅ reset verhindert doppelte
+
   const preview = document.getElementById("preview");
+  preview.innerHTML = ""; // ✅ reset
+
+  const files = event.target.files;
 
   for(let file of files){
     const reader = new FileReader();
@@ -173,10 +191,9 @@ function resizeCanvas(){
 }
 resizeCanvas();
 
-// PDF bauen (ZENTRALE FUNKTION)
+// PDF BUILD
 async function buildPDF(){
 
-  // ✅ FIX Mehrzeilig
   const input=document.getElementById("maengelInput");
   const print=document.getElementById("printMaengel");
 
@@ -198,30 +215,29 @@ async function buildPDF(){
   const c2=await html2canvas(p2,{scale:2});
   pdf.addImage(c2.toDataURL(),"JPEG",10,10,190,c2.height*190/c2.width);
 
-  // ✅ Bilder ins PDF
-  for(let img of imageDataList){
+  // 📸 Bilder einfügen
+  imageDataList.forEach(img=>{
     pdf.addPage();
     pdf.addImage(img,"JPEG",10,10,190,120);
-  }
+  });
 
   pdf.addPage();
   const c3=await html2canvas(p3,{scale:2});
   pdf.addImage(c3.toDataURL(),"JPEG",10,10,190,c3.height*190/c3.width);
 
-  // zurücksetzen
   input.style.display="block";
   print.style.display="none";
 
   return pdf;
 }
 
-// PDF speichern
+// Speichern
 async function generatePDF(){
   const pdf = await buildPDF();
   pdf.save("Bauabnahmeprotokoll.pdf");
 }
 
-// 📤 TEILEN
+// Teilen
 async function sharePDF(){
   const pdf = await buildPDF();
 
@@ -230,7 +246,6 @@ async function sharePDF(){
 
   if(navigator.share){
     await navigator.share({
-      title: "Bauabnahmeprotokoll",
       files: [file]
     });
   } else {
