@@ -5,81 +5,132 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
+<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Segoe UI,Arial;background:#f3f4f6;margin:0}
+body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
 .container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
 h2{margin-top:0}
 
-fieldset{border:none;padding:16px 0 22px;margin-bottom:18px;border-bottom:1px solid #ddd}
-legend{font-weight:600;color:#0a3d62}
+fieldset{border:none;padding:16px 0 22px;margin-bottom:18px;border-bottom:1px solid #e3e3e3}
+legend{font-weight:600;color:#0a3d62;font-size:16px}
+label{display:block;margin-top:8px;font-size:14px}
 
 input,select,textarea{
   width:100%;
-  padding:6px;
+  padding:5px 8px;
+  height:30px;
+  line-height:18px;
+  box-sizing:border-box;
   border-radius:6px;
-  border:1px solid #ccc;
+  border:1px solid #cfcfcf;
+  font-size:14px;
 }
+input[type="date"]{height:28px}
+textarea{min-height:70px;height:auto}
 
-textarea{min-height:70px}
 .row{display:flex;gap:10px}
 .row div{flex:1}
 
-canvas{width:100%;height:140px;border:2px dashed #0a3d62;border-radius:8px}
+canvas{
+  width:100%;
+  height:140px;
+  border:2px dashed #0a3d62;
+  border-radius:8px;
+}
 
-button{margin-top:10px;padding:12px;border:none;border-radius:10px;cursor:pointer}
-.main{background:#0a3d62;color:#fff;width:100%}
-.share{background:#28a745;color:#fff;width:100%}
+button.main{
+  background:#0a3d62;
+  color:#fff;
+  padding:14px;
+  border:none;
+  font-size:16px;
+  border-radius:10px;
+  width:100%;
+  cursor:pointer;
+}
+button.share{
+  background:#28a745;
+  color:#fff;
+  padding:14px;
+  border:none;
+  font-size:16px;
+  border-radius:10px;
+  width:100%;
+  margin-top:10px;
+  cursor:pointer;
+}
+.smallbtn{
+  background:#999;
+  color:#fff;
+  border:none;
+  padding:6px 14px;
+  border-radius:6px;
+  margin-top:8px;
+  cursor:pointer;
+}
 
-#printMaengel{white-space:pre-wrap;border:1px solid #ccc;padding:8px;border-radius:6px;display:none}
+/* ✅ fix für mehrzeiligen Text */
+#printMaengel{
+  white-space: pre-wrap;
+  border:1px solid #cfcfcf;
+  padding:8px;
+  border-radius:6px;
+  display:none;
+  min-height:70px;
+}
 
-/* Bilder */
+/* ✅ Bilder */
 #preview img{
   width:100%;
-  max-height:150px;
+  max-height:140px;
   object-fit:cover;
-  border-radius:8px;
   margin-top:6px;
+  border-radius:8px;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
+<h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<h2>🔧 Bauabnahmeprotokoll</h2>
-
+<!-- Seite 1 -->
 <div id="page1">
 <fieldset>
-<legend>Kunde</legend>
-<input id="kundeInput">
+<legend>👤 1. Projekt- und Kundendaten</legend>
+<input id="kundeInput" placeholder="Kunde">
+<input placeholder="Adresse">
+<input placeholder="Telefon / E-Mail">
 </fieldset>
 </div>
 
+<!-- Seite 2 -->
 <div id="page2">
 <fieldset>
-<legend>⚠️ Mängel</legend>
+<legend>⚠️ 4. Dokumentierte Mängel</legend>
 
 <textarea id="maengelInput"></textarea>
 <div id="printMaengel"></div>
 
 <!-- 📸 FOTO -->
-<label>📸 Fotos aufnehmen</label>
+<label>📸 Fotos</label>
 <input type="file" accept="image/*" capture="environment" multiple onchange="handleImages(event)">
 <div id="preview"></div>
 
 </fieldset>
 </div>
 
+<!-- Seite 3 -->
 <div id="signSection">
 <fieldset>
-<legend>Unterschrift</legend>
+<legend>✍️ Unterschrift</legend>
 
 <canvas id="sig"></canvas>
-<button onclick="signaturePad.clear()">Löschen</button>
+<button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
 
 </fieldset>
 </div>
@@ -92,6 +143,7 @@ button{margin-top:10px;padding:12px;border:none;border-radius:10px;cursor:pointe
 <script>
 let imageDataList = [];
 
+// 📸 Bilder laden
 function handleImages(event){
   const files = event.target.files;
   const preview = document.getElementById("preview");
@@ -110,77 +162,79 @@ function handleImages(event){
 }
 
 // SIGNATUR
-const sigCanvas = document.getElementById("sig");
-const signaturePad = new SignaturePad(sigCanvas,{backgroundColor:"white"});
+const sigCanvas=document.getElementById("sig");
+const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
 
 function resizeCanvas(){
-  const ratio = Math.max(window.devicePixelRatio||1,1);
-  sigCanvas.width = sigCanvas.offsetWidth*ratio;
-  sigCanvas.height = sigCanvas.offsetHeight*ratio;
-  sigCanvas.getContext("2d").setTransform(ratio,0,0,ratio,0,0);
+  const r=Math.max(window.devicePixelRatio||1,1);
+  sigCanvas.width=sigCanvas.offsetWidth*r;
+  sigCanvas.height=sigCanvas.offsetHeight*r;
+  sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
 }
 resizeCanvas();
 
-// PDF ERSTELLEN
+// PDF bauen (ZENTRALE FUNKTION)
 async function buildPDF(){
 
-  const input = document.getElementById("maengelInput");
-  const print = document.getElementById("printMaengel");
+  // ✅ FIX Mehrzeilig
+  const input=document.getElementById("maengelInput");
+  const print=document.getElementById("printMaengel");
 
-  print.innerText = input.value;
-  print.style.display = "block";
-  input.style.display = "none";
+  print.innerText=input.value;
+  print.style.display="block";
+  input.style.display="none";
 
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
+  const pdf=new jsPDF("p","mm","a4");
 
   const p1=document.getElementById("page1");
   const p2=document.getElementById("page2");
   const p3=document.getElementById("signSection");
 
-  const c1 = await html2canvas(p1,{scale:2});
+  const c1=await html2canvas(p1,{scale:2});
   pdf.addImage(c1.toDataURL(),"JPEG",10,10,190,c1.height*190/c1.width);
 
   pdf.addPage();
-  const c2 = await html2canvas(p2,{scale:2});
+  const c2=await html2canvas(p2,{scale:2});
   pdf.addImage(c2.toDataURL(),"JPEG",10,10,190,c2.height*190/c2.width);
 
-  // 📸 Bilder extra Seiten
+  // ✅ Bilder ins PDF
   for(let img of imageDataList){
     pdf.addPage();
     pdf.addImage(img,"JPEG",10,10,190,120);
   }
 
   pdf.addPage();
-  const c3 = await html2canvas(p3,{scale:2});
+  const c3=await html2canvas(p3,{scale:2});
   pdf.addImage(c3.toDataURL(),"JPEG",10,10,190,c3.height*190/c3.width);
 
-  input.style.display = "block";
-  print.style.display = "none";
+  // zurücksetzen
+  input.style.display="block";
+  print.style.display="none";
 
   return pdf;
 }
 
-// PDF speichern Button
+// PDF speichern
 async function generatePDF(){
   const pdf = await buildPDF();
   pdf.save("Bauabnahmeprotokoll.pdf");
 }
 
-// 📤 TEILEN (WhatsApp etc.)
+// 📤 TEILEN
 async function sharePDF(){
   const pdf = await buildPDF();
 
   const blob = pdf.output("blob");
-  const file = new File([blob], "Bauabnahme.pdf", { type: "application/pdf" });
+  const file = new File([blob], "Bauabnahmeprotokoll.pdf", { type: "application/pdf" });
 
   if(navigator.share){
-    navigator.share({
+    await navigator.share({
       title: "Bauabnahmeprotokoll",
       files: [file]
     });
   } else {
-    alert("Teilen wird auf diesem Gerät nicht unterstützt");
+    alert("Teilen nicht unterstützt");
   }
 }
 </script>
