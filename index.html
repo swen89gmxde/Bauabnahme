@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bauabnahmeprotokoll</title>
 
-<!-- ✅ WICHTIG: KORREKTE SCRIPT TAGS -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -72,7 +71,6 @@ button.share{
   cursor:pointer;
 }
 
-/* FIX mehrzeilig */
 #printMaengel{
   white-space: pre-wrap;
   display:none;
@@ -81,7 +79,6 @@ button.share{
   border-radius:6px;
 }
 
-/* Bilder */
 #preview img{
   width:100%;
   max-height:140px;
@@ -96,7 +93,6 @@ button.share{
 <div class="container">
 <h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<!-- SEITE 1 -->
 <div id="page1">
 <fieldset>
 <legend>👤 1. Projekt- und Kundendaten</legend>
@@ -132,7 +128,6 @@ button.share{
 </fieldset>
 </div>
 
-<!-- SEITE 2 -->
 <div id="page2">
 <fieldset>
 <legend>✅ 3. Prüfung</legend>
@@ -165,7 +160,6 @@ button.share{
 </fieldset>
 </div>
 
-<!-- SEITE 3 -->
 <div id="signSection" style="padding-bottom:30mm">
 <fieldset>
 <legend>✍️ 6. Unterschriften</legend>
@@ -193,7 +187,7 @@ button.share{
 <script>
 let imageDataList=[];
 
-// Bilder laden (ohne doppelte)
+// ✅ Bilder KOMPRIMIEREN beim Laden
 function handleImages(event){
   imageDataList=[];
   const preview=document.getElementById("preview");
@@ -202,11 +196,28 @@ function handleImages(event){
   for(let file of event.target.files){
     const reader=new FileReader();
     reader.onload=function(e){
-      imageDataList.push(e.target.result);
 
-      const img=document.createElement("img");
+      const img=new Image();
+      img.onload=function(){
+        const canvas=document.createElement("canvas");
+        const ctx=canvas.getContext("2d");
+
+        const maxWidth=1200;
+        const scale=Math.min(maxWidth/img.width,1);
+
+        canvas.width=img.width*scale;
+        canvas.height=img.height*scale;
+
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+        const compressed=canvas.toDataURL("image/jpeg",0.6);
+        imageDataList.push(compressed);
+
+        const previewImg=document.createElement("img");
+        previewImg.src=compressed;
+        preview.appendChild(previewImg);
+      }
       img.src=e.target.result;
-      preview.appendChild(img);
     }
     reader.readAsDataURL(file);
   }
@@ -228,7 +239,7 @@ resizeCanvas();
 async function buildPDF(){
 
   const preview = document.getElementById("preview");
-  preview.style.display = "none"; // ✅ verhindert doppelte Bilder
+  preview.style.display = "none";
 
   const input=document.getElementById("maengelInput");
   const print=document.getElementById("printMaengel");
@@ -239,24 +250,22 @@ async function buildPDF(){
   const { jsPDF }=window.jspdf;
   const pdf=new jsPDF("p","mm","a4");
 
-  const c1=await html2canvas(page1,{scale:2});
-  pdf.addImage(c1.toDataURL(),"JPEG",10,10,190,c1.height*190/c1.width);
+  const c1=await html2canvas(page1,{scale:1});
+  pdf.addImage(c1.toDataURL("image/jpeg",0.6),"JPEG",10,10,190,c1.height*190/c1.width,null,"FAST");
 
   pdf.addPage();
-  const c2=await html2canvas(page2,{scale:2});
-  pdf.addImage(c2.toDataURL(),"JPEG",10,10,190,c2.height*190/c2.width);
+  const c2=await html2canvas(page2,{scale:1});
+  pdf.addImage(c2.toDataURL("image/jpeg",0.6),"JPEG",10,10,190,c2.height*190/c2.width,null,"FAST");
 
-  // ✅ Bilder extra Seiten
   imageDataList.forEach(img=>{
     pdf.addPage();
-    pdf.addImage(img,"JPEG",10,10,190,120);
+    pdf.addImage(img,"JPEG",10,10,190,120,null,"FAST");
   });
 
   pdf.addPage();
-  const c3=await html2canvas(signSection,{scale:2});
-  pdf.addImage(c3.toDataURL(),"JPEG",10,10,190,c3.height*190/c3.width);
+  const c3=await html2canvas(signSection,{scale:1});
+  pdf.addImage(c3.toDataURL("image/jpeg",0.6),"JPEG",10,10,190,c3.height*190/c3.width,null,"FAST");
 
-  // zurücksetzen
   preview.style.display = "block";
   input.style.display="block";
   print.style.display="none";
@@ -268,10 +277,8 @@ async function buildPDF(){
 async function generatePDF(){
   const pdf=await buildPDF();
   const name = document.getElementById("kundeInput").value.trim();
-const safe = name ? name.replace(/[^a-z0-9]/gi, "_") : "Unbekannt";
-
-pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
-``
+  const safe = name ? name.replace(/[^a-z0-9]/gi, "_") : "Unbekannt";
+  pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
 }
 
 // teilen
