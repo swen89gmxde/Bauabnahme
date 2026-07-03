@@ -3,294 +3,1218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bauabnahmeprotokoll</title>
+<title>Bauabnahmeprotokoll Sichtwerk</title>
 
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;margin:0}
-.container{max-width:800px;margin:20px auto;background:#fff;padding:26px;border-radius:14px}
-h2{margin-top:0}
-
-fieldset{border:none;padding:16px 0 22px;margin-bottom:18px;border-bottom:1px solid #e3e3e3}
-legend{font-weight:600;color:#0a3d62;font-size:16px}
-label{display:block;margin-top:8px;font-size:14px}
-
-input,select,textarea{
-  width:100%;
-  padding:5px 8px;
-  height:30px;
-  line-height:18px;
-  box-sizing:border-box;
-  border-radius:6px;
-  border:1px solid #cfcfcf;
-  font-size:14px;
-}
-input[type="date"]{height:28px}
-textarea{min-height:70px;height:auto}
-
-.row{display:flex;gap:12px}
-.row div{flex:1}
-
-canvas{
-  width:100%;
-  height:140px;
-  border:2px dashed #0a3d62;
-  border-radius:8px;
+:root {
+  --primary: #1f2937;
+  --muted: #6b7280;
+  --accent: #0a3d62;
+  --accent-2: #1f78b4;
+  --success: #198754;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --border: #d1d5db;
+  --soft: #eef6fb;
 }
 
-button.main{
-  background:#0a3d62;
-  color:#fff;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  width:100%;
-  cursor:pointer;
-}
-button.share{
-  background:#28a745;
-  color:#fff;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  width:100%;
-  margin-top:10px;
-  cursor:pointer;
+* {
+  box-sizing: border-box;
 }
 
-.smallbtn{
-  background:#999;
-  color:#fff;
-  border:none;
-  padding:6px 14px;
-  border-radius:6px;
-  margin-top:8px;
-  cursor:pointer;
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--primary);
+  margin: 0;
+  padding: 18px;
 }
 
-#printMaengel{
-  white-space: pre-wrap;
-  display:none;
-  border:1px solid #ccc;
-  padding:8px;
-  border-radius:6px;
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--card);
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
 }
 
-#preview img{
-  width:100%;
-  max-height:140px;
-  object-fit:cover;
-  margin-top:6px;
-  border-radius:8px;
+.header {
+  border-bottom: 4px solid var(--accent);
+  padding-bottom: 16px;
+  margin-bottom: 22px;
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 28px;
+}
+
+.header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.info-box {
+  background: var(--soft);
+  border-left: 4px solid var(--accent);
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 18px 0 24px;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+fieldset {
+  border: none;
+  padding: 18px 0 24px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+legend {
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+label {
+  display: block;
+  margin-top: 13px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 11px;
+  margin-top: 6px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+  background: #fff;
+}
+
+textarea {
+  min-height: 95px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.three-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+.check-area {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 14px;
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 10px 0;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.check-row input {
+  width: auto;
+  margin-top: 3px;
+}
+
+.status-hint {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.status-hint strong {
+  color: var(--accent);
+}
+
+.signature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.signature-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+}
+
+.signature-card strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.canvas-wrap {
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 180px;
+  background: white;
+  touch-action: none;
+}
+
+.signature-hint {
+  padding: 8px 10px;
+  border-top: 1px solid #e5e7eb;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.contractor-signature {
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+#preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.preview-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fff;
+}
+
+.preview-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.preview-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.preview-item button {
+  margin-top: 8px;
+  width: 100%;
+  padding: 7px;
+  font-size: 13px;
+  border-radius: 7px;
+  background: #9ca3af;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  font-weight: 750;
+  border-radius: 10px;
+}
+
+button.main {
+  background: var(--accent);
+  color: #fff;
+  padding: 14px;
+  width: 100%;
+  font-size: 16px;
+  margin-top: 18px;
+}
+
+button.main:hover {
+  background: #072f4d;
+}
+
+button.share {
+  background: var(--success);
+  color: #fff;
+  padding: 14px;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+button.secondary,
+button.smallbtn {
+  background: #6b7280;
+  color: #fff;
+  padding: 9px 14px;
+  margin-top: 10px;
+}
+
+button.danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.footer-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 18px;
+}
+
+.required {
+  color: var(--danger);
+}
+
+@media (max-width: 760px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 20px;
+  }
+
+  .row,
+  .three-row,
+  .signature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header h1 {
+    font-size: 23px;
+  }
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-<h2>🔧 Bauabnahmeprotokoll Sichtwerk</h2>
 
-<div id="page1">
-<fieldset>
-<legend>👤 1. Projekt- und Kundendaten</legend>
+  <div class="header">
+    <h1>🔧 Bauabnahmeprotokoll Sichtwerk</h1>
+    <p>Dokumentation der Abnahme, Mängel, Vorbehalte und Fotodokumentation</p>
+  </div>
 
-<label>Kunde</label>
-<input id="kundeInput">
+  <div class="info-box">
+    Dieses Protokoll dokumentiert die Besichtigung der ausgeführten Leistung. Je nach ausgewähltem
+    Abnahmestatus dient es als Abnahmeprotokoll, Abnahme unter Vorbehalt oder als Zustands- und
+    Mängeldokumentation bei verweigerter Abnahme. Gesetzliche Mängelrechte bleiben unberührt.
+  </div>
 
-<label>Adresse</label>
-<input>
+  <fieldset>
+    <legend>👤 1. Projekt- und Kundendaten</legend>
 
-<label>Telefon / E-Mail</label>
-<input>
+    <div class="row">
+      <div>
+        <label for="kundeInput">Kunde / Auftraggeber <span class="required">*</span></label>
+        <input id="kundeInput" autocomplete="name" placeholder="Name des Kunden">
+      </div>
 
-<div class="row">
-  <div><label>Auftragsnr.</label><input></div>
-  <div><label>Montagedatum</label><input type="date"></div>
-</div>
+      <div>
+        <label for="auftragnehmer">Auftragnehmer</label>
+        <input id="auftragnehmer" value="Sichtwerk – Neubauer">
+      </div>
+    </div>
 
-<label>Objektadresse</label>
-<input>
-</fieldset>
+    <label for="adresse">Adresse Kunde</label>
+    <input id="adresse" placeholder="Straße, Hausnummer, PLZ, Ort">
 
-<fieldset>
-<legend>🛠️ 2. Leistungsbeschreibung</legend>
-<select>
-  <option>Fenster</option>
-  <option>Türen</option>
-  <option>Fenster & Türen</option>
-  <option>Fenster & Rollos</option>
-  <option>Rollos</option>
-  <option>Nachjustierung</option>
-</select>
-</fieldset>
-</div>
+    <label for="kontakt">Telefon / E-Mail</label>
+    <input id="kontakt" placeholder="Telefonnummer oder E-Mail">
 
-<div id="page2">
-<fieldset>
-<legend>✅ 3. Prüfung</legend>
-<select>
-  <option>Ja</option>
-  <option>Nein</option>
-  <option>Teilweise</option>
-</select>
-</fieldset>
+    <div class="row">
+      <div>
+        <label for="auftrag">Auftragsnr. / Angebotsnr.</label>
+        <input id="auftrag" placeholder="z. B. 2026-001">
+      </div>
 
-<fieldset>
-<legend>⚠️ 4. Dokumentierte Mängel</legend>
+      <div>
+        <label for="montagedatum">Montagedatum</label>
+        <input id="montagedatum" type="date">
+      </div>
+    </div>
 
-<textarea id="maengelInput"></textarea>
-<div id="printMaengel"></div>
+    <label for="objektadresse">Objektadresse <span class="required">*</span></label>
+    <input id="objektadresse" placeholder="Adresse des Bauvorhabens">
+  </fieldset>
 
-<label>📸 Fotos</label>
-<input type="file" accept="image/*" capture="environment" multiple onchange="handleImages(event)">
-<div id="preview"></div>
+  <fieldset>
+    <legend>🛠️ 2. Leistungsbeschreibung</legend>
 
-</fieldset>
+    <div class="row">
+      <div>
+        <label for="leistung">Ausgeführte Leistung</label>
+        <select id="leistung">
+          <option>Fenster</option>
+          <option>Türen</option>
+          <option>Fenster & Türen</option>
+          <option>Fenster & Rollos</option>
+          <option>Rollos</option>
+          <option>Nachjustierung / Service</option>
+          <option>Sonstige Leistung</option>
+        </select>
+      </div>
 
-<fieldset>
-<legend>📄 5. Abnahme</legend>
-<select>
-  <option>Ohne Vorbehalt</option>
-  <option>Unter Vorbehalt</option>
-  <option>Abnahme verweigert</option>
-</select>
-</fieldset>
-</div>
+      <div>
+        <label for="vertragsgrundlage">Vertragsgrundlage</label>
+        <select id="vertragsgrundlage">
+          <option>BGB-Werkvertrag</option>
+          <option>VOB/B, sofern wirksam vereinbart</option>
+          <option>Nicht angegeben</option>
+        </select>
+      </div>
+    </div>
 
-<div id="signSection" style="padding-bottom:30mm">
-<fieldset>
-<legend>✍️ 6. Unterschriften</legend>
+    <label for="leistungsumfang">Kurzbeschreibung der ausgeführten Arbeiten</label>
+    <textarea id="leistungsumfang" placeholder="z. B. Lieferung und Montage von Fenstern / Türen, Abdichtung, Einstellarbeiten, Zubehör"></textarea>
+  </fieldset>
 
-<div class="row">
-  <div><label>Ort</label><input></div>
-  <div><label>Datum</label><input type="date"></div>
-</div>
+  <fieldset>
+    <legend>✅ 3. Prüfung der Leistung</legend>
 
-<label>Unterschrift Auftraggeber</label>
-<canvas id="sig"></canvas>
-<button type="button" class="smallbtn" onclick="signaturePad.clear()">Löschen</button>
+    <div class="three-row">
+      <div>
+        <label for="sichtpruefung">Sichtprüfung</label>
+        <select id="sichtpruefung">
+          <option>Ohne erkennbare Beanstandung</option>
+          <option>Mit Beanstandung</option>
+          <option>Nicht geprüft</option>
+        </select>
+      </div>
 
-<label>Unterschrift Auftragnehmer</label>
-<img src="images/unterschrift_auftragnehmer.jpg.jpg" style="width:100%;max-height:140px;object-fit:contain;border:2px dashed #0a3d62;border-radius:8px">
+      <div>
+        <label for="funktion">Funktionsprüfung</label>
+        <select id="funktion">
+          <option>Ohne erkennbare Beanstandung</option>
+          <option>Mit Beanstandung</option>
+          <option>Nicht geprüft</option>
+        </select>
+      </div>
 
-</fieldset>
-</div>
+      <div>
+        <label for="einweisung">Einweisung / Hinweise</label>
+        <select id="einweisung">
+          <option>Erfolgt</option>
+          <option>Nicht erforderlich</option>
+          <option>Noch offen</option>
+        </select>
+      </div>
+    </div>
 
-<button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
-<button class="share" onclick="sharePDF()">📤 Teilen</button>
+    <div class="check-area">
+      <label class="check-row">
+        <input type="checkbox" id="checkBesichtigt">
+        <span>Die ausgeführten Leistungen wurden gemeinsam besichtigt.</span>
+      </label>
+
+      <label class="check-row">
+        <input type="checkbox" id="checkBedienung">
+        <span>Der Auftraggeber wurde, soweit erforderlich, in Bedienung, Pflege und übliche Nutzung eingewiesen.</span>
+      </label>
+
+      <label class="check-row">
+        <input type="checkbox" id="checkDokumentation">
+        <span>Bekannte Beanstandungen, Restarbeiten oder Vorbehalte sind in diesem Protokoll dokumentiert.</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>⚠️ 4. Dokumentierte Mängel / Restarbeiten / Vorbehalte</legend>
+
+    <label for="maengelInput">Beschreibung</label>
+    <textarea id="maengelInput" placeholder="Keine Mängel festgestellt oder konkrete Mängel / Restarbeiten eintragen."></textarea>
+
+    <label for="frist">Frist / Vereinbarung zur Mängelbeseitigung optional</label>
+    <input id="frist" placeholder="z. B. Nachbesserung bis zum ... / wird separat abgestimmt">
+
+    <label>📸 Fotos zur Dokumentation</label>
+    <input id="fotoInput" type="file" accept="image/*" capture="environment" multiple onchange="handleImages(event)">
+
+    <div class="photo-actions">
+      <button type="button" class="secondary" onclick="clearImages()">Fotos entfernen</button>
+    </div>
+
+    <div id="preview"></div>
+
+    <p class="footer-note">
+      Bilder werden beim Laden automatisch verkleinert und komprimiert, damit das PDF nicht unnötig groß wird.
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>📄 5. Abnahmeerklärung</legend>
+
+    <label for="abnahmeStatus">Abnahmestatus <span class="required">*</span></label>
+    <select id="abnahmeStatus" onchange="updateStatusHint()">
+      <option>Ohne Vorbehalt</option>
+      <option>Unter Vorbehalt der dokumentierten Mängel / Restarbeiten</option>
+      <option>Abnahme verweigert wegen dokumentierter Mängel</option>
+    </select>
+
+    <div id="statusHint" class="status-hint"></div>
+
+    <label for="abnahmeText">Ergänzende Erklärung optional</label>
+    <textarea id="abnahmeText" placeholder="z. B. Vertragsstrafe vorbehalten, falls vereinbart / Nutzung ab Datum / gesonderte Vereinbarungen"></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>✍️ 6. Unterschriften</legend>
+
+    <div class="row">
+      <div>
+        <label for="ort">Ort <span class="required">*</span></label>
+        <input id="ort" placeholder="Ort">
+      </div>
+
+      <div>
+        <label for="datum">Datum <span class="required">*</span></label>
+        <input id="datum" type="date">
+      </div>
+    </div>
+
+    <div class="signature-grid">
+      <div class="signature-card">
+        <strong>Unterschrift Auftraggeber</strong>
+        <div class="canvas-wrap">
+          <canvas id="sig"></canvas>
+          <div class="signature-hint">Bitte im weißen Feld unterschreiben.</div>
+        </div>
+        <button type="button" class="smallbtn" onclick="clearSignature()">Unterschrift löschen</button>
+      </div>
+
+      <div class="signature-card">
+        <strong>Unterschrift Auftragnehmer</strong>
+        <img id="contractorSignatureImage" class="contractor-signature" src="images/unterschrift_auftragnehmer.jpg.jpg" alt="Unterschrift Auftragnehmer">
+      </div>
+    </div>
+  </fieldset>
+
+  <button class="main" onclick="generatePDF()">📄 PDF erstellen</button>
+  <button class="share" onclick="sharePDF()">📤 PDF teilen</button>
+
+  <p class="footer-note">
+    Hinweis: Diese Vorlage dient der Dokumentation und ersetzt keine individuelle Rechtsberatung.
+    Die Wirksamkeit einzelner Regelungen hängt vom Vertrag und vom Einzelfall ab.
+  </p>
 
 </div>
 
 <script>
-let imageDataList=[];
+const CONTRACTOR_SIGNATURE_SRC = "images/unterschrift_auftragnehmer.jpg.jpg";
 
-// ✅ Bilder KOMPRIMIEREN beim Laden
-function handleImages(event){
-  imageDataList=[];
-  const preview=document.getElementById("preview");
-  preview.innerHTML="";
+const IMAGE_MAX_DIMENSION = 1400;
+const IMAGE_QUALITY = 0.55;
 
-  for(let file of event.target.files){
-    const reader=new FileReader();
-    reader.onload=function(e){
+let imageDataList = [];
+let signaturePad;
 
-      const img=new Image();
-      img.onload=function(){
-        const canvas=document.createElement("canvas");
-        const ctx=canvas.getContext("2d");
+const sigCanvas = document.getElementById("sig");
+const datumInput = document.getElementById("datum");
+const montagedatumInput = document.getElementById("montagedatum");
 
-        const maxWidth=1200;
-        const scale=Math.min(maxWidth/img.width,1);
+datumInput.value = new Date().toISOString().split("T")[0];
+montagedatumInput.value = new Date().toISOString().split("T")[0];
 
-        canvas.width=img.width*scale;
-        canvas.height=img.height*scale;
+function getValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
 
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+function isChecked(id) {
+  const el = document.getElementById(id);
+  return el ? el.checked : false;
+}
 
-        const compressed=canvas.toDataURL("image/jpeg",0.6);
-        imageDataList.push(compressed);
+function formatDateGerman(dateValue) {
+  if (!dateValue) return "-";
+  const parts = dateValue.split("-");
+  if (parts.length !== 3) return dateValue;
+  return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
 
-        const previewImg=document.createElement("img");
-        previewImg.src=compressed;
-        preview.appendChild(previewImg);
-      }
-      img.src=e.target.result;
-    }
-    reader.readAsDataURL(file);
+function safeFileName(value) {
+  return String(value || "Kunde")
+    .trim()
+    .replace(/[^\wäöüÄÖÜß-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function cleanPdfText(text) {
+  return String(text || "")
+    .replace(/–/g, "-")
+    .replace(/-/g, "-")
+    .replace(/“|”/g, '"')
+    .replace(/’/g, "'")
+    .replace(/\u00A0/g, " ");
+}
+
+function updateStatusHint() {
+  const status = getValue("abnahmeStatus");
+  const hint = document.getElementById("statusHint");
+
+  if (status === "Ohne Vorbehalt") {
+    hint.innerHTML = "<strong>Ohne Vorbehalt:</strong> Die Leistung wird als im Wesentlichen vertragsgerecht abgenommen. Gesetzliche Mängelrechte wegen nicht erkannter oder verdeckter Mängel bleiben unberührt.";
+  } else if (status === "Unter Vorbehalt der dokumentierten Mängel / Restarbeiten") {
+    hint.innerHTML = "<strong>Unter Vorbehalt:</strong> Die Abnahme erfolgt, jedoch ausdrücklich unter Vorbehalt der in diesem Protokoll dokumentierten Mängel, Restarbeiten und Rechte.";
+  } else {
+    hint.innerHTML = "<strong>Abnahme verweigert:</strong> Es erfolgt keine Abnahme. Dieses Dokument dient dann als Zustands- und Mängeldokumentation. Die Gründe müssen im Mängelfeld beschrieben werden.";
   }
 }
 
-// SIGNATUR
-const sigCanvas=document.getElementById("sig");
-const signaturePad=new SignaturePad(sigCanvas,{backgroundColor:"white"});
+updateStatusHint();
 
-function resizeCanvas(){
-  const r=Math.max(window.devicePixelRatio||1,1);
-  sigCanvas.width=sigCanvas.offsetWidth*r;
-  sigCanvas.height=sigCanvas.offsetHeight*r;
-  sigCanvas.getContext("2d").setTransform(r,0,0,r,0,0);
+function resizeSignatureCanvas() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const rect = sigCanvas.getBoundingClientRect();
+
+  sigCanvas.width = Math.round(rect.width * ratio);
+  sigCanvas.height = Math.round(rect.height * ratio);
+
+  const ctx = sigCanvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  if (signaturePad) {
+    signaturePad.clear();
+  }
 }
-resizeCanvas();
 
-// PDF erstellen
-async function buildPDF(){
+function initSignaturePad() {
+  resizeSignatureCanvas();
 
-  const preview = document.getElementById("preview");
-  preview.style.display = "none";
-
-  const input=document.getElementById("maengelInput");
-  const print=document.getElementById("printMaengel");
-  print.innerText=input.value;
-  print.style.display="block";
-  input.style.display="none";
-
-  const { jsPDF }=window.jspdf;
-  const pdf=new jsPDF("p","mm","a4");
-
-  const c1=await html2canvas(page1,{scale:1});
-  pdf.addImage(c1.toDataURL("image/jpeg",0.6),"JPEG",10,10,190,c1.height*190/c1.width,null,"FAST");
-
-  pdf.addPage();
-  const c2=await html2canvas(page2,{scale:1});
-  pdf.addImage(c2.toDataURL("image/jpeg",0.6),"JPEG",10,10,190,c2.height*190/c2.width,null,"FAST");
-
-  imageDataList.forEach(img=>{
-    pdf.addPage();
-    pdf.addImage(img,"JPEG",10,10,190,120,null,"FAST");
+  signaturePad = new SignaturePad(sigCanvas, {
+    backgroundColor: "rgb(255,255,255)",
+    penColor: "rgb(17,24,39)",
+    minWidth: 0.8,
+    maxWidth: 2.5,
+    throttle: 16
   });
 
-  pdf.addPage();
-  const c3=await html2canvas(signSection,{scale:1});
-  pdf.addImage(c3.toDataURL("image/jpeg",0.6),"JPEG",10,10,190,c3.height*190/c3.width,null,"FAST");
+  sigCanvas.addEventListener("touchstart", function(e) {
+    e.preventDefault();
+  }, { passive: false });
 
-  preview.style.display = "block";
-  input.style.display="block";
-  print.style.display="none";
+  sigCanvas.addEventListener("touchmove", function(e) {
+    e.preventDefault();
+  }, { passive: false });
+}
+
+function clearSignature() {
+  if (signaturePad) {
+    signaturePad.clear();
+  }
+}
+
+let resizeTimer;
+window.addEventListener("resize", function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resizeSignatureCanvas, 250);
+});
+
+window.addEventListener("load", initSignaturePad);
+
+function compressImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith("image/")) {
+      reject(new Error("Keine Bilddatei"));
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const img = new Image();
+
+      img.onload = function() {
+        const maxSide = Math.max(img.width, img.height);
+        const scale = Math.min(IMAGE_MAX_DIMENSION / maxSide, 1);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", IMAGE_QUALITY);
+
+        resolve({
+          name: file.name || "Foto",
+          dataUrl,
+          width: canvas.width,
+          height: canvas.height,
+          originalSize: file.size,
+          compressedSizeApprox: Math.round((dataUrl.length * 3) / 4)
+        });
+      };
+
+      img.onerror = function() {
+        reject(new Error("Bild konnte nicht geladen werden"));
+      };
+
+      img.src = e.target.result;
+    };
+
+    reader.onerror = function() {
+      reject(new Error("Datei konnte nicht gelesen werden"));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImages(event) {
+  const files = Array.from(event.target.files || []);
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+
+  for (const file of files) {
+    try {
+      const compressed = await compressImageFile(file);
+      imageDataList.push(compressed);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  renderPreview();
+}
+
+function renderPreview() {
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+
+  imageDataList.forEach((img, index) => {
+    const item = document.createElement("div");
+    item.className = "preview-item";
+
+    const image = document.createElement("img");
+    image.src = img.dataUrl;
+
+    const info = document.createElement("small");
+    const kb = Math.round(img.compressedSizeApprox / 1024);
+    info.textContent = `Foto ${index + 1} · ca. ${kb} KB`;
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "danger";
+    remove.textContent = "Entfernen";
+    remove.onclick = function() {
+      imageDataList.splice(index, 1);
+      renderPreview();
+    };
+
+    item.appendChild(image);
+    item.appendChild(info);
+    item.appendChild(remove);
+    preview.appendChild(item);
+  });
+}
+
+function clearImages() {
+  imageDataList = [];
+  document.getElementById("fotoInput").value = "";
+  renderPreview();
+}
+
+function imageToDataURL(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = function() {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.75));
+      } catch (e) {
+        resolve(null);
+      }
+    };
+
+    img.onerror = function() {
+      resolve(null);
+    };
+
+    img.src = src;
+  });
+}
+
+function collectData() {
+  return {
+    kunde: getValue("kundeInput"),
+    auftragnehmer: getValue("auftragnehmer") || "Sichtwerk - Neubauer",
+    adresse: getValue("adresse"),
+    kontakt: getValue("kontakt"),
+    auftrag: getValue("auftrag"),
+    montagedatum: formatDateGerman(getValue("montagedatum")),
+    objektadresse: getValue("objektadresse"),
+    leistung: getValue("leistung"),
+    vertragsgrundlage: getValue("vertragsgrundlage"),
+    leistungsumfang: getValue("leistungsumfang"),
+    sichtpruefung: getValue("sichtpruefung"),
+    funktion: getValue("funktion"),
+    einweisung: getValue("einweisung"),
+    checkBesichtigt: isChecked("checkBesichtigt"),
+    checkBedienung: isChecked("checkBedienung"),
+    checkDokumentation: isChecked("checkDokumentation"),
+    maengel: getValue("maengelInput"),
+    frist: getValue("frist"),
+    abnahmeStatus: getValue("abnahmeStatus"),
+    abnahmeText: getValue("abnahmeText"),
+    ort: getValue("ort"),
+    datum: formatDateGerman(getValue("datum"))
+  };
+}
+
+function validateForm(data) {
+  if (!data.kunde) {
+    alert("Bitte Kunde / Auftraggeber eintragen.");
+    return false;
+  }
+
+  if (!data.objektadresse) {
+    alert("Bitte Objektadresse eintragen.");
+    return false;
+  }
+
+  if (!data.ort) {
+    alert("Bitte Ort eintragen.");
+    return false;
+  }
+
+  if (!getValue("datum")) {
+    alert("Bitte Datum eintragen.");
+    return false;
+  }
+
+  if (!data.checkBesichtigt || !data.checkBedienung || !data.checkDokumentation) {
+    alert("Bitte die drei Bestätigungsfelder im Abschnitt Prüfung anhaken.");
+    return false;
+  }
+
+  if (data.abnahmeStatus === "Abnahme verweigert wegen dokumentierter Mängel" && !data.maengel) {
+    alert("Bei verweigerter Abnahme müssen die Mängel / Gründe dokumentiert werden.");
+    return false;
+  }
+
+  if (!signaturePad || signaturePad.isEmpty()) {
+    alert("Bitte Auftraggeber unterschreiben lassen.");
+    return false;
+  }
+
+  return true;
+}
+
+function createPdfHelpers(pdf) {
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 16;
+  const contentWidth = pageWidth - margin * 2;
+
+  function header() {
+    const page = pdf.getNumberOfPages();
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(10, 61, 98);
+    pdf.text("Bauabnahmeprotokoll Sichtwerk", margin, 15);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(120);
+    pdf.text("Seite " + page, pageWidth - margin, 15, { align: "right" });
+
+    pdf.setDrawColor(10, 61, 98);
+    pdf.line(margin, 19, pageWidth - margin, 19);
+
+    pdf.setTextColor(31, 41, 55);
+  }
+
+  function footer() {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(120);
+    pdf.text(
+      "Erstellt lokal im Browser. Vorlage ohne individuelle Rechtsberatung.",
+      margin,
+      pageHeight - 8
+    );
+    pdf.setTextColor(31, 41, 55);
+  }
+
+  function newPage() {
+    footer();
+    pdf.addPage();
+    header();
+    return 30;
+  }
+
+  function ensureSpace(y, needed) {
+    if (y + needed > pageHeight - 18) {
+      return newPage();
+    }
+    return y;
+  }
+
+  function section(title, y) {
+    y = ensureSpace(y, 14);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(10, 61, 98);
+    pdf.text(cleanPdfText(title), margin, y);
+    pdf.setTextColor(31, 41, 55);
+    return y + 7;
+  }
+
+  function paragraph(text, y, options = {}) {
+    const fontSize = options.fontSize || 10;
+    const lineHeight = options.lineHeight || 5;
+    const width = options.width || contentWidth;
+    const x = options.x || margin;
+
+    pdf.setFont("helvetica", options.bold ? "bold" : "normal");
+    pdf.setFontSize(fontSize);
+
+    const lines = pdf.splitTextToSize(cleanPdfText(text || "-"), width);
+    y = ensureSpace(y, lines.length * lineHeight + 4);
+    pdf.text(lines, x, y);
+
+    return y + lines.length * lineHeight + 3;
+  }
+
+  function field(label, value, y) {
+    y = ensureSpace(y, 8);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9.5);
+    pdf.text(cleanPdfText(label + ":"), margin, y);
+
+    pdf.setFont("helvetica", "normal");
+    const labelWidth = 48;
+    const lines = pdf.splitTextToSize(cleanPdfText(value || "-"), contentWidth - labelWidth);
+    pdf.text(lines, margin + labelWidth, y);
+
+    return y + Math.max(7, lines.length * 4.8);
+  }
+
+  function checkbox(checked, text, y) {
+    y = ensureSpace(y, 9);
+    pdf.setDrawColor(70);
+    pdf.rect(margin, y - 3.5, 4, 4);
+
+    if (checked) {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("X", margin + 1, y);
+    }
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9.5);
+
+    const lines = pdf.splitTextToSize(cleanPdfText(text), contentWidth - 10);
+    pdf.text(lines, margin + 8, y);
+
+    return y + Math.max(7, lines.length * 4.8);
+  }
+
+  function imageFit(dataUrl, x, y, maxW, maxH) {
+    const props = pdf.getImageProperties(dataUrl);
+    const ratio = Math.min(maxW / props.width, maxH / props.height);
+    const w = props.width * ratio;
+    const h = props.height * ratio;
+    pdf.addImage(dataUrl, "JPEG", x, y, w, h, undefined, "FAST");
+    return { w, h };
+  }
+
+  return {
+    margin,
+    contentWidth,
+    header,
+    footer,
+    ensureSpace,
+    newPage,
+    section,
+    paragraph,
+    field,
+    checkbox,
+    imageFit
+  };
+}
+
+async function buildPDF() {
+  const data = collectData();
+
+  if (!validateForm(data)) {
+    return null;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true
+  });
+
+  pdf.setProperties({
+    title: "Bauabnahmeprotokoll Sichtwerk",
+    subject: "Abnahmeprotokoll / Mängeldokumentation",
+    author: data.auftragnehmer
+  });
+
+  const h = createPdfHelpers(pdf);
+  h.header();
+
+  let y = 31;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(17);
+  pdf.setTextColor(10, 61, 98);
+  pdf.text("Bauabnahmeprotokoll", 105, y, { align: "center" });
+
+  y += 8;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.setTextColor(31, 41, 55);
+  pdf.text("Sichtwerk - Dokumentation der Abnahme und etwaiger Vorbehalte", 105, y, { align: "center" });
+
+  y += 13;
+
+  y = h.section("1. Projekt- und Kundendaten", y);
+  y = h.field("Kunde / Auftraggeber", data.kunde, y);
+  y = h.field("Auftragnehmer", data.auftragnehmer, y);
+  y = h.field("Adresse Kunde", data.adresse, y);
+  y = h.field("Kontakt", data.kontakt, y);
+  y = h.field("Auftragsnr.", data.auftrag, y);
+  y = h.field("Montagedatum", data.montagedatum, y);
+  y = h.field("Objektadresse", data.objektadresse, y);
+
+  y += 4;
+
+  y = h.section("2. Leistungsbeschreibung", y);
+  y = h.field("Ausgeführte Leistung", data.leistung, y);
+  y = h.field("Vertragsgrundlage", data.vertragsgrundlage, y);
+  y = h.paragraph(data.leistungsumfang || "Keine zusätzliche Leistungsbeschreibung eingetragen.", y);
+
+  y += 2;
+
+  y = h.section("3. Prüfung der Leistung", y);
+  y = h.field("Sichtprüfung", data.sichtpruefung, y);
+  y = h.field("Funktionsprüfung", data.funktion, y);
+  y = h.field("Einweisung / Hinweise", data.einweisung, y);
+
+  y += 2;
+
+  y = h.checkbox(data.checkBesichtigt, "Die ausgeführten Leistungen wurden gemeinsam besichtigt.", y);
+  y = h.checkbox(data.checkBedienung, "Der Auftraggeber wurde, soweit erforderlich, in Bedienung, Pflege und übliche Nutzung eingewiesen.", y);
+  y = h.checkbox(data.checkDokumentation, "Bekannte Beanstandungen, Restarbeiten oder Vorbehalte sind in diesem Protokoll dokumentiert.", y);
+
+  y += 4;
+
+  y = h.section("4. Dokumentierte Mängel / Restarbeiten / Vorbehalte", y);
+  y = h.paragraph(data.maengel || "Keine Mängel oder Restarbeiten eingetragen.", y);
+
+  if (data.frist) {
+    y = h.field("Frist / Vereinbarung", data.frist, y);
+  }
+
+  y += 4;
+
+  y = h.section("5. Abnahmeerklärung", y);
+  y = h.field("Abnahmestatus", data.abnahmeStatus, y);
+
+  let legalText = "";
+
+  if (data.abnahmeStatus === "Ohne Vorbehalt") {
+    legalText =
+      "Der Auftraggeber bestätigt die Besichtigung der ausgeführten Leistung. Die Leistung wird als im Wesentlichen vertragsgerecht abgenommen. Gesetzliche Rechte wegen verdeckter oder nicht erkennbarer Mängel bleiben unberührt.";
+  } else if (data.abnahmeStatus === "Unter Vorbehalt der dokumentierten Mängel / Restarbeiten") {
+    legalText =
+      "Der Auftraggeber nimmt die ausgeführte Leistung unter ausdrücklichem Vorbehalt der in diesem Protokoll dokumentierten Mängel, Restarbeiten und Rechte ab. Die dokumentierten Punkte sind zu prüfen beziehungsweise nach Vereinbarung zu beseitigen.";
+  } else {
+    legalText =
+      "Die Abnahme wird wegen der in diesem Protokoll dokumentierten Mängel verweigert. Dieses Dokument dient in diesem Fall als gemeinsame Zustands- und Mängeldokumentation. Eine Abnahme der Leistung ist damit nicht erklärt.";
+  }
+
+  y = h.paragraph(legalText, y);
+
+  if (data.abnahmeText) {
+    y = h.paragraph("Ergänzende Erklärung:", y, { bold: true });
+    y = h.paragraph(data.abnahmeText, y);
+  }
+
+  y += 4;
+
+  y = h.section("6. Rechtlicher Hinweis", y);
+  y = h.paragraph(
+    "Dieses Protokoll dokumentiert den Zustand der ausgeführten Leistung zum Zeitpunkt der Unterzeichnung. Es ersetzt keine gesonderten vertraglichen Vereinbarungen. Gesetzliche Mängelrechte, Rechte wegen verdeckter Mängel sowie zwingende Haftungsvorschriften bleiben unberührt. Der Auftragnehmer haftet weiterhin für die ordnungsgemäße Ausführung der von ihm geschuldeten Leistungen.",
+    y
+  );
+
+  if (imageDataList.length > 0) {
+    y = h.newPage();
+    y = h.section("7. Fotodokumentation", y);
+
+    for (let i = 0; i < imageDataList.length; i++) {
+      y = h.ensureSpace(y, 112);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.text(`Foto ${i + 1}`, h.margin, y);
+      y += 4;
+
+      pdf.setDrawColor(220);
+      pdf.rect(h.margin, y, 178, 100);
+
+      const fit = h.imageFit(imageDataList[i].dataUrl, h.margin + 2, y + 2, 174, 96);
+      y += Math.max(104, fit.h + 8);
+    }
+  }
+
+  y = h.newPage();
+  y = h.section("8. Unterschriften", y);
+
+  y = h.field("Ort / Datum", `${data.ort}, ${data.datum}`, y);
+
+  y += 6;
+
+  const customerSignature = signaturePad.toDataURL("image/png");
+  const contractorSignature = await imageToDataURL(CONTRACTOR_SIGNATURE_SRC);
+
+  y = h.ensureSpace(y, 72);
+
+  pdf.setDrawColor(180);
+  pdf.rect(16, y, 82, 42);
+  pdf.rect(112, y, 82, 42);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.text("Auftraggeber", 18, y + 7);
+  pdf.text("Auftragnehmer", 114, y + 7);
+
+  pdf.addImage(customerSignature, "PNG", 20, y + 11, 72, 23);
+
+  if (contractorSignature) {
+    pdf.addImage(contractorSignature, "JPEG", 116, y + 11, 72, 23, undefined, "FAST");
+  } else {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.text("Signaturbild nicht gefunden", 116, y + 23);
+  }
+
+  y += 52;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.text(cleanPdfText(data.kunde), 16, y);
+  pdf.text(cleanPdfText(data.auftragnehmer), 112, y);
+
+  y += 9;
+
+  pdf.line(16, y, 98, y);
+  pdf.line(112, y, 194, y);
+
+  pdf.setFontSize(8);
+  pdf.text("Unterschrift Auftraggeber", 16, y + 5);
+  pdf.text("Unterschrift Auftragnehmer", 112, y + 5);
+
+  h.footer();
 
   return pdf;
 }
 
-// speichern
-async function generatePDF(){
-  const pdf=await buildPDF();
-  const name = document.getElementById("kundeInput").value.trim();
-  const safe = name ? name.replace(/[^a-z0-9]/gi, "_") : "Unbekannt";
-  pdf.save(`Bauabnahmeprotokoll_${safe}.pdf`);
+async function generatePDF() {
+  const pdf = await buildPDF();
+
+  if (!pdf) {
+    return;
+  }
+
+  const data = collectData();
+  const safe = safeFileName(data.kunde);
+  const date = getValue("datum").replaceAll("-", "");
+
+  pdf.save(`Bauabnahmeprotokoll_${safe}_${date}.pdf`);
 }
 
-// teilen
-async function sharePDF(){
-  const pdf=await buildPDF();
-  const blob=pdf.output("blob");
-  const file=new File([blob],"Bauabnahmeprotokoll.pdf",{type:"application/pdf"});
+async function sharePDF() {
+  const pdf = await buildPDF();
 
-  if(navigator.share){
-    await navigator.share({files:[file]});
+  if (!pdf) {
+    return;
+  }
+
+  const data = collectData();
+  const safe = safeFileName(data.kunde);
+  const date = getValue("datum").replaceAll("-", "");
+  const fileName = `Bauabnahmeprotokoll_${safe}_${date}.pdf`;
+
+  const blob = pdf.output("blob");
+  const file = new File([blob], fileName, { type: "application/pdf" });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({
+      files: [file],
+      title: "Bauabnahmeprotokoll",
+      text: "Bauabnahmeprotokoll als PDF"
+    });
   } else {
-    alert("Teilen nicht unterstützt");
+    pdf.save(fileName);
+    alert("Direktes Teilen wird auf diesem Gerät nicht unterstützt. Das PDF wurde stattdessen gespeichert.");
   }
 }
 </script>
