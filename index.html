@@ -15,7 +15,6 @@
   --accent: #0a3d62;
   --accent-2: #1f78b4;
   --success: #198754;
-  --warning: #b45309;
   --danger: #b91c1c;
   --bg: #f3f4f6;
   --card: #ffffff;
@@ -70,6 +69,23 @@ body {
   margin: 18px 0 24px;
   font-size: 14.5px;
   line-height: 1.55;
+}
+
+.contract-info-box,
+.status-hint {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.contract-info-box strong,
+.status-hint strong {
+  color: var(--accent);
 }
 
 fieldset {
@@ -144,20 +160,6 @@ textarea {
 .check-row input {
   width: auto;
   margin-top: 3px;
-}
-
-.status-hint {
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  line-height: 1.45;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-}
-
-.status-hint strong {
-  color: var(--accent);
 }
 
 .signature-grid {
@@ -400,11 +402,13 @@ button.danger {
 
       <div>
         <label for="vertragsgrundlage">Vertragsgrundlage</label>
-        <select id="vertragsgrundlage">
-          <option>BGB-Werkvertrag</option>
-          <option>VOB/B, sofern wirksam vereinbart</option>
-          <option>Nicht angegeben</option>
+        <select id="vertragsgrundlage" onchange="updateContractInfo()">
+          <option value="BGB-Werkvertrag">BGB-Werkvertrag</option>
+          <option value="VOB/B, sofern wirksam vereinbart">VOB/B, sofern wirksam vereinbart</option>
+          <option value="Nicht angegeben / zu prüfen">Nicht angegeben / zu prüfen</option>
         </select>
+
+        <div id="contractInfo" class="contract-info-box"></div>
       </div>
     </div>
 
@@ -593,6 +597,52 @@ function cleanPdfText(text) {
     .replace(/\u00A0/g, " ");
 }
 
+function getContractInfoHtml(value) {
+  if (value === "BGB-Werkvertrag") {
+    return `
+      <strong>BGB-Werkvertrag:</strong>
+      Es gelten die gesetzlichen Regelungen des Bürgerlichen Gesetzbuches.
+      Die Abnahme richtet sich insbesondere nach § 640 BGB.
+      Wegen unwesentlicher Mängel kann die Abnahme grundsätzlich nicht verweigert werden.
+    `;
+  }
+
+  if (value === "VOB/B, sofern wirksam vereinbart") {
+    return `
+      <strong>VOB/B:</strong>
+      Die VOB/B gilt nur, wenn sie zwischen Auftraggeber und Auftragnehmer wirksam vereinbart wurde.
+      Sie enthält besondere Vertragsbedingungen für Bauleistungen und kann vom BGB abweichende
+      Regelungen enthalten. Bitte nur auswählen, wenn die VOB/B tatsächlich Vertragsbestandteil ist.
+    `;
+  }
+
+  return `
+    <strong>Nicht angegeben / zu prüfen:</strong>
+    Die Vertragsgrundlage wurde in diesem Protokoll nicht eindeutig festgelegt.
+    Maßgeblich bleibt der zugrunde liegende Vertrag beziehungsweise das Angebot.
+  `;
+}
+
+function updateContractInfo() {
+  const box = document.getElementById("contractInfo");
+  if (!box) return;
+
+  const value = getValue("vertragsgrundlage");
+  box.innerHTML = getContractInfoHtml(value);
+}
+
+function getContractInfoPdfText(value) {
+  if (value === "BGB-Werkvertrag") {
+    return "Hinweis zur Vertragsgrundlage: Beim BGB-Werkvertrag gelten die gesetzlichen Regelungen des Bürgerlichen Gesetzbuches. Die Abnahme richtet sich insbesondere nach § 640 BGB. Wegen unwesentlicher Mängel kann die Abnahme grundsätzlich nicht verweigert werden.";
+  }
+
+  if (value === "VOB/B, sofern wirksam vereinbart") {
+    return "Hinweis zur Vertragsgrundlage: Die VOB/B gilt nur, wenn sie zwischen Auftraggeber und Auftragnehmer wirksam vereinbart wurde. Sie enthält besondere Vertragsbedingungen für Bauleistungen und kann vom BGB abweichende Regelungen enthalten.";
+  }
+
+  return "Hinweis zur Vertragsgrundlage: Die Vertragsgrundlage wurde in diesem Protokoll nicht eindeutig festgelegt. Maßgeblich bleibt der zugrunde liegende Vertrag beziehungsweise das Angebot.";
+}
+
 function updateStatusHint() {
   const status = getValue("abnahmeStatus");
   const hint = document.getElementById("statusHint");
@@ -607,6 +657,7 @@ function updateStatusHint() {
 }
 
 updateStatusHint();
+updateContractInfo();
 
 function resizeSignatureCanvas() {
   const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -711,8 +762,6 @@ function compressImageFile(file) {
 
 async function handleImages(event) {
   const files = Array.from(event.target.files || []);
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "";
 
   for (const file of files) {
     try {
@@ -1048,6 +1097,7 @@ async function buildPDF() {
   y = h.section("2. Leistungsbeschreibung", y);
   y = h.field("Ausgeführte Leistung", data.leistung, y);
   y = h.field("Vertragsgrundlage", data.vertragsgrundlage, y);
+  y = h.paragraph(getContractInfoPdfText(data.vertragsgrundlage), y, { fontSize: 9 });
   y = h.paragraph(data.leistungsumfang || "Keine zusätzliche Leistungsbeschreibung eingetragen.", y);
 
   y += 2;
@@ -1207,11 +1257,15 @@ async function sharePDF() {
   const file = new File([blob], fileName, { type: "application/pdf" });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    await navigator.share({
-      files: [file],
-      title: "Bauabnahmeprotokoll",
-      text: "Bauabnahmeprotokoll als PDF"
-    });
+    try {
+      await navigator.share({
+        files: [file],
+        title: "Bauabnahmeprotokoll",
+        text: "Bauabnahmeprotokoll als PDF"
+      });
+    } catch (error) {
+      console.error(error);
+    }
   } else {
     pdf.save(fileName);
     alert("Direktes Teilen wird auf diesem Gerät nicht unterstützt. Das PDF wurde stattdessen gespeichert.");
