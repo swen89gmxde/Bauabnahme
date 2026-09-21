@@ -71,7 +71,6 @@ body {
   line-height: 1.55;
 }
 
-.contract-info-box,
 .status-hint {
   margin-top: 10px;
   padding: 12px;
@@ -83,7 +82,6 @@ body {
   color: #374151;
 }
 
-.contract-info-box strong,
 .status-hint strong {
   color: var(--accent);
 }
@@ -384,40 +382,7 @@ button.danger {
   </fieldset>
 
   <fieldset>
-    <legend>🛠️ 2. Leistungsbeschreibung</legend>
-
-    <div class="row">
-      <div>
-        <label for="leistung">Ausgeführte Leistung</label>
-        <select id="leistung">
-          <option>Fenster</option>
-          <option>Türen</option>
-          <option>Fenster & Türen</option>
-          <option>Fenster & Rollos</option>
-          <option>Rollos</option>
-          <option>Nachjustierung / Service</option>
-          <option>Sonstige Leistung</option>
-        </select>
-      </div>
-
-      <div>
-        <label for="vertragsgrundlage">Vertragsgrundlage</label>
-        <select id="vertragsgrundlage" onchange="updateContractInfo()">
-          <option value="BGB-Werkvertrag">BGB-Werkvertrag</option>
-          <option value="VOB/B, sofern wirksam vereinbart">VOB/B, sofern wirksam vereinbart</option>
-          <option value="Nicht angegeben / zu prüfen">Nicht angegeben / zu prüfen</option>
-        </select>
-
-        <div id="contractInfo" class="contract-info-box"></div>
-      </div>
-    </div>
-
-    <label for="leistungsumfang">Kurzbeschreibung der ausgeführten Arbeiten</label>
-    <textarea id="leistungsumfang" placeholder="z. B. Lieferung und Montage von Fenstern / Türen, Abdichtung, Einstellarbeiten, Zubehör"></textarea>
-  </fieldset>
-
-  <fieldset>
-    <legend>✅ 3. Prüfung der Leistung</legend>
+    <legend>✅ 2. Prüfung der Leistung</legend>
 
     <div class="three-row">
       <div>
@@ -467,7 +432,7 @@ button.danger {
   </fieldset>
 
   <fieldset>
-    <legend>⚠️ 4. Dokumentierte Mängel / Restarbeiten / Vorbehalte</legend>
+    <legend>⚠️ 3. Dokumentierte Mängel / Restarbeiten / Vorbehalte</legend>
 
     <label for="maengelInput">Beschreibung</label>
     <textarea id="maengelInput" placeholder="Keine Mängel festgestellt oder konkrete Mängel / Restarbeiten eintragen."></textarea>
@@ -490,13 +455,13 @@ button.danger {
   </fieldset>
 
   <fieldset>
-    <legend>📄 5. Abnahmeerklärung</legend>
+    <legend>📄 4. Abnahmeerklärung</legend>
 
     <label for="abnahmeStatus">Abnahmestatus <span class="required">*</span></label>
     <select id="abnahmeStatus" onchange="updateStatusHint()">
       <option>Ohne Vorbehalt</option>
       <option>Unter Vorbehalt der dokumentierten Mängel / Restarbeiten</option>
-      <option>Abnahme verweigert wegen dokumentierter Mängel</option>
+      <option>Abnahme verweigert wegen mindestens eines wesentlichen, konkret dokumentierten Mangels</option>
     </select>
 
     <div id="statusHint" class="status-hint"></div>
@@ -506,7 +471,7 @@ button.danger {
   </fieldset>
 
   <fieldset>
-    <legend>✍️ 6. Unterschriften</legend>
+    <legend>✍️ 5. Unterschriften</legend>
 
     <div class="row">
       <div>
@@ -597,52 +562,6 @@ function cleanPdfText(text) {
     .replace(/\u00A0/g, " ");
 }
 
-function getContractInfoHtml(value) {
-  if (value === "BGB-Werkvertrag") {
-    return `
-      <strong>BGB-Werkvertrag:</strong>
-      Es gelten die gesetzlichen Regelungen des Bürgerlichen Gesetzbuches.
-      Die Abnahme richtet sich insbesondere nach § 640 BGB.
-      Wegen unwesentlicher Mängel kann die Abnahme grundsätzlich nicht verweigert werden.
-    `;
-  }
-
-  if (value === "VOB/B, sofern wirksam vereinbart") {
-    return `
-      <strong>VOB/B:</strong>
-      Die VOB/B gilt nur, wenn sie zwischen Auftraggeber und Auftragnehmer wirksam vereinbart wurde.
-      Sie enthält besondere Vertragsbedingungen für Bauleistungen und kann vom BGB abweichende
-      Regelungen enthalten. Bitte nur auswählen, wenn die VOB/B tatsächlich Vertragsbestandteil ist.
-    `;
-  }
-
-  return `
-    <strong>Nicht angegeben / zu prüfen:</strong>
-    Die Vertragsgrundlage wurde in diesem Protokoll nicht eindeutig festgelegt.
-    Maßgeblich bleibt der zugrunde liegende Vertrag beziehungsweise das Angebot.
-  `;
-}
-
-function updateContractInfo() {
-  const box = document.getElementById("contractInfo");
-  if (!box) return;
-
-  const value = getValue("vertragsgrundlage");
-  box.innerHTML = getContractInfoHtml(value);
-}
-
-function getContractInfoPdfText(value) {
-  if (value === "BGB-Werkvertrag") {
-    return "Hinweis zur Vertragsgrundlage: Beim BGB-Werkvertrag gelten die gesetzlichen Regelungen des Bürgerlichen Gesetzbuches. Die Abnahme richtet sich insbesondere nach § 640 BGB. Wegen unwesentlicher Mängel kann die Abnahme grundsätzlich nicht verweigert werden.";
-  }
-
-  if (value === "VOB/B, sofern wirksam vereinbart") {
-    return "Hinweis zur Vertragsgrundlage: Die VOB/B gilt nur, wenn sie zwischen Auftraggeber und Auftragnehmer wirksam vereinbart wurde. Sie enthält besondere Vertragsbedingungen für Bauleistungen und kann vom BGB abweichende Regelungen enthalten.";
-  }
-
-  return "Hinweis zur Vertragsgrundlage: Die Vertragsgrundlage wurde in diesem Protokoll nicht eindeutig festgelegt. Maßgeblich bleibt der zugrunde liegende Vertrag beziehungsweise das Angebot.";
-}
-
 function updateStatusHint() {
   const status = getValue("abnahmeStatus");
   const hint = document.getElementById("statusHint");
@@ -652,12 +571,11 @@ function updateStatusHint() {
   } else if (status === "Unter Vorbehalt der dokumentierten Mängel / Restarbeiten") {
     hint.innerHTML = "<strong>Unter Vorbehalt:</strong> Die Abnahme erfolgt, jedoch ausdrücklich unter Vorbehalt der in diesem Protokoll dokumentierten Mängel, Restarbeiten und Rechte.";
   } else {
-    hint.innerHTML = "<strong>Abnahme verweigert:</strong> Es erfolgt keine Abnahme. Dieses Dokument dient dann als Zustands- und Mängeldokumentation. Die Gründe müssen im Mängelfeld beschrieben werden.";
+    hint.innerHTML = "<strong>Abnahme verweigert:</strong> Es erfolgt keine Abnahme. Die Verweigerung setzt mindestens einen wesentlichen, konkret dokumentierten Mangel voraus. Dieses Dokument dient dann als Zustands- und Mängeldokumentation.";
   }
 }
 
 updateStatusHint();
-updateContractInfo();
 
 function resizeSignatureCanvas() {
   const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -851,9 +769,6 @@ function collectData() {
     auftrag: getValue("auftrag"),
     montagedatum: formatDateGerman(getValue("montagedatum")),
     objektadresse: getValue("objektadresse"),
-    leistung: getValue("leistung"),
-    vertragsgrundlage: getValue("vertragsgrundlage"),
-    leistungsumfang: getValue("leistungsumfang"),
     sichtpruefung: getValue("sichtpruefung"),
     funktion: getValue("funktion"),
     einweisung: getValue("einweisung"),
@@ -1094,15 +1009,7 @@ async function buildPDF() {
 
   y += 4;
 
-  y = h.section("2. Leistungsbeschreibung", y);
-  y = h.field("Ausgeführte Leistung", data.leistung, y);
-  y = h.field("Vertragsgrundlage", data.vertragsgrundlage, y);
-  y = h.paragraph(getContractInfoPdfText(data.vertragsgrundlage), y, { fontSize: 9 });
-  y = h.paragraph(data.leistungsumfang || "Keine zusätzliche Leistungsbeschreibung eingetragen.", y);
-
-  y += 2;
-
-  y = h.section("3. Prüfung der Leistung", y);
+  y = h.section("2. Prüfung der Leistung", y);
   y = h.field("Sichtprüfung", data.sichtpruefung, y);
   y = h.field("Funktionsprüfung", data.funktion, y);
   y = h.field("Einweisung / Hinweise", data.einweisung, y);
@@ -1115,7 +1022,7 @@ async function buildPDF() {
 
   y += 4;
 
-  y = h.section("4. Dokumentierte Mängel / Restarbeiten / Vorbehalte", y);
+  y = h.section("3. Dokumentierte Mängel / Restarbeiten / Vorbehalte", y);
   y = h.paragraph(data.maengel || "Keine Mängel oder Restarbeiten eingetragen.", y);
 
   if (data.frist) {
@@ -1124,7 +1031,7 @@ async function buildPDF() {
 
   y += 4;
 
-  y = h.section("5. Abnahmeerklärung", y);
+  y = h.section("4. Abnahmeerklärung", y);
   y = h.field("Abnahmestatus", data.abnahmeStatus, y);
 
   let legalText = "";
@@ -1137,7 +1044,7 @@ async function buildPDF() {
       "Der Auftraggeber nimmt die ausgeführte Leistung unter ausdrücklichem Vorbehalt der in diesem Protokoll dokumentierten Mängel, Restarbeiten und Rechte ab. Die dokumentierten Punkte sind zu prüfen beziehungsweise nach Vereinbarung zu beseitigen.";
   } else {
     legalText =
-      "Die Abnahme wird wegen der in diesem Protokoll dokumentierten Mängel verweigert. Dieses Dokument dient in diesem Fall als gemeinsame Zustands- und Mängeldokumentation. Eine Abnahme der Leistung ist damit nicht erklärt.";
+      "Die Abnahme wird wegen mindestens eines wesentlichen, in diesem Protokoll konkret dokumentierten Mangels verweigert. Dieses Dokument dient in diesem Fall als gemeinsame Zustands- und Mängeldokumentation. Eine Abnahme der Leistung ist damit nicht erklärt.";
   }
 
   y = h.paragraph(legalText, y);
@@ -1149,7 +1056,7 @@ async function buildPDF() {
 
   y += 4;
 
-  y = h.section("6. Rechtlicher Hinweis", y);
+  y = h.section("5. Rechtlicher Hinweis", y);
   y = h.paragraph(
     "Dieses Protokoll dokumentiert den Zustand der ausgeführten Leistung zum Zeitpunkt der Unterzeichnung. Es ersetzt keine gesonderten vertraglichen Vereinbarungen. Gesetzliche Mängelrechte, Rechte wegen verdeckter Mängel sowie zwingende Haftungsvorschriften bleiben unberührt. Der Auftragnehmer haftet weiterhin für die ordnungsgemäße Ausführung der von ihm geschuldeten Leistungen.",
     y
@@ -1157,7 +1064,7 @@ async function buildPDF() {
 
   if (imageDataList.length > 0) {
     y = h.newPage();
-    y = h.section("7. Fotodokumentation", y);
+    y = h.section("6. Fotodokumentation", y);
 
     for (let i = 0; i < imageDataList.length; i++) {
       y = h.ensureSpace(y, 112);
@@ -1176,7 +1083,7 @@ async function buildPDF() {
   }
 
   y = h.newPage();
-  y = h.section("8. Unterschriften", y);
+  y = h.section("7. Unterschriften", y);
 
   y = h.field("Ort / Datum", `${data.ort}, ${data.datum}`, y);
 
