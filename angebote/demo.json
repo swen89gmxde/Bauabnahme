@@ -1,0 +1,20 @@
+{
+  "title": "Musterangebot DEMO-0162",
+  "filename": "Musterangebot_DEMO-0162.pdf",
+  "demo": true,
+  "layout": {
+    "page": 3,
+    "date": {
+      "x": 125,
+      "y": 243,
+      "w": 414,
+      "h": 18
+    },
+    "signature": {
+      "x": 145,
+      "y": 270,
+      "w": 394,
+      "h": 52
+    }
+  }
+}

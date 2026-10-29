@@ -1,0 +1,7 @@
+.openai/
+**/config.php
+**/sichtwerk-signieren-private/
+**/sichtwerk-signieren-data/
+**/private-*/
+**/*-signed.pdf
+node_modules/
