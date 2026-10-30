@@ -31,6 +31,7 @@ export async function stampPDF(bytes,layout,images,PDFLib,options={}){
   page.drawRectangle({...p,color:PDFLib.rgb(1,1,1),opacity:1});
   const image=await doc.embedPng(png);page.drawImage(image,{...p,opacity:1});
  }
+ if(options.bundle?.length)doc.catalog.set(PDFLib.PDFName.of('SichtwerkDocuments'),doc.context.obj(options.bundle.map(f=>({Name:PDFLib.PDFHexString.fromText(f.name),SHA256:PDFLib.PDFHexString.fromText(f.sha256),Version:PDFLib.PDFHexString.fromText(f.version||'')}))));
  return doc.save({useObjectStreams:false,updateFieldAppearances:false});
 }
 export function germanDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('Bitte ein gültiges Datum wählen.');const [y,m,d]=value.split('-');const date=new Date(Number(y),Number(m)-1,Number(d));if(date.getFullYear()!==+y||date.getMonth()!==+m-1||date.getDate()!==+d)throw Error('Bitte ein gültiges Datum wählen.');return `${d}.${m}.${y}`;}

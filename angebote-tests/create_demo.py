@@ -33,4 +33,8 @@ for n in range(1,5):
  c.drawRightString(w-54,45,f'Seite {n} von 4');c.showPage()
 c.save()
 meta={'title':'Musterangebot DEMO-0162','filename':'Musterangebot_DEMO-0162.pdf','demo':True,'layout':{'page':3,'date':{'x':125,'y':243,'w':414,'h':18},'signature':{'x':145,'y':270,'w':394,'h':52}}}
+release=p/'legal-current.json'
+if release.exists():
+ meta['customer_name']='Unverbindlicher Musterkunde';meta['commission']='DEMO-0162';meta['revision']=1
+ meta['attachments']=[{**f,'id':'demo-'+f['role'],'demoPath':f['file']} for f in json.loads(release.read_text())['documents']]
 (p/'demo.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n')

@@ -1,0 +1,10 @@
+# Angebotsportal: Regeln für Änderungen
+
+- Kundenunterlagen und Unterschriften niemals in dieses öffentliche Repository aufnehmen. Öffentliche allgemeine AGB und Widerrufsvorlagen liegen ausschließlich in `vertragsunterlagen/`.
+- Kundenkennung, Kommission, Freigabeversion und Token nicht vermischen. Keine wiederverwendete URL auf ein jeweils anderes Angebot zeigen lassen.
+- Neue Freigaben einer Kunden-Kommissions-Kombination sperren den alten Link. Alle kundenseitigen Datei- und Abschlussrouten müssen Zugriff und Status serverseitig prüfen.
+- Abschluss speichert die unterschriebene PDF und sperrt den Kundenzugang. Wiederholungen desselben erfolgreichen Abschlusses dürfen keine zweite Unterschrift erzeugen. Historische Originale, Anlagen und abgeschlossene Vorgänge nicht verändern.
+- Bei AGB-/Widerrufsänderungen freigegebene PDFs, `legal-current.json`, Demo-Downloads und alle Referenzen gemeinsam aktualisieren und `node angebote-tests/check-legal.mjs` ausführen. Der Server übernimmt geänderte veröffentlichte Master in neue Freigaben; bestehende Snapshots bleiben erhalten.
+- GitHub-Veröffentlichung und STRATO-Installation getrennt verifizieren. Keine aktive Kundenzuordnung oder serverseitige Sperre behaupten, solange die private PHP-Ablage nicht installiert ist.
+- Vor produktivem Online-Abschluss den tatsächlichen Ablauf mit § 312j BGB und gegebenenfalls § 356a BGB abstimmen. Die Sperre eines Signierlinks darf eine erforderliche separate Widerrufsfunktion nicht blockieren.
+- Nach wesentlichen Änderungen `node angebote-tests/stamp.mjs`, `node angebote-tests/backend.mjs` und die Prüfung der Vertragsunterlagen ausführen. Backend-Tests benötigen die in package.json genannten Entwicklungsabhängigkeiten. Keine echten Kundendaten für Tests verwenden.

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {stampPDF,validateLayout,germanDate,detectLayout,signedName} from '../angebote/core.mjs';
-const require=createRequire(import.meta.url),PDFLib=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/pdf-lib');
+const require=createRequire(import.meta.url),PDFLib=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/pdf-lib':'pdf-lib');
 const root=new URL('../',import.meta.url),demo=fs.readFileSync(new URL('angebote/musterangebot.pdf',root)),meta=JSON.parse(fs.readFileSync(new URL('angebote/demo.json',root)));
 const signature=fs.readFileSync(new URL('signature-test.png',import.meta.url)),date=fs.readFileSync(new URL('date-test.png',import.meta.url));
 let checks=0;

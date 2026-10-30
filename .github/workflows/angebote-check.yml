@@ -1,0 +1,19 @@
+name: Angebotsportal - Unterlagen pruefen
+on:
+  push:
+    paths: ['angebote/**', 'angebote-tests/**', '.github/workflows/angebote-check.yml']
+  pull_request:
+    paths: ['angebote/**', 'angebote-tests/**', '.github/workflows/angebote-check.yml']
+permissions:
+  contents: read
+jobs:
+  documents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vertragsunterlagen und Download-Verweise pruefen
+        run: node angebote-tests/check-legal.mjs
+      - name: Kundenoberflaeche syntaktisch pruefen
+        run: node --check angebote/app.mjs
+      - name: PDF-Verarbeitung syntaktisch pruefen
+        run: node --check angebote/core.mjs

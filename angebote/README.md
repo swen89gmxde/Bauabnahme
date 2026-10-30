@@ -1,45 +1,59 @@
-# Angebote per Finger unterschreiben – erster Entwurf
+# Kommissionsbezogenes Angebotsportal
 
-Stand: 29.10.2026. Ergänzung im Unterverzeichnis `angebote/`; die bestehende Bauabnahme bleibt unverändert.
+Stand 30.10.2026. Erweiterung im Verzeichnis `angebote/`; die bestehende Bauabnahme bleibt unverändert.
 
-## Öffentlicher Test
+Öffentlicher Funktionstest: https://swen89gmxde.github.io/Bauabnahme/angebote/
 
-`https://swen89gmxde.github.io/Bauabnahme/angebote/`
+Auf GitHub Pages läuft weiterhin ausschließlich der unverbindliche Musterablauf. Der allgemeine Musterlink darf wiederholt ausprobiert werden; er zeigt keine echten Kundendaten. Individuelle Kundenlinks, PINs, Abschlussarchiv und Sperren benötigen den PHP-Server auf dem privaten Webspace. Eine GitHub-Veröffentlichung installiert diesen nicht automatisch.
 
-Der Link öffnet ein vierseitiges, ausdrücklich unverbindliches Musterangebot ohne Kundendaten. Name, Datum und Fingerzeichnung werden als schwarzer, deckender PDF-Seiteninhalt eingesetzt. Es wird die ganze PDF mit allen Seiten ausgegeben. Die fertige Datei wird vor dem Teilen erzeugt; ein eigener Button ruft anschließend direkt aus der Nutzeraktion das native Teilen auf. Der Nutzer wählt WhatsApp und den bestehenden Chat selbst. Übergabe an eine App ist keine Versand- oder Empfangsbestätigung.
+## Kunden und Freigaben
 
-Auf Browsern ohne Datei-Teilen werden Öffnen und Speichern der fertigen PDF angeboten. Ein echter iPhone-/Android-/WhatsApp-Gerätetest steht noch aus. PDF-Ausgabe und Bedienung wurden im Browser bei Smartphone-Breite geprüft.
+Eine Freigabe ist fest an Kundenkennung, Kundenname, Kommission, Angebots-PDF, Signierflächen und Unterlagenpaket gebunden. Für jede neue Freigabe wird ein neuer zufälliger 256-Bit-Link erzeugt. Die Daten stehen nicht unter einer wechselnden `latest.pdf`-URL. Neue Freigaben derselben Kunden-Kommissions-Kombination sperren den alten Link; andere Kommissionen bleiben davon getrennt.
 
-## Vorbereitung einer Lexware-PDF
+Der zusätzliche sechsstellige Kundencode ist standardmäßig eingeschaltet. Er wird nur als Passwort-Hash gespeichert, ist vor Einsicht in die Kundendaten erforderlich und wird durch begrenzte Versuche geschützt. Link und Code dürfen nur dem vorgesehenen Kunden mitgeteilt werden. Das ist Zugangsschutz, keine verifizierte Identität; weitergegebene Zugangsdaten können von Dritten genutzt werden.
 
-`?vorbereiten=1` öffnet die Sichtwerk-Vorbereitung. PDFs werden zunächst lokal gelesen. Ein geeigneter Kundenblock mit Datum/Unterschrift wird anhand der Textpositionen vorgeschlagen. Bekannte vorbereitete PDFs können außerdem ihre Platzierung als `/SichtwerkSigning`-Metadaten mitbringen. Rasterisierte Seiten, unbekannte Layouts oder zu enge Zeilen werden nicht blind bestempelt: Datum und Unterschriftsfläche lassen sich auf der richtigen Seite markieren. Vor dem Link ist die sichtbare Platzierung zu bestätigen.
+Der Token steht im URL-Fragment und wird der API im Header übergeben. Zugriff und Status werden für jede Original-PDF, jede Anlage und die Abschlussfunktion serverseitig geprüft. Ein fremder Anhang-Identifier allein gewährt keinen Zugriff. Link, Code oder Dateiname werden nicht als frei auswählbarer Dateisystempfad verwendet.
 
-Name wird lesbar unter die Fingerunterschrift gesetzt. Datum kommt in die eigene Zeile. Seitenzahl, Seitenformat und übriger Angebotstext bleiben erhalten. Gedrehte oder beschnittene Signierseiten sowie bereits vorhandene digitale Signaturen werden abgewiesen. Formularfelder oder Stempel innerhalb der Zielfläche werden nicht übermalt. Bereits handschriftlich unterschriebene Scans können technisch nicht zuverlässig erkannt werden; immer eine ununterzeichnete Quelle verwenden.
+## Unterlagen und Vorlagen
 
-Der lokale Probelauf lädt nichts hoch. Seine Ausgabe ist ausdrücklich als PROBELAUF markiert und dient nicht der Angebotsannahme.
+Der Kunde sieht vor der Unterschrift große Download-Buttons für die zu dieser Freigabe gehörenden Unterlagen. AGB und die kombinierte Widerrufsbelehrung mit Musterformular werden automatisch als feste Kopien übernommen. Zusätzlich können bis zu zwölf PDFs, Word-Dateien (.doc/.docx), JPG-, PNG- oder WebP-Bilder bereitgestellt werden. 20 MB je Datei, insgesamt 60 MB zuzüglich der allgemeinen Vertragsvorlagen. Diese Grenzen müssen zur Webspace-Konfiguration passen. Aktive Dateitypen wie HTML/SVG und makrohaltige DOCX-Pakete werden nicht akzeptiert. Alte binäre DOC-Dateien werden als Download behandelt und nicht ausgeführt oder in der Seite dargestellt.
 
-## Echte individuelle Kundenlinks: einmalige Einrichtung auf STRATO
+Die allgemeinen, zur Veröffentlichung freigegebenen Unternehmensvorlagen liegen versioniert in `vertragsunterlagen/`. `legal-current.json` enthält die Freigabeversionen, Größen und SHA-256-Werte. Der Server prüft diese Freigabe bei angemeldeten Verwaltungszugriffen und übernimmt einen geänderten veröffentlichten Stand automatisch in seine Mastervorlagen. Neue Kundenfreigaben übernehmen anschließend die aktuellen Master. Ein manueller Vorlagen-Upload in der Verwaltung ist ebenfalls möglich; er bleibt aktiv, bis eine neue gebündelte Freigabe veröffentlicht wird.
 
-GitHub Pages führt kein PHP aus. Deshalb ist die öffentliche Seite bisher ein Funktionstest; der Button für echte Kundenlinks ist dort gesperrt. Keine Kunden-PDFs, Unterschriften, Zugangsdaten oder individuellen Kundenlinks in das öffentliche Repository hochladen.
+Bereits freigegebene Pakete ändern sich bei einem Master-Update nicht. Offene Vorgänge mit älterem Stand werden in der Verwaltung markiert. Für notwendige Änderungen wird die Kommission erneut freigegeben; damit erhält der Kunde einen neuen Link und der alte wird gesperrt. Unterschriebene Pakete behalten ihre damaligen Versionen. Die aktuelle öffentliche Vorlage ist keine nachträgliche Änderung eines bestehenden Vertrags.
 
-Die vollständige Anwendung kann aus diesem Verzeichnis auf dem vorhandenen STRATO-Webspace unter `/angebote/` betrieben werden:
+`node angebote-tests/check-legal.mjs` prüft Vorlagendateien, Prüfsummen und Demo-Verweise. Dieselbe Prüfung läuft über `.github/workflows/angebote-check.yml` bei relevanten GitHub-Änderungen. Eine Änderung in Drive allein aktualisiert GitHub oder STRATO nicht: Die zugehörige Veröffentlichung gehört laut Projektanweisung in denselben Arbeitsgang. Kein unverifizierter Hintergrundabgleich wird behauptet.
 
-1. PHP >= 8.1 mit `session`, `fileinfo`, `json`, HTTPS sowie ausreichenden Uploadgrenzen bereitstellen. Für 20-MB-PDFs `upload_max_filesize` >= 20M und `post_max_size` >= 22M setzen.
-2. Einen privaten Ordner **außerhalb von DOCUMENT_ROOT** anlegen. `server/config.example.php` dort als `config.php` anlegen; Pfad per Server-Umgebungsvariable `SICHTWERK_SIGN_CONFIG` setzen oder den Standardpfad `dirname(DOCUMENT_ROOT)/sichtwerk-signieren-private/config.php` nutzen. Der Schutz wird serverseitig geprüft; eine `.htaccess`-Sperre allein genügt hier nicht.
-3. `origin` auf den tatsächlichen HTTPS-Ursprung setzen, `data_dir` auf einen privaten Pfad außerhalb des Webroots. `password_hash` mit PHP `password_hash` für ein langes, eigenes Admin-Passwort erzeugen. Niemals Klartextpasswort oder Konfiguration ins Repository schreiben. Einrichtung und Zugangsdaten sind in diesem Entwurf noch nicht auf STRATO installiert.
-4. Alle öffentlichen Dateien aus diesem Ordner einschließlich `vendor/` und `server/api.php` auf den Webspace kopieren. `.mjs` muss als JavaScript ausgeliefert werden; die mitgelieferte `.htaccess` enthält dies und zusätzliche Browser-Schutzheader. Keine Testdateien/privaten Angebote mitkopieren.
-5. Vorbereitung öffnen, als Sichtwerk anmelden, ein unverbindliches Muster hochladen, Platzierung bestätigen, Link öffnen und Sperren/Ablauf testen. Erst nach dem Gerätetest echte Kundenangebote bereitstellen.
+## Unterschreiben und Sperren
 
-Nach Einrichtung: Als Sichtwerk anmelden → Lexware-PDF auswählen → markierte Flächen prüfen → Kundenlink erstellen → Angebot und genau diesen Link in WhatsApp senden. Der Link enthält ein zufälliges 256-Bit-Zugangsgeheimnis im Fragment (`#auftrag=...`) und ist standardmäßig 14 Tage gültig. Jeder, der den Link erhält, kann das Angebot öffnen. Er ist in der Vorbereitung sperrbar. Zugriff wird bei Ablauf sofort verweigert; abgelaufene Dateien werden beim nächsten Upload bereinigt. Für zeitnahe physische Löschung auch ohne weitere Uploads einen täglichen Bereinigungslauf einrichten.
+Der Kunde liest sein Angebot und die Unterlagen, trägt Name und Datum ein und zeichnet mit dem Finger. Die vollständige PDF bleibt mit allen Seiten erhalten. Name, Datum und schwarze Unterschrift werden in die geprüften Flächen eingesetzt; ein Dokumentverzeichnis mit Prüfsummen wird zusätzlich als PDF-Metadatum gespeichert.
 
-Die API verwendet passwortgeschützte Admin-Sitzungen, CSRF-Schutz und begrenzte Anmeldeversuche. PDFs und Angebotsmetadaten werden außerhalb des öffentlichen Webverzeichnisses gespeichert; der Kunde lädt das Original anhand des Links. Der SHA-256-Wert bindet die geladenen Bytes an die Angebotsmetadaten. Unterschrift und Name werden im Browser verarbeitet; es gibt keinen automatischen Rückversand und keine serverseitige Ablage der fertigen Unterschrift. Ohne Teilen oder Speichern geht die fertige Datei beim Schließen verloren.
+Die Vorschau schließt den Vorgang noch nicht. Erst der ausdrückliche Abschluss übermittelt die unterschriebene PDF und den zugehörigen Unterlagenstand an den Server. Der Server prüft Original-Hash, Dokumentliste, Sitzung und Abschlusskennung, speichert die Datei und setzt den Vorgang auf `completed`. Danach verweigert derselbe Kundenlink alle erneuten Angebots- und Anlagenzugriffe, Öffnungen und weiteren Unterschriften. Eine identische Wiederholung nach einem Verbindungsabbruch bestätigt nur den bereits gespeicherten Abschluss. Eine zweite abweichende Unterschrift wird nicht angenommen. Schreibvorgänge sind pro Kommission und Freigabe über Dateisperren serialisiert.
 
-## Hinweise für den Einsatz
+Die fertige PDF bleibt im geöffneten Fenster verfügbar und wird erst mit einem weiteren Button über die native Gerätefunktion geteilt. Der Nutzer wählt WhatsApp und den Chat selbst. App-Übergabe ist keine Versandbestätigung. Bei abgebrochenem Teilen kann Sichtwerk die gespeicherte unterschriebene PDF aus der Verwaltung laden. Alle damaligen Unterlagen inklusive Original, Anlagen, Unterlagenverzeichnis und unterschriebener PDF sind als geschützter ZIP-Archivexport abrufbar. Bereits heruntergeladene Kopien auf fremden Geräten können nicht zurückgerufen werden.
 
-Die Fingerzeichnung ist keine Zertifikatsignatur; es gibt keine verifizierte Identität, manipulationssichere Zeitangabe oder garantierte Beweiskraft. Vertragsinhalte und Widerrufsablauf werden nicht geändert oder rechtlich neu geprüft. Alle zugehörigen Anlagen müssen vor der Linkerstellung im Angebot enthalten sein. Die Anwendung unterstützt im ersten Entwurf die Kundenannahme; sie ist noch kein getrenntes Versicherer-Freigabeformular mit Schadennummer und Übernahmebeträgen.
+Ein erneut aufgerufener abgeschlossener, gesperrter, ersetzter oder abgelaufener Kundenlink zeigt keine Kundenunterlagen mehr. Der Betrieb behält die Archivdaten; diese Erweiterung löscht abgeschlossene Vertragsunterlagen nicht automatisch. Archivierung, Sicherungen und Aufbewahrungs-/Löschregeln sind betrieblich festzulegen.
 
-Vor echtem Einsatz die Datenschutzhinweise der Website um die geschützte Bereitstellung, Linkgültigkeit, lokale Signaturverarbeitung und anschließende freiwillige Weitergabe über das Geräte-Teilen ergänzen. Der Entwurf behauptet keine bereits erfolgte Änderung der STRATO-Website, AGB oder Lexware.
+## STRATO-Einrichtung und tatsächlicher Betrieb
 
-## Bibliotheken
+- PHP >= 8.1, HTTPS sowie `session`, `fileinfo`, `json` und `zip` bereitstellen. Für 60-MB-Pakete `post_max_size` mindestens 65M, `upload_max_filesize` mindestens 20M und ausreichende `max_file_uploads` vorsehen.
+- Die Anwendung aus `angebote/` mit `vendor/`, `server/`, `vertragsunterlagen/` und `legal-current.json` auf den Webspace kopieren. `.mjs` als JavaScript ausliefern. Die `.htaccess` enthält dies sowie zusätzliche Schutzheader. `angebote-tests/`, Entwicklungsabhängigkeiten und Testdaten nicht deployen.
+- `config.php` und alle privaten Daten müssen außerhalb von `DOCUMENT_ROOT` liegen. `SICHTWERK_SIGN_CONFIG` kann den privaten Konfigurationspfad festlegen; sonst gilt `dirname(DOCUMENT_ROOT)/sichtwerk-signieren-private/config.php`. Die Anwendung prüft den Ablageort. Ein Sperrvermerk in `.htaccess` allein genügt nicht.
+- In der privaten Konfiguration den tatsächlichen HTTPS-Ursprung, ein mit `password_hash` erzeugtes Admin-Passwort-Hash und den privaten Datenpfad setzen. Keine Zugangsdaten in GitHub speichern. `SICHTWERK_TEST_HTTP` ist ausschließlich für lokale synthetische Tests und darf im öffentlichen Betrieb nicht aktiviert sein.
+- Mit synthetischen Angeboten Kundenwechsel, Anhangtrennung, falsche Codes, Revision, Abschluss, Wiederholung, Archiv und Ablauf auf dem tatsächlichen Webspace testen. Anschließend echte iPhone-/Android-/WhatsApp-Gerätetests durchführen. Bisherige automatisierte PHP-Tests und Browserprüfungen ersetzen diese nicht.
 
-Lokal mitgeliefert, keine externen CDNs zur Laufzeit: pdf-lib 1.17.1 (MIT), PDF.js 5.6.205 Legacy-Build (Apache 2.0), signature_pad 4.1.7 (MIT). Lizenzen in `vendor/`. `isEvalSupported` ist deaktiviert. Keine Analyse-Skripte und kein lokales Speichern von Signaturen.
+## Vertragsablauf vor produktivem Online-Abschluss
+
+Diese technische Erweiterung bearbeitet die bestehenden AGB und Widerrufstexte nicht inhaltlich und behauptet keine rechtliche Gesamtprüfung. Der zu verwendende Dokumenttyp hängt von Vertragsart und Abschlusssituation ab. Die aktuelle Widerrufsvorlage ist für Werk-/Montageverträge bestimmt; sie ist keine universelle Fassung für jeden Vertrag.
+
+Wird die Annahme über die Plattform elektronisch entgegengenommen, vor dem Produktivbetrieb den tatsächlichen Ablauf einschließlich hervorgehobener Vertragsinformationen und eindeutiger zahlungspflichtiger Bestätigung nach § 312j BGB prüfen und gegebenenfalls ergänzen. Bei einschlägigen Fernabsatzverträgen verlangt § 356a BGB eine leicht zugängliche elektronische Widerrufsfunktion mit Eingangsbestätigung. Diese Funktion muss unabhängig vom nach Unterschrift gesperrten Signierlink bestehen. Der PDF-Download allein stellt sie nicht bereit; diese Erweiterung implementiert sie nicht. Die konkrete Freischaltung für solche Verträge ist erst nach Erledigung dieser Punkte vorgesehen. Quellen: https://www.gesetze-im-internet.de/bgb/__312j.html und https://www.gesetze-im-internet.de/bgb/__356a.html .
+
+Datenschutzhinweise um das tatsächlich eingesetzte Hosting, Kundenpakete, Codesitzungen, serverseitige Abschlussablage und selbst ausgelöstes Geräte-Teilen ergänzen. Die Unterschrift ist eine Fingerzeichnung ohne Zertifikatsprüfung und keine Garantie für Identität, Integrität oder Beweiskraft.
+
+## Entwicklung
+
+Buildlose Browseranwendung; zur Laufzeit keine externen CDNs. pdf-lib 1.17.1, PDF.js 5.6.205 Legacy und signature_pad 4.1.7 liegen mit Lizenzen in `vendor/`.
+
+Für lokale Tests die Entwicklungsabhängigkeiten aus `package.json` installieren. `node angebote-tests/stamp.mjs`, `node angebote-tests/backend.mjs` und `node angebote-tests/check-legal.mjs` ausführen. `CODEX_PRIMARY_RUNTIME_NODE_MODULES` beziehungsweise `PHP_WASM_MODULE_ROOT` können vorhandene Entwicklungsabhängigkeiten referenzieren. `npm run dev` unter `http://localhost:4173` ist ausschließlich eine interne Vorschau mit synthetischen Testvorgängen und wird nicht öffentlich deployt. Die generierten privaten Testverzeichnisse und Zugangsdaten sind von Git ausgeschlossen.
+
+Die verwaltete Browser-Vorschau unter einer unverschlüsselten `.local`-Adresse bietet kein Web Crypto. Dort lässt sich die vollständige PHP-/Browser-Kette deshalb nicht verifizieren; ohne HTTPS wird kein Hashvergleich umgangen. Die öffentliche GitHub-Demo wird getrennt über HTTPS geprüft.

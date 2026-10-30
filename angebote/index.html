@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#123f46"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20261030">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs"></script>
+<script type="module" src="app.mjs?v=20261030"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -15,13 +15,15 @@
 <div id="status" role="status" aria-live="polite" class="message" hidden></div>
 <section id="loading" class="card"><p class="eyebrow">Einen Moment bitte</p><h1>Ihr Angebot wird geöffnet …</h1></section>
 <section id="error" class="card" hidden><h1>Das Angebot konnte nicht geöffnet werden.</h1><p id="error-text"></p><button id="retry" class="primary">Noch einmal versuchen</button><p>Bitte wenden Sie sich an Swen Neubauer, wenn der Link nicht mehr gültig ist.</p></section>
+<section id="access-gate" class="card" hidden><p class="eyebrow">Ihr persönlicher Zugang</p><h1>Bitte Kundencode eingeben</h1><p>Den sechsstelligen Code erhalten Sie von Swen Neubauer.</p><form id="code-form"><label for="customer-code">Ihr Kundencode</label><input id="customer-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="6 Ziffern"><button class="primary wide" id="unlock-offer">Mein Angebot öffnen →</button></form></section>
 <div id="customer" hidden>
 <nav class="steps" aria-label="Fortschritt"><span id="step-one" aria-current="step"><b>1</b> Ansehen</span><span id="step-two"><b>2</b> Unterschreiben</span><span id="step-three"><b>3</b> Zurücksenden</span></nav>
 <section id="review" class="card">
-<p class="eyebrow">Sichtwerk – Neubauer</p><h1>Ihr Angebot unterschreiben</h1><p id="offer-title" class="offer-title"></p><p>Bitte lesen Sie zuerst das Angebot mit allen Seiten.</p>
+<p class="eyebrow">Sichtwerk – Neubauer</p><h1>Ihr Angebot unterschreiben</h1><p id="offer-title" class="offer-title"></p><p id="commission-label" class="small muted"></p><p>Bitte lesen Sie zuerst das Angebot mit allen Seiten.</p>
 <div class="document-toolbar"><button id="prev-page" class="secondary compact" aria-label="Vorherige Seite">← Zurück</button><span id="page-label" aria-live="polite"></span><button id="next-page" class="secondary compact" aria-label="Nächste Seite">Weiter →</button></div>
 <div class="pdf-view"><canvas id="offer-canvas" aria-label="Angebotsseite"></canvas></div>
 <a id="original-pdf" class="secondary wide" target="_blank" rel="noopener">Angebot groß öffnen ↗</a>
+<section id="documents"><h2>Ihre Unterlagen zum Herunterladen</h2><p class="hint">Diese Unterlagen gehören genau zu diesem Angebot. Bitte vor der Unterschrift lesen und für Ihre Ablage speichern.</p><div id="document-list" class="download-list"></div></section>
 <button id="to-sign" class="primary wide">Weiter zur Unterschrift →</button>
 <p class="small muted">Sie können das Angebot vor dem Unterschreiben jederzeit erneut ansehen.</p>
 </section>
@@ -33,18 +35,20 @@
 <label for="signature">Ihre Unterschrift</label><p class="hint">Mit dem Finger in das weiße Feld schreiben. Am Computer mit der Maus.</p>
 <div class="signature-wrap"><canvas id="signature" aria-label="Hier mit dem Finger unterschreiben"></canvas><span class="signature-line" aria-hidden="true"></span></div>
 <button type="button" id="clear-signature" class="secondary">Unterschrift neu schreiben</button>
-<label class="check"><input id="confirm" type="checkbox" required><span id="confirm-text">Ich habe das Angebot gelesen und nehme es mit meiner Unterschrift unverändert an.</span></label>
+<label class="check"><input id="confirm" type="checkbox" required><span id="confirm-text">Ich habe das Angebot und die dazu bereitgestellten Unterlagen gelesen und nehme das Angebot unverändert an.</span></label>
 <button type="submit" id="create-pdf" class="primary wide">Unterschrift ins Angebot einsetzen →</button>
 <button type="button" id="back-review" class="quiet wide">← Angebot noch einmal ansehen</button>
 </form>
 </section>
 <section id="complete" class="card" hidden>
-<div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">Schritt 3 von 3</p><h1>Fast fertig!</h1><p><b>Ihre Unterschrift ist im Angebot.</b><br>Bitte senden Sie die fertige PDF jetzt an Swen Neubauer zurück.</p>
+<div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">Schritt 3 von 3</p><h1 id="completion-title">Unterschrift prüfen</h1><p id="completion-text">Name, Datum und Unterschrift stehen jetzt in der PDF. Bitte prüfen Sie die Vorschau.</p>
 <div class="pdf-view"><canvas id="signed-canvas" aria-label="Vorschau der unterschriebenen Seite"></canvas></div>
-<button id="share-pdf" class="primary wide">PDF über WhatsApp zurücksenden</button><p id="share-hint" class="hint">Im nächsten Fenster WhatsApp und den Chat mit Swen Neubauer auswählen.</p>
+<div id="finalize-area"><p class="hint">Mit „Unterschrift abschließen“ wird die unterschriebene PDF gespeichert und dieser Angebotslink gesperrt. Danach können Sie die PDF zurückteilen.</p><button id="finalize-offer" class="primary wide">Unterschrift abschließen →</button></div>
+<div id="return-area" hidden><button id="share-pdf" class="primary wide">PDF über WhatsApp zurücksenden</button><p id="share-hint" class="hint">Im nächsten Fenster WhatsApp und den Chat mit Swen Neubauer auswählen.</p>
 <a id="download-pdf" class="secondary wide" download>Unterschriebene PDF speichern</a>
 <a id="open-pdf" class="text-link" target="_blank" rel="noopener">Fertige PDF groß ansehen ↗</a>
 <p id="send-status" class="small" role="status">Noch nicht zurückgesendet. Bitte den grünen Button benutzen.</p>
+</div>
 <button id="correct" class="quiet wide">← Angaben oder Unterschrift korrigieren</button>
 </section>
 </div>
@@ -53,6 +57,8 @@
 <div id="server-note" class="notice" hidden>GitHub-Test: Die Vorbereitung und PDF-Erstellung funktionieren lokal. Für Kundenlinks zu eigenen Angeboten muss die geschützte Ablage auf dem Webspace eingerichtet sein.</div>
 <div id="login-area"><label for="password">Zugang für Sichtwerk</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary wide">Anmelden</button></div>
 <div id="prepare-area" hidden>
+<div class="owner-details"><h2>Kunde und Kommission</h2><label for="customer-id">Kundennummer / eindeutige Kundenkennung</label><input id="customer-id" maxlength="100" required placeholder="z. B. K-10023"><label for="customer-name">Kundenname</label><input id="customer-name" maxlength="160" required placeholder="Vorname und Nachname / Firma"><label for="commission-id">Kommission / Angebotsnummer</label><input id="commission-id" maxlength="100" required placeholder="z. B. AG-2026-10-0162"><label class="check"><input id="require-code" type="checkbox" checked><span>Zusätzlichen sechsstelligen Kundencode verwenden.</span></label></div>
+
 <label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">
 <div id="placement" hidden>
 <label for="prepared-title">Angebotsnummer / Bezeichnung</label><input id="prepared-title" maxlength="120">
@@ -61,11 +67,15 @@
 <div class="pick-tools"><button id="pick-signature" class="secondary">Unterschriftsfläche markieren</button><button id="pick-date" class="secondary">Datumsfläche markieren</button></div>
 <p class="hint">Zum Ändern: Button wählen und auf der Seite ein Rechteck aufziehen. Der Name wird unter die Unterschrift gesetzt.</p>
 <div id="placement-view" class="pdf-view placement-view"><canvas id="owner-canvas"></canvas><div id="signature-box" class="placement-box"><span>Unterschrift + Name</span></div><div id="date-box" class="placement-box date"><span>Datum</span></div><div id="draw-box" class="placement-box" hidden></div></div>
+<label for="extra-files">Weitere Unterlagen für genau diese Kommission</label><input id="extra-files" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"><p class="hint">Bis zu zwölf Dateien: PDF, Word, JPG, PNG oder WebP. Die aktuellen AGB und Widerrufsunterlagen werden automatisch als feste Kopien beigefügt.</p><p id="extra-file-list" class="small"></p>
 <label class="check"><input id="placement-confirm" type="checkbox"><span>Ich habe Seite und Platzierung geprüft. Die Flächen verdecken keinen Angebotstext.</span></label>
 <button id="local-test" class="secondary wide">Diese PDF selbst probeweise unterschreiben</button>
 <button id="publish-offer" class="primary wide">2. Kundenlink erstellen</button>
-<div id="offer-link-result" hidden><label for="offer-link">Diesen Link mit dem Angebot über WhatsApp senden</label><input id="offer-link" readonly><button id="copy-link" class="primary wide">Link kopieren</button><p class="hint">Der Link ist 14 Tage gültig. Jeder mit diesem Link kann das Angebot öffnen.</p><button id="revoke-link" class="secondary wide">Diesen Link wieder sperren</button></div>
-</div></div>
+<div id="offer-link-result" hidden><label for="offer-link">Diesen Link mit dem Angebot über WhatsApp senden</label><input id="offer-link" readonly><button id="copy-link" class="primary wide">Link kopieren</button><div id="code-result" hidden><label for="issued-code">Kundencode – getrennt an den Kunden weitergeben</label><input id="issued-code" readonly><button id="copy-code" class="secondary wide">Kundencode kopieren</button></div><p id="issued-status" class="hint">Nur für diese Kommission. Nach Abschluss, Sperrung oder Ablauf nicht mehr nutzbar. Eine neue Freigabe derselben Kommission sperrt den vorherigen Link.</p><button id="revoke-link" class="secondary wide">Diesen Link wieder sperren</button></div>
+</div>
+<section id="legal-admin" class="owner-details"><h2>Aktuelle Vertragsvorlagen</h2><p id="legal-status" class="hint">Vorlagen werden nach Anmeldung geladen.</p><label for="legal-role">Vorlage</label><select id="legal-role"><option value="agb">AGB</option><option value="widerruf">Widerrufsbelehrung + Musterformular</option></select><label for="legal-version">Versionsstand</label><input id="legal-version" placeholder="z. B. 30.10.2026" maxlength="80"><label for="legal-file">Aktuelle PDF</label><input id="legal-file" type="file" accept="application/pdf,.pdf"><button id="upload-legal" class="secondary wide">Vertragsvorlage aktualisieren</button><p class="hint">Neue Freigaben übernehmen diese Vorlagen automatisch. Bereits freigegebene Unterlagenpakete behalten ihren gespeicherten Stand. Für Änderungen eine neue Freigabe erstellen.</p></section>
+<section id="records-admin" class="owner-details"><h2>Freigegebene Angebote</h2><button id="load-records" class="secondary wide">Meine Vorgänge anzeigen</button><div id="record-list"></div></section>
+</div>
 </section>
 </main>
 <footer><b>Sichtwerk – Neubauer</b><br>Bei Fragen einfach Swen Neubauer im bestehenden WhatsApp-Chat schreiben.<br><a href="https://www.sichtwerk-neubauer.de/impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="https://www.sichtwerk-neubauer.de/datenschutz.html" target="_blank" rel="noopener">Datenschutz</a><br><a id="owner-link" href="?vorbereiten=1">Angebot vorbereiten</a></footer>

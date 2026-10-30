@@ -1,0 +1,23 @@
+{
+  "release": "2026-10-30",
+  "documents": [
+    {
+      "role": "agb",
+      "name": "AGB_Sichtwerk_Neubauer_2026-10-28.pdf",
+      "version": "28.10.2026",
+      "mime": "application/pdf",
+      "size": 179331,
+      "sha256": "737d9629aca0f4b8f0a8fd0bf879bab39e56e7e00768a9a8eaa921bf9f4279ce",
+      "file": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-10-28.pdf"
+    },
+    {
+      "role": "widerruf",
+      "name": "Widerrufsbelehrung_Sichtwerk_Neubauer_2026-10-26_WhatsApp.pdf",
+      "version": "26.10.2026",
+      "mime": "application/pdf",
+      "size": 78961,
+      "sha256": "847bd87f0fd30d73a01751ead101e885639c20e85a75f77da442397ff94976da",
+      "file": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-10-26_WhatsApp.pdf"
+    }
+  ]
+}

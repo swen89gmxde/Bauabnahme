@@ -1,0 +1,1 @@
+{"name":"sichtwerk-angebotsportal","private":true,"type":"module","scripts":{"dev":"node angebote-tests/dev-server.mjs","pretest":"node angebote-tests/stamp.mjs","test":"node angebote-tests/backend.mjs"},"devDependencies":{"@php-wasm/node":"3.1.61","@php-wasm/universal":"3.1.61","pdf-lib":"1.17.1"}}
