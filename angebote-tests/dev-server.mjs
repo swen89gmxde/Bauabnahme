@@ -5,7 +5,7 @@ const {PHP,PHPRequestHandler}=await import(pathToFileURL(path.join(modules,'@php
 const origin=process.env.PORTAL_PREVIEW_ORIGIN||'http://localhost:4173';
 const fixture=path.join(root,'angebote-tests/private-preview-'+randomBytes(8).toString('hex')),privateDir=path.join(fixture,'sichtwerk-signieren-private'),phpWeb=path.join(fixture,'public');fs.mkdirSync(privateDir,{recursive:true});fs.cpSync(web,phpWeb,{recursive:true});
 const php=new PHP(await loadNodeRuntime('8.3',{emscriptenOptions:{processId:process.pid}}));useHostFilesystem(php);const pass=randomBytes(32).toString('hex'),hashed=await php.run({code:`<?php echo password_hash('${pass}',PASSWORD_DEFAULT);`});
-const config=path.join(privateDir,'config.php');fs.writeFileSync(config,`<?php putenv('SICHTWERK_TEST_HTTP=1');return ['origin'=>'${origin}','password_hash'=>'${hashed.text.trim()}','data_dir'=>'${privateDir}/data'];`);
+const config=path.join(privateDir,'config.php');fs.writeFileSync(config,`<?php putenv('SICHTWERK_TEST_HTTP=1');require '${root}/angebote-tests/drive-mock.php';return ['origin'=>'${origin}','password_hash'=>'${hashed.text.trim()}','data_dir'=>'${privateDir}/data','drive_archive'=>['folder_id'=>'synthetic_root_12345','client_id'=>'preview','client_secret'=>'preview','refresh_token'=>'preview','transport'=>'syntheticDrive']];`);
 // Runtime environment persists across requests. All data is synthetic and private to this preview.
 
 const handler=new PHPRequestHandler({php,documentRoot:phpWeb,absoluteUrl:origin,cookieStore:false});let cookie='',csrf='';

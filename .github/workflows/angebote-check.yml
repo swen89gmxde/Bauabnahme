@@ -17,3 +17,5 @@ jobs:
         run: node --check angebote/app.mjs
       - name: PDF-Verarbeitung syntaktisch pruefen
         run: node --check angebote/core.mjs
+      - name: PHP-Syntax pruefen
+        run: for file in angebote/server/*.php; do php -l "$file" || exit 1; done

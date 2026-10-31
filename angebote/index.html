@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261030-farben-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261030"></script>
+<script type="module" src="app.mjs?v=20261031-archiv-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -43,7 +43,7 @@
 <section id="complete" class="card" hidden>
 <div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">Schritt 3 von 3</p><h1 id="completion-title">Unterschrift prüfen</h1><p id="completion-text">Name, Datum und Unterschrift stehen jetzt in der PDF. Bitte prüfen Sie die Vorschau.</p>
 <div class="pdf-view"><canvas id="signed-canvas" aria-label="Vorschau der unterschriebenen Seite"></canvas></div>
-<div id="finalize-area"><p class="hint">Mit „Unterschrift abschließen“ wird die unterschriebene PDF gespeichert und dieser Angebotslink gesperrt. Danach können Sie die PDF zurückteilen.</p><button id="finalize-offer" class="primary wide">Unterschrift abschließen →</button></div>
+<div id="finalize-area"><p id="finalize-hint" class="hint">Mit „Unterschrift abschließen“ wird Ihre PDF gespeichert. Erst nach bestätigter Archivierung wird dieser Angebotslink gesperrt. Danach können Sie die PDF zusätzlich zurückteilen.</p><button id="finalize-offer" class="primary wide">Unterschrift abschließen →</button></div>
 <div id="return-area" hidden><button id="share-pdf" class="primary wide">PDF über WhatsApp zurücksenden</button><p id="share-hint" class="hint">Im nächsten Fenster WhatsApp und den Chat mit Swen Neubauer auswählen.</p>
 <a id="download-pdf" class="secondary wide" download>Unterschriebene PDF speichern</a>
 <a id="open-pdf" class="text-link" target="_blank" rel="noopener">Fertige PDF groß ansehen ↗</a>
@@ -74,6 +74,7 @@
 <div id="offer-link-result" hidden><label for="offer-link">Diesen Link mit dem Angebot über WhatsApp senden</label><input id="offer-link" readonly><button id="copy-link" class="primary wide">Link kopieren</button><div id="code-result" hidden><label for="issued-code">Kundencode – getrennt an den Kunden weitergeben</label><input id="issued-code" readonly><button id="copy-code" class="secondary wide">Kundencode kopieren</button></div><p id="issued-status" class="hint">Nur für diese Kommission. Nach Abschluss, Sperrung oder Ablauf nicht mehr nutzbar. Eine neue Freigabe derselben Kommission sperrt den vorherigen Link.</p><button id="revoke-link" class="secondary wide">Diesen Link wieder sperren</button></div>
 </div>
 <section id="legal-admin" class="owner-details"><h2>Aktuelle Vertragsvorlagen</h2><p id="legal-status" class="hint">Vorlagen werden nach Anmeldung geladen.</p><label for="legal-role">Vorlage</label><select id="legal-role"><option value="agb">AGB</option><option value="widerruf">Widerrufsbelehrung + Musterformular</option></select><label for="legal-version">Versionsstand</label><input id="legal-version" placeholder="z. B. 30.10.2026" maxlength="80"><label for="legal-file">Aktuelle PDF</label><input id="legal-file" type="file" accept="application/pdf,.pdf"><button id="upload-legal" class="secondary wide">Vertragsvorlage aktualisieren</button><p class="hint">Neue Freigaben übernehmen diese Vorlagen automatisch. Bereits freigegebene Unterlagenpakete behalten ihren gespeicherten Stand. Für Änderungen eine neue Freigabe erstellen.</p></section>
+<section id="archive-admin" class="owner-details"><h2>Automatische Archivierung</h2><p id="archive-status" class="hint">Die Drive-Anbindung wird nach Anmeldung geprüft.</p><p class="hint">Der normale Abschluss sperrt den Kundenlink erst, wenn die unterschriebene PDF und das vollständige Unterlagenpaket auch in Google Drive geprüft gespeichert sind. Ausstehende Sicherungen sehen Sie bei den Vorgängen.</p></section>
 <section id="records-admin" class="owner-details"><h2>Freigegebene Angebote</h2><button id="load-records" class="secondary wide">Meine Vorgänge anzeigen</button><div id="record-list"></div></section>
 </div>
 </section>

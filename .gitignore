@@ -2,6 +2,11 @@
 **/config.php
 **/sichtwerk-signieren-private/
 **/sichtwerk-signieren-data/
-**/private-*/
-**/*-signed.pdf
+tests/private-*/
+tests/*-signed.pdf
 node_modules/
+
+angebote-tests/private-*/
+angebote-tests/*-signed.pdf
+angebote-tests/__pycache__/
+angebote/qa-*.html
