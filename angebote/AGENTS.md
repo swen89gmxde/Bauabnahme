@@ -1,6 +1,7 @@
 # Angebotsportal: Regeln für Änderungen
 
 - Kundenunterlagen und Unterschriften niemals in dieses öffentliche Repository aufnehmen. Öffentliche allgemeine AGB und Widerrufsvorlagen liegen ausschließlich in `vertragsunterlagen/`.
+- Das zusätzliche Pflichtkästchen für AGB und den Hinweis auf die Widerrufsbelehrung darf nicht vorausgewählt sein. Neue Abschlüsse auch serverseitig ohne boolesche Bestätigung und passende Textversion ablehnen. Erklärung, Zeitpunkt und freigegebene Dokumentstände archivieren. Historische Abschlüsse nicht nachträglich verändern; aus der Bestätigung keinen Widerrufsverzicht oder vorzeitigen Beginn ableiten.
 - Kundenkennung, Kommission, Freigabeversion und Token nicht vermischen. Keine wiederverwendete URL auf ein jeweils anderes Angebot zeigen lassen.
 - Neue Freigaben einer Kunden-Kommissions-Kombination sperren den alten Link. Alle kundenseitigen Datei- und Abschlussrouten müssen Zugriff und Status serverseitig prüfen.
 - Abschluss speichert die unterschriebene PDF zuerst privat auf STRATO. Der automatische Abschluss sperrt den Kundenzugang erst nach zusätzlich bestätigter Drive-Archivierung des vollständigen Pakets. Während `archive_pending` bleibt die gespeicherte Unterschrift unverändert; Wiederholung, Browser-Neustart und geplanter Worker müssen denselben Vorgang fortsetzen. Ein fehlender Drive-Zugang darf die Sicherung nicht stillschweigend überspringen. Wiederholungen desselben erfolgreichen Abschlusses dürfen keine zweite Unterschrift erzeugen. Historische Originale, Anlagen und abgeschlossene Vorgänge nicht verändern.

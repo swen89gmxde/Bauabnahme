@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261030-farben-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261031-archiv-1"></script>
+<script type="module" src="app.mjs?v=20261031-pflichtfeld-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -36,6 +36,8 @@
 <div class="signature-wrap"><canvas id="signature" aria-label="Hier mit dem Finger unterschreiben"></canvas><span class="signature-line" aria-hidden="true"></span></div>
 <button type="button" id="clear-signature" class="secondary">Unterschrift neu schreiben</button>
 <label class="check"><input id="confirm" type="checkbox" required><span id="confirm-text">Ich habe das Angebot und die dazu bereitgestellten Unterlagen gelesen und nehme das Angebot unverändert an.</span></label>
+<section aria-label="AGB und Widerrufsbelehrung"><p class="hint">Bitte beachten Sie vor dem Abschluss die AGB und die Widerrufsbelehrung einschließlich Muster-Widerrufsformular. Hier können Sie beide Unterlagen einsehen und speichern.</p><div id="sign-document-list" class="download-list"></div>
+<label class="check"><input id="legal-confirm" name="legal_consent" type="checkbox" required><span><span id="legal-confirm-text">Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.</span> <b>(Pflichtfeld)</b></span></label></section>
 <button type="submit" id="create-pdf" class="primary wide">Unterschrift ins Angebot einsetzen →</button>
 <button type="button" id="back-review" class="quiet wide">← Angebot noch einmal ansehen</button>
 </form>

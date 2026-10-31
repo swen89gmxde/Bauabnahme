@@ -52,7 +52,7 @@ function driveReserve(): string {
     if($r['status']!==200||!is_string($id)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id))throw new RuntimeException('drive_generate_id');return $id;
 }
 function archiveManifest(array $r): array {
-    return ['schema'=>1,'customer_id'=>$r['customer_id'],'customer_name'=>$r['customer_name'],'commission'=>$r['commission'],'revision'=>$r['revision'],'title'=>$r['title'],'accepted_at'=>$r['completion']['accepted_at'],'signer'=>$r['completion']['name'],'date'=>$r['completion']['date'],'original_sha256'=>$r['sha256'],'signed_sha256'=>$r['completion']['sha256'],'documents'=>publicFiles($r['attachments'])];
+    return ['schema'=>1,'customer_id'=>$r['customer_id'],'customer_name'=>$r['customer_name'],'commission'=>$r['commission'],'revision'=>$r['revision'],'title'=>$r['title'],'accepted_at'=>$r['completion']['accepted_at'],'signer'=>$r['completion']['name'],'date'=>$r['completion']['date'],'original_sha256'=>$r['sha256'],'signed_sha256'=>$r['completion']['sha256'],'documents'=>publicFiles($r['attachments']),'legal_consent'=>$r['completion']['legal_consent']??null];
 }
 function archiveFiles(array $r): array {
     $dir=recordPath($r['id']);

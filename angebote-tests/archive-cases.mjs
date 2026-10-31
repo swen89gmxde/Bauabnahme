@@ -6,10 +6,12 @@ export async function archiveCases(t){
  const readRecord=id=>JSON.parse(fs.readFileSync(path.join(privateDir,'data/records',id,'record.json')));
  const saveRecord=r=>fs.writeFileSync(path.join(privateDir,'data/records',r.id,'record.json'),JSON.stringify(r));
  const pending=await create(meta('PENDING','ARCHIVE-1'),{'attachments[0]':file(source,'Anlage.pdf')});const p=await unlock(alice,pending);
- const metadata={name:'Testperson Archiv',date:'2026-10-30',request_id:randomBytes(16).toString('hex'),source_sha256:p.sha256,proof:p.proof,documents:Object.fromEntries(p.attachments.map(f=>[f.id,f.sha256]))};
+ const metadata={name:'Testperson Archiv',date:'2026-10-30',legal_consent:true,consent_version:1,request_id:randomBytes(16).toString('hex'),source_sha256:p.sha256,proof:p.proof,documents:Object.fromEntries(p.attachments.map(f=>[f.id,f.sha256]))};
  const complete=(m=metadata,pdf=signed)=>({method:'POST',token:pending.token,body:{pdf:file(pdf),metadata:JSON.stringify(m)}});
  await expect(alice,'archive-progress',409,post({proof:p.proof},pending.token));
  setMock({fail_upload:true});let r=json(await expect(alice,'complete',202,complete()));assert(r.archive_pending&&r.saved_locally&&!r.ok);
+ const evidence=readRecord(pending.id).completion.legal_consent;assert.equal(evidence.version,1);assert.equal(evidence.documents.length,2);checks(2);
+ await expect(alice,'complete',400,complete({...metadata,legal_consent:false}));
  assert.equal(readRecord(pending.id).state,'archive_pending');assert.deepEqual(fs.readFileSync(path.join(privateDir,'data/records',pending.id,'signed.pdf')),signed);checks(3);
  for(const action of ['access','offer','document','attachment&id='+p.attachments[0].id])await expect(alice,action,200,{token:pending.token});
  await expect(alice,'complete',410,complete({...metadata,request_id:randomBytes(16).toString('hex')}));

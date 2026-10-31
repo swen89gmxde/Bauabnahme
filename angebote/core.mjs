@@ -1,3 +1,4 @@
+export const LEGAL_CONSENT=Object.freeze({version:1,text:'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'});
 export function validateLayout(layout,pages){
  if(!layout || !Number.isInteger(layout.page) || layout.page<0 || layout.page>=pages.length)throw Error('Die Unterschriftsseite fehlt. Bitte das Angebot neu vorbereiten.');
  const page=pages[layout.page],{width,height}=page.getSize();
@@ -32,6 +33,7 @@ export async function stampPDF(bytes,layout,images,PDFLib,options={}){
   const image=await doc.embedPng(png);page.drawImage(image,{...p,opacity:1});
  }
  if(options.bundle?.length)doc.catalog.set(PDFLib.PDFName.of('SichtwerkDocuments'),doc.context.obj(options.bundle.map(f=>({Name:PDFLib.PDFHexString.fromText(f.name),SHA256:PDFLib.PDFHexString.fromText(f.sha256),Version:PDFLib.PDFHexString.fromText(f.version||'')}))));
+ if(options.consent){const c=options.consent;if(c.accepted!==true||!Number.isInteger(c.version)||typeof c.text!=='string')throw Error('Die Pflichtbestätigung zu den Vertragsunterlagen fehlt.');doc.catalog.set(PDFLib.PDFName.of('SichtwerkConsent'),doc.context.obj({Version:c.version,Accepted:true,Text:PDFLib.PDFHexString.fromText(c.text),Test:!!c.test}));}
  return doc.save({useObjectStreams:false,updateFieldAppearances:false});
 }
 export function germanDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('Bitte ein gültiges Datum wählen.');const [y,m,d]=value.split('-');const date=new Date(Number(y),Number(m)-1,Number(d));if(date.getFullYear()!==+y||date.getMonth()!==+m-1||date.getDate()!==+d)throw Error('Bitte ein gültiges Datum wählen.');return `${d}.${m}.${y}`;}
