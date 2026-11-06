@@ -15,6 +15,8 @@ jobs:
         run: node angebote-tests/check-legal.mjs
       - name: Kundenoberflaeche syntaktisch pruefen
         run: node --check angebote/app.mjs
+      - name: Ersteinrichtung syntaktisch pruefen
+        run: node --check angebote/setup.mjs
       - name: PDF-Verarbeitung syntaktisch pruefen
         run: node --check angebote/core.mjs
       - name: Anlagenauswahl und Paketgrenzen pruefen
@@ -25,3 +27,9 @@ jobs:
         run: node angebote-tests/signature-touch.mjs
       - name: PHP-Syntax pruefen
         run: for file in angebote/server/*.php; do php -l "$file" || exit 1; done
+      - name: Isolierte PHP-Testlaufzeit installieren
+        run: npm install --prefix "$RUNNER_TEMP/portal-tests" --ignore-scripts --no-audit --no-fund @php-wasm/node@3.1.61 @php-wasm/universal@3.1.61
+      - name: Geschuetzte Ersteinrichtung und Freigabesperre pruefen
+        env:
+          PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
+        run: node angebote-tests/setup.mjs
