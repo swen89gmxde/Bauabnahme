@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261106-anlagen-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261106-anlagen-2"></script>
+<script type="module" src="app.mjs?v=20261106-ruecksendung-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -17,7 +17,7 @@
 <section id="error" class="card" hidden><h1>Das Angebot konnte nicht geöffnet werden.</h1><p id="error-text"></p><button id="retry" class="primary">Noch einmal versuchen</button><p>Bitte wenden Sie sich an Swen Neubauer, wenn der Link nicht mehr gültig ist.</p></section>
 <section id="access-gate" class="card" hidden><p class="eyebrow">Ihr persönlicher Zugang</p><h1>Bitte Kundencode eingeben</h1><p>Den sechsstelligen Code erhalten Sie von Swen Neubauer.</p><form id="code-form"><label for="customer-code">Ihr Kundencode</label><input id="customer-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="6 Ziffern"><button class="primary wide" id="unlock-offer">Mein Angebot öffnen →</button></form></section>
 <div id="customer" hidden>
-<nav class="steps" aria-label="Fortschritt"><span id="step-one" aria-current="step"><b>1</b> Ansehen</span><span id="step-two"><b>2</b> Unterschreiben</span><span id="step-three"><b>3</b> Zurücksenden</span></nav>
+<nav class="steps" aria-label="Fortschritt"><span id="step-one" aria-current="step"><b>1</b> Ansehen</span><span id="step-two"><b>2</b> Unterschreiben</span><span id="step-three"><b>3</b> Abschließen</span></nav>
 <section id="review" class="card">
 <p class="eyebrow">Sichtwerk – Neubauer</p><h1>Ihr Angebot unterschreiben</h1><p id="offer-title" class="offer-title"></p><p id="commission-label" class="small muted"></p><p>Bitte lesen Sie zuerst das Angebot mit allen Seiten.</p>
 <div class="document-toolbar"><button id="prev-page" class="secondary compact" aria-label="Vorherige Seite">← Zurück</button><span id="page-label" aria-live="polite"></span><button id="next-page" class="secondary compact" aria-label="Nächste Seite">Weiter →</button></div>
@@ -47,10 +47,15 @@
 <div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">Schritt 3 von 3</p><h1 id="completion-title">Unterschrift prüfen</h1><p id="completion-text">Name, Datum und Unterschrift stehen jetzt in der PDF. Bitte prüfen Sie die Vorschau.</p>
 <div class="pdf-view"><canvas id="signed-canvas" aria-label="Vorschau der unterschriebenen Seite"></canvas></div>
 <div id="finalize-area"><p id="finalize-hint" class="hint">Mit „Unterschrift abschließen“ wird Ihre PDF gespeichert. Erst nach bestätigter Archivierung wird dieser Angebotslink gesperrt. Danach können Sie die PDF zusätzlich zurückteilen.</p><button id="finalize-offer" class="primary wide">Unterschrift abschließen →</button></div>
-<div id="return-area" hidden><button id="share-pdf" class="primary wide">PDF über WhatsApp zurücksenden</button><p id="share-hint" class="hint">Im nächsten Fenster WhatsApp und den Chat mit Swen Neubauer auswählen.</p>
+<div id="return-area" hidden>
+<h2>PDF zusätzlich zurücksenden</h2><p id="return-storage" class="hint"></p>
+<button id="share-pdf" class="primary wide">PDF per WhatsApp teilen</button><p id="share-hint" class="hint">Im Teilen-Menü WhatsApp und den Chat mit Swen Neubauer auswählen. Dort den Versand bestätigen.</p>
+<button id="email-pdf" class="primary wide">PDF per E-Mail zurücksenden</button><p id="email-hint" class="hint"></p>
+<button id="show-email-options" class="quiet wide">Mailprogramm stattdessen öffnen</button>
+<div id="email-options" class="notice" hidden><b>Rücksenden mit Ihrem Mailprogramm</b><p>1. PDF speichern.<br>2. Mailprogramm öffnen.<br>3. Gespeicherte PDF als Anhang hinzufügen und auf „Senden“ drücken.</p><a id="download-email-pdf" class="secondary wide" download>1. Unterschriebene PDF speichern</a><a id="email-draft" class="secondary wide">2. Mailprogramm öffnen</a><p class="hint">Empfänger und Betreff sind vorbereitet. Dieser Weg fügt keinen Anhang automatisch hinzu. Falls kein Mailprogramm eingerichtet ist, verwenden Sie Ihr Webmail-Postfach.</p></div>
 <a id="download-pdf" class="secondary wide" download>Unterschriebene PDF speichern</a>
 <a id="open-pdf" class="text-link" target="_blank" rel="noopener">Fertige PDF groß ansehen ↗</a>
-<p id="send-status" class="small" role="status">Noch nicht zurückgesendet. Bitte den grünen Button benutzen.</p>
+<p id="send-status" class="small" role="status">Zusätzliches Teilen ist noch nicht erfolgt.</p>
 </div>
 <button id="correct" class="quiet wide">← Angaben oder Unterschrift korrigieren</button>
 </section>

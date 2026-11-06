@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {RETURN_EMAIL,returnMail,canShareFile,returnSignedPDF} from '../angebote/return.mjs';
+const file=new File(['synthetic signed PDF'],'PROBELAUF_angebot.pdf',{type:'application/pdf'});
+let checks=0;
+const check=(actual,expected)=>{assert.deepEqual(actual,expected);checks++;};
+const draft=new URL(returnMail({title:'AG-TEST & Zeichnung',name:'Max Muster',demo:true}));
+check(draft.pathname,RETURN_EMAIL);
+check(draft.searchParams.get('subject'),'PROBELAUF – Unterschriebenes Angebot: AG-TEST & Zeichnung');
+check(draft.searchParams.get('body').endsWith('Max Muster'),true);
+check([...draft.searchParams.keys()],['subject','body']);
+check(draft.href.includes('auftrag='),false);
+check(new URL(returnMail({title:'Test\r\nBcc: fremd@example.test'})).searchParams.get('subject').includes('\n'),false);
+check(canShareFile({},file),false);
+check(canShareFile({canShare:()=>true},file),false);
+check(canShareFile({share(){},canShare(){throw Error('blocked');}},file),false);
+for(const channel of ['whatsapp','email']){
+ const statuses=[],fallbacks=[],calls=[];
+ const options={channel,file,title:'PROBELAUF – Angebot',navigator:{canShare:()=>true,share:async data=>{calls.push(data);}},onStatus:text=>statuses.push(text),onFallback:method=>fallbacks.push(method)};
+ await returnSignedPDF(options);
+ check(calls.length,1);check(calls[0].files[0],file);check(calls[0].title,options.title);check(fallbacks,[]);
+ check(statuses.at(-1).includes('Eingang ist hier nicht bestätigt'),true);
+ calls.length=0;statuses.length=0;
+ await returnSignedPDF({...options,navigator:{canShare:()=>true,share:async()=>{calls.push(1);throw Object.assign(Error('cancel'),{name:'AbortError'});}}});
+ check(calls.length,1);check(fallbacks,[]);check(statuses.at(-1).startsWith('Teilen abgebrochen'),true);
+ statuses.length=0;
+ await returnSignedPDF({...options,navigator:{canShare:()=>false,share:async()=>{throw Error('must not share');}}});
+ check(fallbacks,[channel]);check(statuses,[]);
+ fallbacks.length=0;
+ await returnSignedPDF({...options,navigator:{canShare:()=>true,share:async()=>{throw Error('unsupported');}}});
+ check(fallbacks,[channel]);
+ fallbacks.length=0;
+ await returnSignedPDF({...options,file:null});check(fallbacks,[]);
+}
+console.log(checks+' Prüfungen bestanden: PDF-Übergabe, E-Mail-Vorbereitung, Abbruch und Ersatzwege. Kein Versand ausgelöst.');
