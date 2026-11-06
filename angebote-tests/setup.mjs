@@ -23,6 +23,8 @@ try{
  for(const name of ['setup.php','setup-store.php']){const r=await php.run({code:`<?php token_get_all(file_get_contents('${web}/server/${name}'),TOKEN_PARSE);echo 'OK';`});eq(r.text,'OK');}
  await expect(owner,page,404);const expired=grant(Math.floor(Date.now()/1000)-60);await expect(owner,page,404);
  const token=grant();let r=await expect(owner,page,200);eq(r.text.includes('name="password"'),false);eq(r.text.includes(token),false);eq(r.text.includes(hash(token)),false);
+ // The native password form must keep its same-origin Origin (Fetch standard section 3.2).
+ eq(Object.entries(r.headers).filter(([key])=>key.toLowerCase()==='referrer-policy').flatMap(([,values])=>values),['same-origin']);eq(r.text.includes('<meta name="referrer" content="same-origin">'),true);
  r=await expect(owner,unlock,403,{...unlockBody(token),origin:'https://foreign.test'});eq(fs.existsSync(configPath),false);
  await expect(owner,unlock,403,{...unlockBody(token),csrf:'wrong'});await expect(owner,unlock,403,unlockBody('0'.repeat(64)));
  const oldSession=owner.cookies.sichtwerk_portal_setup;
@@ -31,7 +33,7 @@ try{
  r=await expect(owner,page,200);eq(r.text.includes('autocomplete="new-password"'),true);eq(r.text.includes(token),false);eq(r.text.includes('Kundenfreigaben bleiben zunächst gesperrt'),true);
  r=await expect(stranger,page,200);eq(r.text.includes('name="password"'),false);
  const password=randomBytes(24).toString('hex');await expect(stranger,page,403,form(stranger,password));eq(fs.existsSync(configPath),false);
- await expect(owner,page,403,{...form(owner,password),origin:'https://foreign.test'});await expect(owner,page,403,{method:'POST',body:{csrf:'wrong',password,repeat:password}});
+ await expect(owner,page,403,{...form(owner,password),origin:'https://foreign.test'});await expect(owner,page,403,{...form(owner,password),origin:'null'});eq(fs.existsSync(configPath),false);await expect(owner,page,403,{method:'POST',body:{csrf:'wrong',password,repeat:password}});
  await expect(owner,page,400,form(owner,'short'));await expect(owner,page,400,form(owner,password,'different'));await expect(owner,page,400,form(owner,'ü'.repeat(40)));eq(fs.existsSync(configPath),false);
  // Expiry must also apply to an already-unlocked session.
  const originalGrant=fs.readFileSync(grantPath);const g=JSON.parse(originalGrant);g.expires=Math.floor(Date.now()/1000)-60;fs.writeFileSync(grantPath,JSON.stringify(g));await expect(owner,page,404,form(owner,password));eq(fs.existsSync(configPath),false);fs.writeFileSync(grantPath,originalGrant);
