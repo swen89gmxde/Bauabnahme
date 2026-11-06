@@ -3,6 +3,7 @@
 h2{font-size:23px;line-height:1.3;margin:28px 0 14px}.download-list{display:grid;gap:10px}.download-list button{justify-content:space-between;width:100%;text-align:left;font-size:17px;padding:15px;overflow-wrap:anywhere}.download-list small{font-size:13px;font-weight:400;display:block}.owner-details{border-top:1px solid var(--line);margin-top:28px;padding-top:8px}select{width:100%;font:inherit;min-height:58px;padding:12px;border:2px solid #8296a2;border-radius:10px;background:white;color:#111}.record-card{border:1px solid var(--line);padding:16px;border-radius:12px;margin:16px 0;font-size:15px}.record-card button{font-size:15px;min-height:48px;margin-top:9px}.record-card p{margin:6px 0}#customer-code,#issued-code{font-size:30px;letter-spacing:.24em;text-align:center}#documents{margin-top:24px;padding-top:5px;border-top:1px solid var(--line)}
 
 /* Website palette: sichtwerk-neubauer.de, checked 30.10.2026. */
+.signature-wrap,.signature-wrap canvas{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #share-pdf{background:var(--whatsapp)}
 #share-pdf:hover{background:#105333}
 

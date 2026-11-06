@@ -21,5 +21,7 @@ jobs:
         run: node angebote-tests/attachments.mjs
       - name: PDF-Ruecksendung und E-Mail-Ersatzweg pruefen
         run: node angebote-tests/return.mjs
+      - name: Smartphone-Unterschrift und Scrollfreigabe pruefen
+        run: node angebote-tests/signature-touch.mjs
       - name: PHP-Syntax pruefen
         run: for file in angebote/server/*.php; do php -l "$file" || exit 1; done
