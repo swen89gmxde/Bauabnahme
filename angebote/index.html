@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261030-farben-1">
+<link rel="stylesheet" href="style.css?v=20261106-anlagen-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261031-pflichtfeld-1"></script>
+<script type="module" src="app.mjs?v=20261106-anlagen-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -25,6 +25,7 @@
 <a id="original-pdf" class="secondary wide" target="_blank" rel="noopener">Angebot groß öffnen ↗</a>
 <section id="documents"><h2>Ihre Unterlagen zum Herunterladen</h2><p class="hint">Diese Unterlagen gehören genau zu diesem Angebot. Bitte vor der Unterschrift lesen und für Ihre Ablage speichern.</p><div id="document-list" class="download-list"></div></section>
 <button id="to-sign" class="primary wide">Weiter zur Unterschrift →</button>
+<button id="back-preparation" class="quiet wide" hidden>← Vorbereitung und Anlagen bearbeiten</button>
 <p class="small muted">Sie können das Angebot vor dem Unterschreiben jederzeit erneut ansehen.</p>
 </section>
 <section id="sign" class="card" hidden>
@@ -62,6 +63,14 @@
 <div class="owner-details"><h2>Kunde und Kommission</h2><label for="customer-id">Kundennummer / eindeutige Kundenkennung</label><input id="customer-id" maxlength="100" required placeholder="z. B. K-10023"><label for="customer-name">Kundenname</label><input id="customer-name" maxlength="160" required placeholder="Vorname und Nachname / Firma"><label for="commission-id">Kommission / Angebotsnummer</label><input id="commission-id" maxlength="100" required placeholder="z. B. AG-2026-10-0162"><label class="check"><input id="require-code" type="checkbox" checked><span>Zusätzlichen sechsstelligen Kundencode verwenden.</span></label></div>
 
 <label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">
+<section id="attachments-preparation" class="owner-details" aria-labelledby="attachments-heading">
+<h2 id="attachments-heading">2. Weitere Unterlagen anhängen <span class="small muted">(optional)</span></h2>
+<p>Hier können Sie Zeichnungen, Sondervereinbarungen und andere Unterlagen für dieses Angebot hinzufügen. Bei Bedarf sind auch Bilder möglich.</p>
+<label for="extra-files">Dokumente oder Bilder hinzufügen</label><input id="extra-files" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" aria-describedby="extra-file-hint extra-file-summary">
+<p id="extra-file-hint" class="hint">Zeichnungen bitte als PDF. Außerdem möglich: Word (.doc/.docx), JPG, PNG und WebP. Bis zu 12 Anlagen, je 20 MB; Angebot und Anlagen zusammen höchstens 60 MB.</p>
+<p class="hint">Sie können Dateien auch nacheinander hinzufügen und einzeln entfernen. Die aktuellen AGB und Widerrufsunterlagen kommen bei einer Kundenfreigabe automatisch dazu; im Probelauf werden die Musterfassungen angezeigt.</p>
+<p id="extra-file-summary" class="small" role="status" aria-live="polite">Noch keine zusätzlichen Unterlagen ausgewählt.</p><ul id="extra-file-list" class="attachment-selection"></ul>
+</section>
 <div id="placement" hidden>
 <label for="prepared-title">Angebotsnummer / Bezeichnung</label><input id="prepared-title" maxlength="120">
 <div class="document-toolbar"><button id="owner-prev" class="secondary compact">← Zurück</button><span id="owner-page"></span><button id="owner-next" class="secondary compact">Weiter →</button></div>
@@ -69,10 +78,9 @@
 <div class="pick-tools"><button id="pick-signature" class="secondary">Unterschriftsfläche markieren</button><button id="pick-date" class="secondary">Datumsfläche markieren</button></div>
 <p class="hint">Zum Ändern: Button wählen und auf der Seite ein Rechteck aufziehen. Der Name wird unter die Unterschrift gesetzt.</p>
 <div id="placement-view" class="pdf-view placement-view"><canvas id="owner-canvas"></canvas><div id="signature-box" class="placement-box"><span>Unterschrift + Name</span></div><div id="date-box" class="placement-box date"><span>Datum</span></div><div id="draw-box" class="placement-box" hidden></div></div>
-<label for="extra-files">Weitere Unterlagen für genau diese Kommission</label><input id="extra-files" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"><p class="hint">Bis zu zwölf Dateien: PDF, Word, JPG, PNG oder WebP. Die aktuellen AGB und Widerrufsunterlagen werden automatisch als feste Kopien beigefügt.</p><p id="extra-file-list" class="small"></p>
 <label class="check"><input id="placement-confirm" type="checkbox"><span>Ich habe Seite und Platzierung geprüft. Die Flächen verdecken keinen Angebotstext.</span></label>
 <button id="local-test" class="secondary wide">Diese PDF selbst probeweise unterschreiben</button>
-<button id="publish-offer" class="primary wide">2. Kundenlink erstellen</button>
+<button id="publish-offer" class="primary wide">3. Kundenlink erstellen</button>
 <div id="offer-link-result" hidden><label for="offer-link">Diesen Link mit dem Angebot über WhatsApp senden</label><input id="offer-link" readonly><button id="copy-link" class="primary wide">Link kopieren</button><div id="code-result" hidden><label for="issued-code">Kundencode – getrennt an den Kunden weitergeben</label><input id="issued-code" readonly><button id="copy-code" class="secondary wide">Kundencode kopieren</button></div><p id="issued-status" class="hint">Nur für diese Kommission. Nach Abschluss, Sperrung oder Ablauf nicht mehr nutzbar. Eine neue Freigabe derselben Kommission sperrt den vorherigen Link.</p><button id="revoke-link" class="secondary wide">Diesen Link wieder sperren</button></div>
 </div>
 <section id="legal-admin" class="owner-details"><h2>Aktuelle Vertragsvorlagen</h2><p id="legal-status" class="hint">Vorlagen werden nach Anmeldung geladen.</p><label for="legal-role">Vorlage</label><select id="legal-role"><option value="agb">AGB</option><option value="widerruf">Widerrufsbelehrung + Musterformular</option></select><label for="legal-version">Versionsstand</label><input id="legal-version" placeholder="z. B. 30.10.2026" maxlength="80"><label for="legal-file">Aktuelle PDF</label><input id="legal-file" type="file" accept="application/pdf,.pdf"><button id="upload-legal" class="secondary wide">Vertragsvorlage aktualisieren</button><p class="hint">Neue Freigaben übernehmen diese Vorlagen automatisch. Bereits freigegebene Unterlagenpakete behalten ihren gespeicherten Stand. Für Änderungen eine neue Freigabe erstellen.</p></section>

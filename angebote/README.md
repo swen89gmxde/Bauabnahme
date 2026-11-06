@@ -1,6 +1,6 @@
 # Kommissionsbezogenes Angebotsportal
 
-Stand 31.10.2026. Erweiterung im Verzeichnis `angebote/`; die bestehende Bauabnahme bleibt unverändert.
+Stand 06.11.2026. Erweiterung im Verzeichnis `angebote/`; die bestehende Bauabnahme bleibt unverändert.
 
 Öffentlicher Funktionstest: https://swen89gmxde.github.io/Bauabnahme/angebote/
 
@@ -15,6 +15,10 @@ Der zusätzliche sechsstellige Kundencode ist standardmäßig eingeschaltet. Er 
 Der Token steht im URL-Fragment und wird der API im Header übergeben. Zugriff und Status werden für jede Original-PDF, jede Anlage und die Abschlussfunktion serverseitig geprüft. Ein fremder Anhang-Identifier allein gewährt keinen Zugriff. Link, Code oder Dateiname werden nicht als frei auswählbarer Dateisystempfad verwendet.
 
 ## Unterlagen und Vorlagen
+
+Ergänzung vom 06.11.2026: Direkt unter der Angebots-PDF steht ein eigener, sofort sichtbarer Bereich „Weitere Unterlagen anhängen“. Zeichnungen als PDF, Sondervereinbarungen als PDF/Word und gelegentliche Bilder lassen sich nacheinander hinzufügen und einzeln entfernen. Die Anzeige nennt Anzahl, Dateiname, Typ und Größe. Die Grenzen entsprechen der Serverprüfung: zwölf zusätzliche Dateien, 20 MB pro Datei, 60 MB für Angebot plus zusätzliche Anlagen. Ein anderes neu ausgewähltes Angebot leert die Anlagenauswahl. AGB und Widerrufsunterlagen werden separat automatisch ergänzt.
+
+Der lokale Probelauf übernimmt die tatsächlich ausgewählten Anlagen mit Prüfsummen. Die Dateien verbleiben im Arbeitsspeicher des Browsers und sind dort in der Unterlagenliste herunterladbar. Die Rückkehr zur Vorbereitung erlaubt Änderungen und einen neuen Probelauf. Bei einer echten Kundenfreigabe werden genau die ausgewählten Dateien an den geschützten Server übermittelt; dessen Typ-, Größen- und Kundentrennungsprüfung gilt weiter. Bei jedem neu geöffneten Angebot werden Fingerzeichnung, Name und Pflichtkästchen zurückgesetzt.
 
 Der Kunde sieht vor der Unterschrift große Download-Buttons für die zu dieser Freigabe gehörenden Unterlagen. AGB und die kombinierte Widerrufsbelehrung mit Musterformular werden automatisch als feste Kopien übernommen. Zusätzlich können bis zu zwölf PDFs, Word-Dateien (.doc/.docx), JPG-, PNG- oder WebP-Bilder bereitgestellt werden. 20 MB je Datei, insgesamt 60 MB zuzüglich der allgemeinen Vertragsvorlagen. Diese Grenzen müssen zur Webspace-Konfiguration passen. Aktive Dateitypen wie HTML/SVG und makrohaltige DOCX-Pakete werden nicht akzeptiert. Alte binäre DOC-Dateien werden als Download behandelt und nicht ausgeführt oder in der Seite dargestellt.
 

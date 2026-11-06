@@ -1,4 +1,16 @@
 export const LEGAL_CONSENT=Object.freeze({version:1,text:'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'});
+export function attachmentInfo(file){
+ const ext=file.name?.split('.').pop().toLowerCase(),types={pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
+ if(!types[ext])throw Error('Bitte PDF, Word (.doc/.docx), JPG, PNG oder WebP auswählen. Zeichnungen bitte als PDF exportieren.');
+ if(!Number.isFinite(file.size)||file.size<1||file.size>20*1024*1024)throw Error('Jede Anlage muss eine Größe zwischen 1 Byte und 20 MB haben.');
+ return {name:file.name,mime:types[ext],size:file.size};
+}
+export function validateAttachments(files,offerSize=0){
+ if(files.length>12)throw Error('Bitte höchstens zwölf zusätzliche Dateien auswählen.');
+ const total=files.reduce((sum,f)=>sum+attachmentInfo(f).size,offerSize);
+ if(total>60*1024*1024)throw Error('Angebot und zusätzliche Anlagen dürfen zusammen höchstens 60 MB groß sein.');
+ return files;
+}
 export function validateLayout(layout,pages){
  if(!layout || !Number.isInteger(layout.page) || layout.page<0 || layout.page>=pages.length)throw Error('Die Unterschriftsseite fehlt. Bitte das Angebot neu vorbereiten.');
  const page=pages[layout.page],{width,height}=page.getSize();
