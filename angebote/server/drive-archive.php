@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/completion-notification.php';
 
 // All credentials and state belong to the private PHP configuration/data directory.
 function driveSettings(): array {
@@ -113,6 +114,8 @@ function runDriveArchive(array $r): array {
             drivePrivate(driveMetadata($root)??[]);drivePrivate(driveMetadata($folder)??[]);
             foreach($files as $f){$fid=$r['archive']['files'][$f['key']]['id'];$m=driveMetadata($fid);if(!$m)throw new RuntimeException('drive_archive_missing');driveVerifyFile($m,$f,$folder,$r['id']);}
             $r['archive']['state']='verified';$r['archive']['verified_at']=gmdate(DATE_ATOM);$r['state']='completed';$r['completion']['completed_at']=gmdate(DATE_ATOM);
+            // Persist the notification intent together with completion, before handing off mail.
+            $r['notification']=['state'=>'pending','requested_at'=>gmdate(DATE_ATOM),'attempts'=>0,'next_attempt'=>0];
         }
         unset($r['archive']['last_error']);$r['archive']['next_attempt']=0;
     }catch(Throwable $e){
@@ -121,7 +124,7 @@ function runDriveArchive(array $r): array {
         $r['archive']['last_error']=$e instanceof PortalError?$e->reason:(in_array($e->getMessage(),$safe,true)?$e->getMessage():'drive_transfer');
         $r['archive']['next_attempt']=time()+min(900,15*2**min(6,$r['archive']['attempts']-1));
     }
-    saveJson(recordPath($r['id']).'/record.json',$r);return $r;
+    saveJson(recordPath($r['id']).'/record.json',$r);return notifyCompletedOffer($r);
 }
 function archiveResult(array $r): array {
     return ['ok'=>$r['state']==='completed','archive_pending'=>$r['state']==='archive_pending','completed_at'=>$r['completion']['completed_at']??null,'saved_locally'=>!empty($r['completion']),'retry_after'=>max(2,min(900,($r['archive']['next_attempt']??0)-time()))];
@@ -141,13 +144,13 @@ function retryOwnerArchive(string $id): array {
 }
 
 function runArchiveQueue(): array {
-    global $dataDir;$done=0;$pending=0;
+    global $dataDir;$done=0;$pending=0;$notified=0;$notificationPending=0;$processed=0;
     foreach(glob($dataDir.'/records/*/record.json')?:[] as $path){
-        $r=readJson($path);if(($r['state']??'')!=='archive_pending'||($r['archive']['next_attempt']??0)>time())continue;
+        $r=readJson($path);$archiveDue=($r['state']??'')==='archive_pending'&&($r['archive']['next_attempt']??0)<=time();$noticeDue=($r['state']??'')==='completed'&&($r['notification']['state']??'')==='pending'&&($r['notification']['next_attempt']??0)<=time();if(!$archiveDue&&!$noticeDue)continue;
         $scope=lockPortal('scope:'.$r['scope']);$record=lockPortal('record:'.$r['id']);
-        try{$r=recordById($r['id']);if($r['state']==='archive_pending'){$r=runDriveArchive($r);if($r['state']==='completed')$done++;else $pending++;}}
+        try{$r=recordById($r['id']);if($r['state']==='archive_pending'){$r=runDriveArchive($r);if($r['state']==='completed')$done++;else $pending++;}elseif($r['state']==='completed'){$r=notifyCompletedOffer($r);if(($r['notification']['state']??'')==='submitted')$notified++;else $notificationPending++;}$processed++;}
         finally{releasePortal($record);releasePortal($scope);}
-        if($done+$pending>=5)break;
+        if($processed>=5)break;
     }
-    return ['completed'=>$done,'pending'=>$pending];
+    return ['completed'=>$done,'pending'=>$pending,'notifications_submitted'=>$notified,'notifications_pending'=>$notificationPending];
 }

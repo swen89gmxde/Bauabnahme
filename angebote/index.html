@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261106-touch-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261107-archivtest-1"></script>
+<script type="module" src="app.mjs?v=20261107-abschlussmail-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -46,16 +46,18 @@
 <section id="complete" class="card" hidden>
 <div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">Schritt 3 von 3</p><h1 id="completion-title">Unterschrift prüfen</h1><p id="completion-text">Name, Datum und Unterschrift stehen jetzt in der PDF. Bitte prüfen Sie die Vorschau.</p>
 <div class="pdf-view"><canvas id="signed-canvas" aria-label="Vorschau der unterschriebenen Seite"></canvas></div>
-<div id="finalize-area"><p id="finalize-hint" class="hint">Mit „Unterschrift abschließen“ wird Ihre PDF gespeichert. Erst nach bestätigter Archivierung wird dieser Angebotslink gesperrt. Danach können Sie die PDF zusätzlich zurückteilen.</p><button id="finalize-offer" class="primary wide">Unterschrift abschließen →</button></div>
+<div id="finalize-area"><p id="finalize-hint" class="hint">Mit „Unterschrift abschließen“ wird Ihre PDF gespeichert. Erst nach bestätigter Archivierung wird dieser Angebotslink gesperrt. Ein zusätzliches Zurücksenden ist nicht erforderlich.</p><button id="finalize-offer" class="primary wide">Unterschrift abschließen →</button></div>
 <div id="return-area" hidden>
-<h2>PDF zusätzlich zurücksenden</h2><p id="return-storage" class="hint"></p>
-<button id="share-pdf" class="primary wide">PDF per WhatsApp teilen</button><p id="share-hint" class="hint">Im Teilen-Menü WhatsApp und den Chat mit Swen Neubauer auswählen. Dort den Versand bestätigen.</p>
-<button id="email-pdf" class="primary wide">PDF per E-Mail zurücksenden</button><p id="email-hint" class="hint"></p>
-<button id="show-email-options" class="quiet wide">Mailprogramm stattdessen öffnen</button>
-<div id="email-options" class="notice" hidden><b>Rücksenden mit Ihrem Mailprogramm</b><p>1. PDF speichern.<br>2. Mailprogramm öffnen.<br>3. Gespeicherte PDF als Anhang hinzufügen und auf „Senden“ drücken.</p><a id="download-email-pdf" class="secondary wide" download>1. Unterschriebene PDF speichern</a><a id="email-draft" class="secondary wide">2. Mailprogramm öffnen</a><p class="hint">Empfänger und Betreff sind vorbereitet. Dieser Weg fügt keinen Anhang automatisch hinzu. Falls kein Mailprogramm eingerichtet ist, verwenden Sie Ihr Webmail-Postfach.</p></div>
+<h2>Ihre PDF für die eigenen Unterlagen</h2><p id="return-storage" class="hint"></p>
 <a id="download-pdf" class="secondary wide" download>Unterschriebene PDF speichern</a>
 <a id="open-pdf" class="text-link" target="_blank" rel="noopener">Fertige PDF groß ansehen ↗</a>
+<details id="optional-sharing"><summary>PDF zusätzlich teilen (freiwillig)</summary>
+<button id="share-pdf" class="secondary wide">PDF per WhatsApp teilen</button><p id="share-hint" class="hint">Im Teilen-Menü WhatsApp und den Chat mit Swen Neubauer auswählen. Dort den Versand bestätigen.</p>
+<button id="email-pdf" class="secondary wide">PDF per E-Mail zurücksenden</button><p id="email-hint" class="hint"></p>
+<button id="show-email-options" class="quiet wide">Mailprogramm stattdessen öffnen</button>
+<div id="email-options" class="notice" hidden><b>Rücksenden mit Ihrem Mailprogramm</b><p>1. PDF speichern.<br>2. Mailprogramm öffnen.<br>3. Gespeicherte PDF als Anhang hinzufügen und auf „Senden“ drücken.</p><a id="download-email-pdf" class="secondary wide" download>1. Unterschriebene PDF speichern</a><a id="email-draft" class="secondary wide">2. Mailprogramm öffnen</a><p class="hint">Empfänger und Betreff sind vorbereitet. Dieser Weg fügt keinen Anhang automatisch hinzu. Falls kein Mailprogramm eingerichtet ist, verwenden Sie Ihr Webmail-Postfach.</p></div>
 <p id="send-status" class="small" role="status">Zusätzliches Teilen ist noch nicht erfolgt.</p>
+</details>
 </div>
 <button id="correct" class="quiet wide">← Angaben oder Unterschrift korrigieren</button>
 </section>
@@ -91,6 +93,7 @@
 </div>
 <section id="legal-admin" class="owner-details"><h2>Aktuelle Vertragsvorlagen</h2><p id="legal-status" class="hint">Vorlagen werden nach Anmeldung geladen.</p><label for="legal-role">Vorlage</label><select id="legal-role"><option value="agb">AGB</option><option value="widerruf">Widerrufsbelehrung + Musterformular</option></select><label for="legal-version">Versionsstand</label><input id="legal-version" placeholder="z. B. 30.10.2026" maxlength="80"><label for="legal-file">Aktuelle PDF</label><input id="legal-file" type="file" accept="application/pdf,.pdf"><button id="upload-legal" class="secondary wide">Vertragsvorlage aktualisieren</button><p class="hint">Neue Freigaben übernehmen diese Vorlagen automatisch. Bereits freigegebene Unterlagenpakete behalten ihren gespeicherten Stand. Für Änderungen eine neue Freigabe erstellen.</p></section>
 <section id="archive-admin" class="owner-details"><h2>Automatische Archivierung</h2><p id="archive-status" class="hint">Die Drive-Anbindung wird nach Anmeldung geprüft.</p><a id="drive-connect" class="secondary wide" href="server/drive-connect.php" hidden>Google Drive einrichten</a><p class="hint">Der normale Abschluss sperrt den Kundenlink erst, wenn die unterschriebene PDF und das vollständige Unterlagenpaket auch in Google Drive geprüft gespeichert sind. Ausstehende Sicherungen sehen Sie bei den Vorgängen.</p></section>
+<section id="notification-admin" class="owner-details"><h2>E-Mail nach dem Abschluss</h2><p id="notification-status" class="hint">Der Benachrichtigungsstatus wird nach Anmeldung geprüft.</p><p class="hint">Erst nach bestätigter vollständiger Drive-Ablage wird die Benachrichtigung an Sichtwerk versendet. Der Kunde muss die PDF nicht zurückschicken. Den Versandstatus sehen Sie bei den Vorgängen.</p></section>
 <section id="records-admin" class="owner-details"><h2>Freigegebene Angebote</h2><button id="load-records" class="secondary wide">Meine Vorgänge anzeigen</button><div id="record-list"></div></section>
 <section id="archive-test-admin" class="owner-details" hidden><h2>Drive-Archivierung testen</h2><p>Dieser Test verwendet ausschließlich Musterunterlagen. Er prüft die Übertragung einer Testunterschrift und des vollständigen Pakets nach Drive. Es entsteht kein Kundenauftrag.</p><button id="create-archive-test" class="primary wide" disabled>Archivtest vorbereiten</button><p id="archive-test-status" class="hint" role="status">Bitte zuerst Google Drive verbinden.</p><div id="archive-test-result" hidden><label for="archive-test-code">Kundencode für diesen Test</label><input id="archive-test-code" readonly><a id="archive-test-open" class="secondary wide" target="_blank" rel="noopener noreferrer">Testangebot öffnen</a><p class="hint">Im Testangebot den Code eingeben, alle vier Musterseiten ansehen und mit „TEST“ unterschreiben. Danach „Archivtest abschließen“ wählen. Die echte Kundenfreigabe bleibt gesperrt.</p></div></section>
 </div>

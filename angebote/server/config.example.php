@@ -7,6 +7,13 @@ return [
     'lifetime_days' => 14,
     // Keep false until the protected setup and complete archive tests are finished.
     'releases_enabled' => false,
+    // New completed archives notify the owner through the STRATO PHP mail service.
+    // A successful handoff is not proof of inbox delivery. No PDF/signature is mailed.
+    'completion_notification' => [
+        'enabled' => true,
+        'to' => 'sichtwerk.neubauer@gmx.de',
+        'from' => 'info@sichtwerk-neubauer.de',
+    ],
     // Mandatory before customer releases. OAuth credentials stay in this private file.
     // Use a private, app-authorized Drive folder; never an 'anyone with link' folder.
     'drive_archive' => [
