@@ -5,6 +5,7 @@ declare(strict_types=1);
 function driveSettings(): array {
     global $config;
     $d=$config['drive_archive']??[];
+    if(array_key_exists('connection_verified',$d)&&$d['connection_verified']!==true)abortPortal('Die Google-Verbindung wurde noch nicht vollständig geprüft.',503,'drive_not_configured');
     foreach(['folder_id','client_id','client_secret','refresh_token'] as $key)
         if(!is_string($d[$key]??null)||$d[$key]==='')abortPortal('Die automatische Drive-Sicherung ist noch nicht eingerichtet. Bitte Swen Neubauer kontaktieren.',503,'drive_not_configured');
     if(!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$d['folder_id']))abortPortal('Der Drive-Archivordner ist ungültig.',503,'drive_not_configured');

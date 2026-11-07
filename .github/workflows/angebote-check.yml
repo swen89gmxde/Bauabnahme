@@ -33,3 +33,7 @@ jobs:
         env:
           PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
         run: node angebote-tests/setup.mjs
+      - name: Private Google-Verbindung und Rueckleitung pruefen
+        env:
+          PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
+        run: node angebote-tests/drive-connect.mjs
