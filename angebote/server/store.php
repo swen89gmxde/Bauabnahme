@@ -64,7 +64,7 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  if(!$archiveTest&&$customer==='__ARCHIVTEST__')abortPortal('Diese Kundenkennung ist für den internen Archivtest reserviert.');
  $layout=$meta['layout']??null;$count=$meta['pageCount']??0;if(!is_int($count)||$count<1||$count>100||!is_array($layout)||!is_int($layout['page']??null)||$layout['page']<0||$layout['page']>=$count)abortPortal('Die Unterschriftsseite ist ungültig.');$safe=['page'=>$layout['page']];foreach(['signature','date'] as $key){$r=$layout[$key]??[];foreach(['x','y','w','h'] as $axis){$v=$r[$axis]??null;if(!is_numeric($v)||!is_finite((float)$v)||$v<0||$v>4000)abortPortal('Die Unterschriftsflächen sind ungültig.');$safe[$key][$axis]=(float)$v;}if($r['w']<40||$r['h']<($key==='signature'?25:12))abortPortal('Die Unterschriftsfläche ist zu klein.');}
  $f=checkUpload($pdf,true);if(count($extra)>12)abortPortal('Bitte höchstens zwölf zusätzliche Dateien bereitstellen.');$files=array_map(fn($x)=>checkUpload($x),$extra);$total=$f['size'];foreach($files as $x)$total+=$x['size'];if($total>60*1024*1024)abortPortal('Ein Unterlagenpaket darf höchstens 60 MB groß sein.');
- $lh=lockPortal('legal',LOCK_SH);$legal=legalMasters();foreach(['agb','widerruf'] as $role)if(empty($legal['documents'][$role]))abortPortal('Bitte zuerst aktuelle AGB und Widerrufsunterlagen in den Vertragsvorlagen hinterlegen.',409,'missing_legal');
+ $lh=lockPortal('legal',LOCK_SH);$legal=legalMasters();if($archiveTest)requireArchiveTestLegal($legal);foreach(['agb','widerruf'] as $role)if(empty($legal['documents'][$role]))abortPortal('Bitte zuerst aktuelle AGB und Widerrufsunterlagen in den Vertragsvorlagen hinterlegen.',409,'missing_legal');
  driveSettings();
  $token=bin2hex(random_bytes(32));$id=tokenId($token);$scope=hash('sha256',$customer."\0".$commission);directory($dataDir.'/records');directory($dataDir.'/scopes');directory($dataDir.'/staging');$stage=$dataDir.'/staging/'.$id;directory($stage);$attachments=[];
  if(!copy($f['tmp'],$stage.'/original.pdf'))abortPortal('Das Angebot konnte nicht gespeichert werden.',503);
@@ -75,6 +75,17 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  if($archiveTest)$r['archive_test']=true;
  saveJson($stage.'/record.json',$r);if(!rename($stage,recordPath($id)))abortPortal('Das Angebot konnte nicht freigegeben werden.',503);saveJson($dataDir.'/scopes/'.$scope.'.json',['active_id'=>$id,'revision'=>$revision]);if($oldId&&$oldId!==$id){lockPortal('record:'.$oldId);$old=recordById($oldId);if($old['state']==='active'){$old['state']='replaced';$old['closed_at']=gmdate(DATE_ATOM);saveJson(recordPath($oldId).'/record.json',$old);}}
  return ['token'=>$token,'id'=>$id,'code'=>$requireCode?$code:null,'expires'=>$r['expires'],'revision'=>$revision,'attachments'=>publicFiles($attachments)];
+}
+function requireArchiveTestLegal(array $masters): void {
+ global $dataDir;
+ $released=readJson(dirname(__DIR__).'/legal-current.json');
+ if(count($released['documents']??[])!==2||count($masters['documents']??[])!==2)abortPortal('Die Vertragsvorlagen für den Archivtest sind nicht vollständig.',409);
+ foreach($released['documents'] as $entry){
+  $role=$entry['role']??'';$master=$masters['documents'][$role]??[];
+  if(!in_array($role,['agb','widerruf'],true))abortPortal('Die Vertragsvorlagen für den Archivtest sind ungültig.',409);
+  foreach(['name','version','mime','size','sha256'] as $key)if(($master[$key]??null)!==($entry[$key]??null))abortPortal('Der Archivtest benötigt die aktuell veröffentlichten AGB und Widerrufsunterlagen. Bitte die Vertragsvorlagen abgleichen.',409);
+  $stored=$master['stored']??'';if(!is_string($stored)||basename($stored)!==$stored||!is_file($dataDir.'/legal/'.$stored)||!hash_equals((string)$entry['sha256'],hash_file('sha256',$dataDir.'/legal/'.$stored)))abortPortal('Eine Vertragsvorlage für den Archivtest stimmt nicht mit dem freigegebenen Stand überein.',409);
+ }
 }
 function createArchiveTest(array $pdf,array $extra): array {
  global $config;
