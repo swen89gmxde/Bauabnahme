@@ -32,9 +32,9 @@ try{
  const cookieHeaders=Object.entries(r.headers).filter(([key])=>key.toLowerCase()==='set-cookie').flatMap(([,values])=>values).join(' ');eq(/secure/i.test(cookieHeaders),true);eq(/httponly/i.test(cookieHeaders),true);eq(/samesite=strict/i.test(cookieHeaders),true);
  r=await expect(owner,page,200);eq(r.text.includes('autocomplete="new-password"'),true);eq(r.text.includes(token),false);eq(r.text.includes('Kundenfreigaben bleiben zunächst gesperrt'),true);
  r=await expect(stranger,page,200);eq(r.text.includes('name="password"'),false);
- const password=randomBytes(24).toString('hex');await expect(stranger,page,403,form(stranger,password));eq(fs.existsSync(configPath),false);
+ const password=randomBytes(5).toString('hex');await expect(stranger,page,403,form(stranger,password));eq(fs.existsSync(configPath),false);
  await expect(owner,page,403,{...form(owner,password),origin:'https://foreign.test'});await expect(owner,page,403,{...form(owner,password),origin:'null'});eq(fs.existsSync(configPath),false);await expect(owner,page,403,{method:'POST',body:{csrf:'wrong',password,repeat:password}});
- await expect(owner,page,400,form(owner,'short'));await expect(owner,page,400,form(owner,password,'different'));await expect(owner,page,400,form(owner,'ü'.repeat(40)));eq(fs.existsSync(configPath),false);
+ await expect(owner,page,400,form(owner,'short'));await expect(owner,page,400,form(owner,'a'.repeat(9)));await expect(owner,page,400,form(owner,'ü'.repeat(5)));await expect(owner,page,400,form(owner,password,'different'));await expect(owner,page,400,form(owner,'ü'.repeat(40)));eq(fs.existsSync(configPath),false);
  // Expiry must also apply to an already-unlocked session.
  const originalGrant=fs.readFileSync(grantPath);const g=JSON.parse(originalGrant);g.expires=Math.floor(Date.now()/1000)-60;fs.writeFileSync(grantPath,JSON.stringify(g));await expect(owner,page,404,form(owner,password));eq(fs.existsSync(configPath),false);fs.writeFileSync(grantPath,originalGrant);
  r=await expect(owner,page,303,form(owner,password));

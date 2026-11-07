@@ -25,7 +25,7 @@ function driveConnectOwner(): void {
     directory($dataDir.'/sessions');session_save_path($dataDir.'/sessions');session_name('sichtwerk_signieren');
     session_set_cookie_params(['lifetime'=>0,'path'=>'/angebote/','secure'=>true,'httponly'=>true,'samesite'=>'Strict']);
     ini_set('session.use_strict_mode','1');session_start();
-    if(empty($_SESSION['authenticated_at'])||time()-$_SESSION['authenticated_at']>=3600)abortPortal('Bitte zuerst in der Angebotsverwaltung anmelden.',401);
+    if(!portalOwnerAuthenticated())abortPortal('Bitte zuerst in der Angebotsverwaltung anmelden.',401);
     $_SESSION['csrf']??=bin2hex(random_bytes(32));
     $method=$_SERVER['REQUEST_METHOD']??'GET';
     if(!in_array($method,['GET','POST'],true))abortPortal('Diese Aktion ist nicht verfügbar.',405);
@@ -46,12 +46,7 @@ function driveConnectWrite(array $changes): void {
     global $config;
     $path=$GLOBALS['drive_connect_config_path'];$fresh=require $path;
     $fresh['drive_archive']=array_replace($fresh['drive_archive']??[],$changes);
-    $bytes="<?php\n// Private portal configuration. Never publish or copy into GitHub.\nreturn ".var_export($fresh,true).";\n";
-    $tmp=$path.'.'.bin2hex(random_bytes(12)).'.tmp';$h=@fopen($tmp,'x');
-    if(!$h)abortPortal('Die private Verbindung konnte nicht gespeichert werden.',503);
-    $ok=fwrite($h,$bytes)===strlen($bytes)&&fflush($h);fclose($h);@chmod($tmp,0600);
-    if(!$ok||!rename($tmp,$path)){@unlink($tmp);abortPortal('Die private Verbindung konnte nicht gespeichert werden.',503);}
-    if(function_exists('opcache_invalidate'))@opcache_invalidate($path,true);
+    savePrivateConfig($path,$fresh);
     $config=$fresh;
 }
 function driveConnectRedirect(): string {global $config;return $config['origin'].'/angebote/server/drive-callback.php';}
@@ -79,7 +74,7 @@ function driveConnectStart(): string {
     // Superseded flows cannot finish even if the browser retained an older cookie.
     if(!empty($_SESSION['drive_connect_started'])){$old=$dataDir.'/drive-connect/'.$_SESSION['drive_connect_started'].'.json';if(is_file($old))unlink($old);}
     $key=hash('sha256',$state);$_SESSION['drive_connect_started']=$key;
-    saveJson($dataDir.'/drive-connect/'.$key.'.json',['expires'=>$expires,'nonce_hash'=>hash('sha256',$nonce),'client_hash'=>driveConnectFingerprint(),'verifier'=>$verifier,'used'=>false]);
+    saveJson($dataDir.'/drive-connect/'.$key.'.json',['expires'=>$expires,'nonce_hash'=>hash('sha256',$nonce),'client_hash'=>driveConnectFingerprint(),'owner_hash'=>portalPasswordFingerprint(),'verifier'=>$verifier,'used'=>false]);
     setcookie(DRIVE_CONNECT_COOKIE,$nonce,['expires'=>$expires,'path'=>'/angebote/server/','secure'=>true,'httponly'=>true,'samesite'=>'Lax']);
     return 'https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query(['client_id'=>$d['client_id'],'redirect_uri'=>driveConnectRedirect(),'response_type'=>'code','scope'=>DRIVE_CONNECT_SCOPE,'access_type'=>'offline','prompt'=>'consent','include_granted_scopes'=>'false','login_hint'=>$d['account_email'],'state'=>$state,'code_challenge'=>rtrim(strtr(base64_encode(hash('sha256',$verifier,true)),'+/','-_'),'='),'code_challenge_method'=>'S256'],'','&',PHP_QUERY_RFC3986);
 }
@@ -126,6 +121,7 @@ function driveConnectCallback(): void {
     try{
         driveConnectSetupOnly();$path=$dataDir.'/drive-connect/'.hash('sha256',$state).'.json';$flow=readJson($path);
         if(!$flow||!empty($flow['used'])||($flow['expires']??0)<time()||!hash_equals((string)($flow['nonce_hash']??''),hash('sha256',$nonce))||!hash_equals((string)($flow['client_hash']??''),driveConnectFingerprint()))abortPortal('Die Google-Rückleitung ist abgelaufen oder ungültig. Bitte neu starten.',403);
+        if(isset($flow['owner_hash'])?!hash_equals((string)$flow['owner_hash'],portalPasswordFingerprint()):isset($config['password_changed_at']))abortPortal('Der Portalzugang wurde geändert. Bitte die Google-Verbindung aus der Angebotsverwaltung neu starten.',403);
         $verifier=(string)$flow['verifier'];$flow['used']=true;unset($flow['verifier']);saveJson($path,$flow);
         setcookie(DRIVE_CONNECT_COOKIE,'',['expires'=>1,'path'=>'/angebote/server/','secure'=>true,'httponly'=>true,'samesite'=>'Lax']);
         if(isset($_GET['error']))abortPortal('Die Google-Freigabe wurde nicht abgeschlossen. Du kannst die Verbindung erneut starten.');

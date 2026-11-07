@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261106-touch-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261107-drive-1"></script>
+<script type="module" src="app.mjs?v=20261107-passwort-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -65,6 +65,7 @@
 <div id="server-note" class="notice" hidden>Testbetrieb: Die Vorbereitung und PDF-Erstellung funktionieren lokal. Echte Kundenlinks sind erst nach Einrichtung der geschützten Ablage und der Drive-Anbindung verfügbar.</div>
 <div id="login-area"><label for="password">Zugang für Sichtwerk</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary wide">Anmelden</button></div>
 <div id="prepare-area" hidden>
+<a id="change-password" class="secondary wide" href="server/password.php" hidden>Passwort ändern</a>
 <div class="owner-details"><h2>Kunde und Kommission</h2><label for="customer-id">Kundennummer / eindeutige Kundenkennung</label><input id="customer-id" maxlength="100" required placeholder="z. B. K-10023"><label for="customer-name">Kundenname</label><input id="customer-name" maxlength="160" required placeholder="Vorname und Nachname / Firma"><label for="commission-id">Kommission / Angebotsnummer</label><input id="commission-id" maxlength="100" required placeholder="z. B. AG-2026-10-0162"><label class="check"><input id="require-code" type="checkbox" checked><span>Zusätzlichen sechsstelligen Kundencode verwenden.</span></label></div>
 
 <label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">

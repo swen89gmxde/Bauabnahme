@@ -28,9 +28,7 @@ function setupUnlock(string $private,array $grant,string $token): void {
 function setupCreate(string $private,string $configPath,array $grant,array $input): void {
     if(!hash_equals($grant['token_hash'],(string)($_SESSION['setup_grant']??'')))abortPortal('Bitte den persönlichen Einrichtungszugang öffnen.',403);
     if(file_exists($configPath)||is_link($configPath)||glob($private.'/data/records/*/record.json'))abortPortal('Ein vorhandener Portalzugang oder bestehende Vorgänge dürfen hier nicht überschrieben werden.',409);
-    $password=$input['password']??null;$repeat=$input['repeat']??null;
-    if(!is_string($password)||!is_string($repeat)||strlen($password)>72||preg_match_all('/./us',$password)<16)abortPortal('Bitte ein Passwort mit mindestens 16 Zeichen und höchstens 72 UTF-8-Bytes wählen.');
-    if(!hash_equals($password,$repeat))abortPortal('Die beiden Passwörter stimmen nicht überein.');
+    $password=portalPassword($input['password']??null,$input['repeat']??null);
     directory($private.'/data');
     $config=['origin'=>$grant['origin'],'password_hash'=>password_hash($password,PASSWORD_DEFAULT),'data_dir'=>$private.'/data','lifetime_days'=>14,'releases_enabled'=>false,'drive_archive'=>['folder_id'=>'','client_id'=>'','client_secret'=>'','refresh_token'=>'','batch_size'=>2]];
     $bytes="<?php\n// Private portal configuration. Never publish or copy into GitHub.\nreturn ".var_export($config,true).";\n";

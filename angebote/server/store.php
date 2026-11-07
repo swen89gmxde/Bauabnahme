@@ -3,6 +3,28 @@ declare(strict_types=1);
 require_once __DIR__.'/drive-archive.php';
 final class PortalError extends RuntimeException { public function __construct(string $message, public int $status=400, public string $reason='request_error') { parent::__construct($message); } }
 function abortPortal(string $message,int $status=400,string $reason='request_error'): never { throw new PortalError($message,$status,$reason); }
+function portalPassword(mixed $password,mixed $repeat): string {
+ if(!is_string($password)||!is_string($repeat)||str_contains($password,"\0")||preg_match_all('/./us',$password)<10)abortPortal('Bitte ein Passwort mit mindestens 10 Zeichen wählen.');
+ if(strlen($password)>72)abortPortal('Dieses Passwort ist zu lang. Bitte ein kürzeres Passwort wählen.');
+ if(!hash_equals($password,$repeat))abortPortal('Die beiden neuen Passwörter stimmen nicht überein.');
+ return $password;
+}
+function portalPasswordFingerprint(): string {global $config;return hash('sha256',(string)$config['password_hash']);}
+function portalOwnerAuthenticated(): bool {
+ global $config;$at=$_SESSION['authenticated_at']??null;
+ if(!is_int($at)||time()-$at<0||time()-$at>=3600)return false;
+ $fingerprint=$_SESSION['password_fingerprint']??null;
+ // Existing sessions remain usable until their normal expiry or the first password change.
+ return array_key_exists('password_fingerprint',$_SESSION)?is_string($fingerprint)&&hash_equals(portalPasswordFingerprint(),$fingerprint):!isset($config['password_changed_at']);
+}
+function savePrivateConfig(string $path,array $fresh): void {
+ $bytes="<?php\n// Private portal configuration. Never publish or copy into GitHub.\nreturn ".var_export($fresh,true).";\n";
+ $tmp=$path.'.'.bin2hex(random_bytes(12)).'.tmp';$h=@fopen($tmp,'x');
+ if(!$h)abortPortal('Die private Konfiguration konnte nicht gespeichert werden.',503);
+ $ok=fwrite($h,$bytes)===strlen($bytes)&&fflush($h);fclose($h);@chmod($tmp,0600);
+ if(!$ok||!rename($tmp,$path)){@unlink($tmp);abortPortal('Die private Konfiguration konnte nicht gespeichert werden.',503);}
+ if(function_exists('opcache_invalidate'))@opcache_invalidate($path,true);
+}
 function readJson(string $path): array { if(!is_file($path))return []; $data=json_decode((string)file_get_contents($path),true); return is_array($data)?$data:[]; }
 function saveJson(string $path,array $data): void { $tmp=$path.'.'.bin2hex(random_bytes(8)).'.tmp'; if(file_put_contents($tmp,json_encode($data,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),LOCK_EX)===false||!rename($tmp,$path))abortPortal('Die Änderung konnte nicht gespeichert werden.',503); }
 function directory(string $path): void { if(!is_dir($path)&&!mkdir($path,0700,true))abortPortal('Die geschützte Ablage ist nicht verfügbar.',503); }

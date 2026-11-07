@@ -9,6 +9,7 @@ try{
     if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
         $lock=driveConnectLock();
         try{
+            if(!portalOwnerAuthenticated())abortPortal('Bitte zuerst in der Angebotsverwaltung anmelden.',401);
             $action=$_POST['action']??'';
             if($action==='import')driveConnectImport($_FILES['credentials']??[],$_POST['google_email']??null);
             elseif($action==='authorize')$authURL=driveConnectStart();
