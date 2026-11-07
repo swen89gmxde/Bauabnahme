@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261106-touch-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261107-passwort-1"></script>
+<script type="module" src="app.mjs?v=20261107-archivtest-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -92,6 +92,7 @@
 <section id="legal-admin" class="owner-details"><h2>Aktuelle Vertragsvorlagen</h2><p id="legal-status" class="hint">Vorlagen werden nach Anmeldung geladen.</p><label for="legal-role">Vorlage</label><select id="legal-role"><option value="agb">AGB</option><option value="widerruf">Widerrufsbelehrung + Musterformular</option></select><label for="legal-version">Versionsstand</label><input id="legal-version" placeholder="z. B. 30.10.2026" maxlength="80"><label for="legal-file">Aktuelle PDF</label><input id="legal-file" type="file" accept="application/pdf,.pdf"><button id="upload-legal" class="secondary wide">Vertragsvorlage aktualisieren</button><p class="hint">Neue Freigaben übernehmen diese Vorlagen automatisch. Bereits freigegebene Unterlagenpakete behalten ihren gespeicherten Stand. Für Änderungen eine neue Freigabe erstellen.</p></section>
 <section id="archive-admin" class="owner-details"><h2>Automatische Archivierung</h2><p id="archive-status" class="hint">Die Drive-Anbindung wird nach Anmeldung geprüft.</p><a id="drive-connect" class="secondary wide" href="server/drive-connect.php" hidden>Google Drive einrichten</a><p class="hint">Der normale Abschluss sperrt den Kundenlink erst, wenn die unterschriebene PDF und das vollständige Unterlagenpaket auch in Google Drive geprüft gespeichert sind. Ausstehende Sicherungen sehen Sie bei den Vorgängen.</p></section>
 <section id="records-admin" class="owner-details"><h2>Freigegebene Angebote</h2><button id="load-records" class="secondary wide">Meine Vorgänge anzeigen</button><div id="record-list"></div></section>
+<section id="archive-test-admin" class="owner-details" hidden><h2>Drive-Archivierung testen</h2><p>Dieser Test verwendet ausschließlich Musterunterlagen. Er prüft die Übertragung einer Testunterschrift und des vollständigen Pakets nach Drive. Es entsteht kein Kundenauftrag.</p><button id="create-archive-test" class="primary wide" disabled>Archivtest vorbereiten</button><p id="archive-test-status" class="hint" role="status">Bitte zuerst Google Drive verbinden.</p><div id="archive-test-result" hidden><label for="archive-test-code">Kundencode für diesen Test</label><input id="archive-test-code" readonly><a id="archive-test-open" class="secondary wide" target="_blank" rel="noopener noreferrer">Testangebot öffnen</a><p class="hint">Im Testangebot den Code eingeben, alle vier Musterseiten ansehen und mit „TEST“ unterschreiben. Danach „Archivtest abschließen“ wählen. Die echte Kundenfreigabe bleibt gesperrt.</p></div></section>
 </div>
 </section>
 </main>
