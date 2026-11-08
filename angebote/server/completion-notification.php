@@ -23,6 +23,7 @@ function completionNotificationMessage(array $r,array $n): array {
     $body=($test?"ARCHIVTEST - KEIN KUNDENAUFTRAG\n\n":"").($single?"Die unterschriebene Angebots-PDF wurde in Google Drive geprüft gespeichert.\n\n":"Ein unterschriebenes Angebot und das vollständige Unterlagenpaket wurden auf STRATO und in Google Drive geprüft gespeichert.\n\n");
     foreach(['Kunde'=>$r['customer_name'],'Kommission'=>$r['commission'],'Angebot'=>$r['title'],'Freigabe'=>$r['revision'],'Unterschriftsdatum'=>$r['completion']['date'],'Archiv bestätigt'=>$r['archive']['verified_at']] as $label=>$value)$body.=$label.': '.$line($value)."\n";
     $body.="\nGeschütztes Archiv (Anmeldung mit dem verbundenen Google-Konto erforderlich):\nhttps://drive.google.com/drive/folders/".$folder."\n\nDer Kundenlink ist gesperrt.\n\nDiese Nachricht enthält keine PDF, Unterschrift, Kundencodes oder Kunden-Zugangslinks.\n";
+    if(!empty($r['customer_copy']))$body.="\nVertragskopie an den Kunden: ".(in_array($r['customer_copy']['state'],['submitted','manual_delivered'],true)?'an Maildienst übergeben oder manuell zugestellt.':'AUSSTEHEND / UNKLAR - bitte unverzüglich in der Verwaltung prüfen.')."\n";
     if($single)$body.="\nDauerhafte Dokumentenablage: ausschließlich diese PDF in Google Drive. Separate Anlagen werden nicht archiviert.\n";
     $domain=substr($n['from'],strpos($n['from'],'@')+1);
     return ['to'=>$n['to'],'from'=>$n['from'],'subject'=>$subject,'body'=>$body,'message_id'=>'<sichtwerk.archive.'.$r['id'].'@'.$domain.'>'];

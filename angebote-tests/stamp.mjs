@@ -1,3 +1,4 @@
+import {syntheticCheckout} from './checkout-fixture.mjs';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -11,7 +12,8 @@ for(const [name,input,layout] of cases){
  const source=await PDFLib.PDFDocument.load(input),out=await stampPDF(input,layout,{signature,date},PDFLib),doc=await PDFLib.PDFDocument.load(out);assert.equal(doc.getPageCount(),source.getPageCount());for(let i=0;i<doc.getPageCount();i++)assert.deepEqual(doc.getPage(i).getSize(),source.getPage(i).getSize());fs.writeFileSync(new URL(name+'-signed.pdf',import.meta.url),out);checks+=2;
 }
 const d=await PDFLib.PDFDocument.load(demo);assert.throws(()=>validateLayout({...meta.layout,page:99},d.getPages()));assert.throws(()=>validateLayout({...meta.layout,signature:{x:1,y:1,w:999,h:100}},d.getPages()));assert.throws(()=>validateLayout({...meta.layout,date:meta.layout.signature},d.getPages()));checks+=3;
-const withConsent=await PDFLib.PDFDocument.load(await stampPDF(demo,meta.layout,{signature,date},PDFLib,{bundle:meta.attachments,consent:{...LEGAL_CONSENT,accepted:true}}));
+const withConsent=await PDFLib.PDFDocument.load(await stampPDF(demo,meta.layout,{signature,date},PDFLib,{bundle:meta.attachments,checkout:syntheticCheckout,consent:{...LEGAL_CONSENT,accepted:true}}));
+const checkout=withConsent.catalog.lookup(PDFLib.PDFName.of('SichtwerkCheckout'),PDFLib.PDFHexString);assert.deepEqual(JSON.parse(checkout.decodeText()),syntheticCheckout);checks++;
 const consent=withConsent.catalog.lookup(PDFLib.PDFName.of('SichtwerkConsent'),PDFLib.PDFDict);assert.equal(consent.lookup(PDFLib.PDFName.of('Text'),PDFLib.PDFHexString).decodeText(),LEGAL_CONSENT.text);assert.equal(consent.lookup(PDFLib.PDFName.of('Accepted'),PDFLib.PDFBool).asBoolean(),true);assert.equal(withConsent.getPageCount(),d.getPageCount());checks+=3;
 await assert.rejects(stampPDF(demo,meta.layout,{signature,date},PDFLib,{consent:{...LEGAL_CONSENT,accepted:false}}));checks++;
 assert.equal(germanDate('2026-10-29'),'29.10.2026');assert.throws(()=>germanDate('2026-02-31'));assert.equal(signedName('Mein Angebot.pdf'),'Mein Angebot_unterschrieben.pdf');checks+=3;

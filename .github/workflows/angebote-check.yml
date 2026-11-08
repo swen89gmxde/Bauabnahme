@@ -19,6 +19,8 @@ jobs:
         run: node --check angebote/setup.mjs
       - name: PDF-Verarbeitung syntaktisch pruefen
         run: node --check angebote/core.mjs
+      - name: Abschlussuebersicht syntaktisch pruefen
+        run: node --check angebote/checkout.mjs
       - name: Anlagenauswahl und Paketgrenzen pruefen
         run: node angebote-tests/attachments.mjs
       - name: PDF-Ruecksendung und E-Mail-Ersatzweg pruefen
@@ -26,7 +28,7 @@ jobs:
       - name: Smartphone-Unterschrift und Scrollfreigabe pruefen
         run: node angebote-tests/signature-touch.mjs
       - name: PHP-Syntax pruefen
-        run: for file in angebote/server/*.php; do php -l "$file" || exit 1; done
+        run: for file in angebote/server/*.php angebote/widerruf.php; do php -l "$file" || exit 1; done
       - name: Isolierte PHP-Testlaufzeit installieren
         run: npm install --prefix "$RUNNER_TEMP/portal-tests" --ignore-scripts --no-audit --no-fund @php-wasm/node@3.1.61 @php-wasm/universal@3.1.61
       - name: Geschuetzte Ersteinrichtung und Freigabesperre pruefen
@@ -55,3 +57,7 @@ jobs:
         env:
           PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
         run: node angebote-tests/drive-pdf-only.mjs
+      - name: Verbindlichen Abschluss, Vertragskopie und unabhaengigen Widerruf pruefen
+        env:
+          PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
+        run: node angebote-tests/checkout.mjs

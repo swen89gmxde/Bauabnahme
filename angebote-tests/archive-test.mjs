@@ -1,3 +1,4 @@
+import {syntheticCheckout} from './checkout-fixture.mjs';
 // Isolated archive setup test: approved public fixtures, synthetic account and mock Drive only.
 import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import {randomBytes,createHash} from 'node:crypto';import {fileURLToPath,pathToFileURL} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url)),modules=process.env.PHP_WASM_MODULE_ROOT||path.join(root,'node_modules');
@@ -34,7 +35,7 @@ try{
  const manifest=JSON.parse(fs.readFileSync(privateDir+'/data/records/'+second.id+'/archive-manifest.json'));eq(manifest.archive_test,true);eq(manifest.legal_consent.version,1001);eq(manifest.legal_consent.text,offer.consent.text);eq(manifest.customer_id,'__ARCHIVTEST__');eq(sha(fs.readFileSync(configPath)),configHash);
  r=json(await expect(owner,'legal',200));eq(r.releases_enabled,false);await expect(owner,'create',503,{method:'POST',body:{pdf:pdf(source),metadata:'{}'}});
  // A client flag may not turn a normal release into a test or use its reserved scope.
- fs.writeFileSync(configPath,config(true,true));const base=JSON.parse(fs.readFileSync(web+'/demo.json')),normal={title:'Synthetic normal release',customer_id:'NORMAL_TEST',customer_name:'Synthetic fixture',commission:'NORMAL_TEST',layout:base.layout,pageCount:4,archive_test:true};
+ fs.writeFileSync(configPath,config(true,true));const base=JSON.parse(fs.readFileSync(web+'/demo.json')),normal={title:'Synthetic normal release',customer_id:'NORMAL_TEST',customer_name:'Synthetic fixture',commission:'NORMAL_TEST',checkout:syntheticCheckout,layout:base.layout,pageCount:4,archive_test:true};
  const release=json(await expect(owner,'create',201,{method:'POST',body:{pdf:pdf(source),metadata:JSON.stringify(normal)}}));const normalOffer=await unlock(other,release);eq(normalOffer.archive_test,false);eq(normalOffer.consent.version,1);
  await expect(owner,'create',400,{method:'POST',body:{pdf:pdf(source),metadata:JSON.stringify({...normal,customer_id:'__ARCHIVTEST__'})}});
  console.log(JSON.stringify({checks,result:'passed',coverage:['owner-only fixed-fixture test','Origin and CSRF','real releases stay blocked','no arbitrary offer or attachment upload','mandatory customer code','test links replace older test links','explicit non-binding consent version','pending test is resumable','complete mock Drive package verified before link closure','private signed PDF retained','configuration unchanged','client cannot spoof archive-test status']}));

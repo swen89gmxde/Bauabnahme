@@ -45,6 +45,7 @@ export async function stampPDF(bytes,layout,images,PDFLib,options={}){
   const image=await doc.embedPng(png);page.drawImage(image,{...p,opacity:1});
  }
  if(options.bundle?.length)doc.catalog.set(PDFLib.PDFName.of('SichtwerkDocuments'),doc.context.obj(options.bundle.map(f=>({Name:PDFLib.PDFHexString.fromText(f.name),SHA256:PDFLib.PDFHexString.fromText(f.sha256),Version:PDFLib.PDFHexString.fromText(f.version||'')}))));
+ if(options.checkout)doc.catalog.set(PDFLib.PDFName.of('SichtwerkCheckout'),PDFLib.PDFHexString.fromText(JSON.stringify(options.checkout)));
  if(options.consent){const c=options.consent;if(c.accepted!==true||!Number.isInteger(c.version)||typeof c.text!=='string')throw Error('Die Pflichtbestätigung zu den Vertragsunterlagen fehlt.');doc.catalog.set(PDFLib.PDFName.of('SichtwerkConsent'),doc.context.obj({Version:c.version,Accepted:true,Text:PDFLib.PDFHexString.fromText(c.text),Test:!!c.test}));}
  return doc.save({useObjectStreams:false,updateFieldAppearances:false});
 }

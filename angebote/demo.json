@@ -34,14 +34,14 @@
     },
     {
       "role": "widerruf",
-      "name": "Widerrufsbelehrung_Sichtwerk_Neubauer_2026-10-26_WhatsApp.pdf",
-      "version": "26.10.2026",
+      "name": "Widerrufsbelehrung_Sichtwerk_Neubauer_2026-11-08_Portal.pdf",
+      "version": "08.11.2026",
       "mime": "application/pdf",
-      "size": 78961,
-      "sha256": "847bd87f0fd30d73a01751ead101e885639c20e85a75f77da442397ff94976da",
+      "size": 47594,
+      "sha256": "1fde9e052df2dfc53c104f5959c7e89dcab6c9252aedc2ddb9789ddc10a05a1f",
       "file": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-10-26_WhatsApp.pdf",
       "id": "demo-widerruf",
-      "demoPath": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-10-26_WhatsApp.pdf"
+      "demoPath": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-11-08_Portal.pdf"
     }
   ]
 }
