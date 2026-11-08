@@ -58,6 +58,7 @@ function archiveManifest(array $r): array {
 }
 function archiveFiles(array $r): array {
     $dir=recordPath($r['id']);
+    if(archiveMode($r)==='signed_pdf_only')return [['key'=>'signed','path'=>$dir.'/signed.pdf','name'=>'Unterschriebenes_Angebot.pdf','mime'=>'application/pdf','sha256'=>$r['completion']['sha256']]];
     $files=[['key'=>'signed','path'=>$dir.'/signed.pdf','name'=>'Unterschriebenes_Angebot.pdf','mime'=>'application/pdf','sha256'=>$r['completion']['sha256']],['key'=>'original','path'=>$dir.'/original.pdf','name'=>'01_Angebot.pdf','mime'=>'application/pdf','sha256'=>$r['sha256']]];
     foreach($r['attachments'] as $i=>$f)$files[]=['key'=>'asset-'.$f['id'],'path'=>$dir.'/asset-'.$f['id'],'name'=>sprintf('%02d_', $i+2).$f['name'],'mime'=>$f['mime'],'sha256'=>$f['sha256']];
     $manifest=$dir.'/archive-manifest.json';
@@ -67,7 +68,9 @@ function archiveFiles(array $r): array {
 }
 function driveVerifyFile(array $m,array $f,string $folder,string $record): void {
     drivePrivate($m);
-    if(!in_array($folder,$m['parents']??[],true)||($m['mimeType']??'')!==$f['mime']||($m['appProperties']['record']??'')!==$record||($m['appProperties']['asset']??'')!==$f['key']||(string)($m['size']??'')!==(string)filesize($f['path']))throw new RuntimeException('drive_wrong_file');
+    $size=$f['size']??filesize($f['path']);
+    if(!in_array($folder,$m['parents']??[],true)||($m['mimeType']??'')!==$f['mime']||($m['appProperties']['record']??'')!==$record)throw new RuntimeException('drive_wrong_file');
+    if(($m['appProperties']['asset']??'')!==$f['key']||(string)($m['size']??'')!==(string)$size)throw new RuntimeException('drive_wrong_file');
     $sha=$m['sha256Checksum']??'';
     if(!$sha){$download=driveRequest('GET','files/'.rawurlencode($m['id']).'?alt=media&supportsAllDrives=true');if($download['status']!==200)throw new RuntimeException('drive_readback');$sha=hash('sha256',$download['body']);}
     if(!hash_equals($f['sha256'],$sha))throw new RuntimeException('drive_checksum');
@@ -116,6 +119,7 @@ function runDriveArchive(array $r): array {
             $r['archive']['state']='verified';$r['archive']['verified_at']=gmdate(DATE_ATOM);$r['state']='completed';$r['completion']['completed_at']=gmdate(DATE_ATOM);
             // Persist the notification intent together with completion, before handing off mail.
             $r['notification']=['state'=>'pending','requested_at'=>gmdate(DATE_ATOM),'attempts'=>0,'next_attempt'=>0];
+            if(archiveMode($r)==='signed_pdf_only')$r['local_cleanup']=['state'=>'pending','next_attempt'=>0];
         }
         unset($r['archive']['last_error']);$r['archive']['next_attempt']=0;
     }catch(Throwable $e){
@@ -124,10 +128,37 @@ function runDriveArchive(array $r): array {
         $r['archive']['last_error']=$e instanceof PortalError?$e->reason:(in_array($e->getMessage(),$safe,true)?$e->getMessage():'drive_transfer');
         $r['archive']['next_attempt']=time()+min(900,15*2**min(6,$r['archive']['attempts']-1));
     }
-    saveJson(recordPath($r['id']).'/record.json',$r);return notifyCompletedOffer($r);
+    saveJson(recordPath($r['id']).'/record.json',$r);return notifyCompletedOffer(purgeTemporaryDocuments($r));
+}
+// Missing policy means a historic full-package release. Never migrate it by inference.
+function archiveMode(array $r): string {return $r['archive_mode']??'full_package';}
+function newArchiveMode(): string {
+    global $config;$mode=$config['archive_mode']??'signed_pdf_only';
+    if(!in_array($mode,['signed_pdf_only','full_package'],true))abortPortal('Die Ablageeinstellung ist ungültig.',503);
+    return $mode;
+}
+function archivedSignedURL(array $r): ?string {
+    $id=$r['archive']['files']['signed']['id']??'';
+    return ($r['state']??'')==='completed'&&($r['archive']['state']??'')==='verified'&&is_string($id)&&preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id)?'https://drive.google.com/file/d/'.$id.'/view':null;
+}
+function purgeTemporaryDocuments(array $r): array {
+    if(archiveMode($r)!=='signed_pdf_only'||($r['state']??'')!=='completed'||($r['archive']['state']??'')!=='verified'||($r['local_cleanup']['state']??'')!=='pending')return $r;
+    try{
+        // Recheck the surviving Drive copy before every cleanup attempt, including crash recovery.
+        $root=$r['archive']['root_id'];$folder=$r['archive']['folder_id'];$rootMeta=driveMetadata($root);$folderMeta=driveMetadata($folder);drivePrivate($rootMeta??[]);drivePrivate($folderMeta??[]);
+        if(($rootMeta['mimeType']??'')!=='application/vnd.google-apps.folder'||($folderMeta['mimeType']??'')!=='application/vnd.google-apps.folder'||!in_array($root,$folderMeta['parents']??[],true)||($folderMeta['appProperties']['record']??'')!==$r['id'])throw new RuntimeException('cleanup_archive');
+        $stored=$r['archive']['files']['signed'];$file=['key'=>'signed','mime'=>'application/pdf','size'=>$stored['size'],'sha256'=>$r['completion']['sha256']];$remote=driveMetadata($stored['id']);if(!$remote)throw new RuntimeException('cleanup_archive');driveVerifyFile($remote,$file,$folder,$r['id']);
+        $dir=recordPath($r['id']);$files=['original.pdf'=>$r['sha256'],'signed.pdf'=>$r['completion']['sha256']];
+        foreach($r['attachments'] as $attachment){if(!preg_match('/^[a-f0-9]{32}$/D',$attachment['id']))throw new RuntimeException('cleanup_path');$files['asset-'.$attachment['id']]=$attachment['sha256'];}
+        // Only the explicitly recorded temporary files are eligible. Never recurse or follow links.
+        foreach($files as $name=>$sha){$path=$dir.'/'.$name;if(is_link($path)||file_exists($path)&&(!is_file($path)||!hash_equals($sha,hash_file('sha256',$path))))throw new RuntimeException('cleanup_source');}
+        foreach($files as $name=>$sha){$path=$dir.'/'.$name;if(is_file($path)&&!unlink($path))throw new RuntimeException('cleanup_delete');}
+        $r['local_cleanup']=['state'=>'done','completed_at'=>gmdate(DATE_ATOM)];
+    }catch(Throwable){$r['local_cleanup']['last_error']='cleanup_pending';$r['local_cleanup']['next_attempt']=time()+60;}
+    saveJson(recordPath($r['id']).'/record.json',$r);return $r;
 }
 function archiveResult(array $r): array {
-    return ['ok'=>$r['state']==='completed','archive_pending'=>$r['state']==='archive_pending','completed_at'=>$r['completion']['completed_at']??null,'saved_locally'=>!empty($r['completion']),'retry_after'=>max(2,min(900,($r['archive']['next_attempt']??0)-time()))];
+    return ['ok'=>$r['state']==='completed','archive_pending'=>$r['state']==='archive_pending','completed_at'=>$r['completion']['completed_at']??null,'saved_locally'=>is_file(recordPath($r['id']).'/signed.pdf'),'retry_after'=>max(2,min(900,($r['archive']['next_attempt']??0)-time()))];
 }
 function retryCustomerArchive(string $token,array $input): array {
     [$id,$r]=lockRecordByToken($token);requireCustomer($id,$r);
@@ -138,7 +169,7 @@ function retryCustomerArchive(string $token,array $input): array {
 }
 function retryOwnerArchive(string $id): array {
     $r=recordById($id);lockPortal('scope:'.$r['scope']);lockPortal('record:'.$id);$r=recordById($id);
-    if($r['state']==='completed')return archiveResult($r);
+    if($r['state']==='completed')return archiveResult(purgeTemporaryDocuments($r));
     if($r['state']!=='archive_pending')abortPortal('Dieser Vorgang wartet nicht auf eine Archivierung.',409);
     return archiveResult(runDriveArchive($r));
 }
@@ -146,9 +177,9 @@ function retryOwnerArchive(string $id): array {
 function runArchiveQueue(): array {
     global $dataDir;$done=0;$pending=0;$notified=0;$notificationPending=0;$processed=0;
     foreach(glob($dataDir.'/records/*/record.json')?:[] as $path){
-        $r=readJson($path);$archiveDue=($r['state']??'')==='archive_pending'&&($r['archive']['next_attempt']??0)<=time();$noticeDue=($r['state']??'')==='completed'&&($r['notification']['state']??'')==='pending'&&($r['notification']['next_attempt']??0)<=time();if(!$archiveDue&&!$noticeDue)continue;
+        $r=readJson($path);$archiveDue=($r['state']??'')==='archive_pending'&&($r['archive']['next_attempt']??0)<=time();$noticeDue=($r['state']??'')==='completed'&&($r['notification']['state']??'')==='pending'&&($r['notification']['next_attempt']??0)<=time();$cleanupDue=archiveMode($r)==='signed_pdf_only'&&($r['state']??'')==='completed'&&($r['local_cleanup']['state']??'')==='pending'&&($r['local_cleanup']['next_attempt']??0)<=time();if(!$archiveDue&&!$noticeDue&&!$cleanupDue)continue;
         $scope=lockPortal('scope:'.$r['scope']);$record=lockPortal('record:'.$r['id']);
-        try{$r=recordById($r['id']);if($r['state']==='archive_pending'){$r=runDriveArchive($r);if($r['state']==='completed')$done++;else $pending++;}elseif($r['state']==='completed'){$r=notifyCompletedOffer($r);if(($r['notification']['state']??'')==='submitted')$notified++;else $notificationPending++;}$processed++;}
+        try{$r=recordById($r['id']);if($r['state']==='archive_pending'){$r=runDriveArchive($r);if($r['state']==='completed')$done++;else $pending++;}elseif($r['state']==='completed'){$r=notifyCompletedOffer(purgeTemporaryDocuments($r));if(($r['notification']['state']??'')==='submitted')$notified++;else $notificationPending++;}$processed++;}
         finally{releasePortal($record);releasePortal($scope);}
         if($processed>=5)break;
     }

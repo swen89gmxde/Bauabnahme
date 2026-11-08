@@ -7,6 +7,8 @@ return [
     'lifetime_days' => 14,
     // Keep false until the protected setup and complete archive tests are finished.
     'releases_enabled' => false,
+    // Captured for each new release; existing releases keep their original policy.
+    'archive_mode' => 'signed_pdf_only',
     // New completed archives notify the owner through the STRATO PHP mail service.
     // A successful handoff is not proof of inbox delivery. No PDF/signature is mailed.
     'completion_notification' => [

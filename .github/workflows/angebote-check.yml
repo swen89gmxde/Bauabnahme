@@ -50,3 +50,8 @@ jobs:
         env:
           PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
         run: node angebote-tests/notification.mjs
+
+      - name: Einzelne Drive-PDF und anschliessende Zwischenablagebereinigung pruefen
+        env:
+          PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
+        run: node angebote-tests/drive-pdf-only.mjs
