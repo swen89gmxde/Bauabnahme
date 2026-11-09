@@ -27,7 +27,7 @@ try{
     if(!$preview&&!$receipt&&isset($_SESSION['receipt']))$receipt=readJson(withdrawalPath($_SESSION['receipt']));
     if($receipt&&isset($_GET['bestaetigung'])){header('Content-Type: text/plain; charset=UTF-8');header('Content-Disposition: attachment; filename="Widerruf_Eingangsbestatigung.txt"');echo withdrawalBody($receipt);exit;}
 }catch(PortalError $e){http_response_code($e->status);$error=$e->getMessage();}catch(Throwable){http_response_code(503);$error='Die Funktion ist momentan nicht verfügbar. Bitte nutzen Sie E-Mail oder Post.';}
-?><!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vertrag widerrufen | Sichtwerk - Neubauer</title><link rel="stylesheet" href="style.css?v=20261108-vertrag-1"></head><body>
+?><!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="referrer" content="same-origin"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vertrag widerrufen | Sichtwerk - Neubauer</title><link rel="stylesheet" href="style.css?v=20261108-vertrag-1"></head><body>
 <header class="brand"><a href="./"><span class="brandmark">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Vertrag widerrufen</small></span></a></header><main><section class="card">
 <p class="eyebrow">Unabhängig vom Angebotslink</p><h1>Vertrag widerrufen</h1><p>Hier können Sie eine Widerrufserklärung übermitteln. Ein Angebotslink, Kundencode oder eine Anmeldung sind dafür nicht erforderlich. Ob ein gesetzliches Widerrufsrecht besteht, richtet sich nach Ihrem Vertrag und der Abschlusssituation. Andere zulässige Widerrufswege bleiben bestehen.</p>
 <?php if($error):?><p class="notice" role="alert"><?=$h($error)?></p><?php endif;?>
