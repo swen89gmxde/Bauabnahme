@@ -15,3 +15,6 @@ textarea,select{font:inherit;width:100%;padding:14px;border:2px solid #93a4aa;bo
 .import-note{margin-top:.35rem;color:#7a4b08}.import-note[data-imported="true"]{color:#315d4f}
 
 .authority-fields fieldset{border:1px solid var(--line);border-radius:12px;margin:24px 0;padding:18px}.authority-fields legend{font-weight:700;font-size:22px;padding:0 7px}.authority-choice{border:1px solid var(--line);border-radius:10px;padding:16px 12px;min-height:60px;cursor:pointer}.authority-choice:has(input:checked){border-color:var(--brand);background:#edf4f6}.authority-choice input{flex-shrink:0;accent-color:var(--brand)}.authority-fields p{overflow-wrap:anywhere}
+
+/* The checked Lexware PDF is the only source for the new checkout. */
+.offer-source-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:1rem;line-height:1.65;padding:14px;border:1px solid var(--line);border-radius:8px;background:#f8fafb}.checkout-summary h4{margin:24px 0 8px;font-size:1rem}

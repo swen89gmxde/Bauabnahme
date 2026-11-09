@@ -8,7 +8,12 @@ export const COPY_DELIVERIES={email:'E-Mail (automatisch)',whatsapp:'WhatsApp (m
 export function syncCopyDelivery(doc){
  const method=doc.getElementById('checkout-copy-delivery')?.value||'email',email=method==='email',field=doc.getElementById('checkout-email');field.required=email;doc.getElementById('checkout-email-area').hidden=!email;
  const note=doc.getElementById('checkout-copy-hint');note.textContent=email?'Die vollständige Vertragskopie wird nach Annahme automatisch an diese Adresse gesendet. Gesamtpaket einschließlich Vertragsvorlagen: höchstens 10 MB.':'Eine Kunden-E-Mail ist für diesen Weg nicht erforderlich. Nach Annahme die vollständigen Unterlagen in der Verwaltung herunterladen, '+(method==='paper'?'ausdrucken und aushändigen':'als speicherbare Dateien im vereinbarten WhatsApp-Chat übermitteln')+' und erst danach die tatsächliche Übergabe bestätigen. Die benötigten Dateien bleiben bis zur Bestätigung geschützt erhalten. Gesamtpaket: höchstens 60 MB.';
- doc.getElementById('checkout-checked').checked=false;
+ const check=doc.getElementById('checkout-checked');if(check)check.checked=false;
+}
+export function copyDeliveryFromForm(doc){
+ const method=doc.getElementById('checkout-copy-delivery')?.value||'whatsapp';if(!Object.hasOwn(COPY_DELIVERIES,method))throw Error('Bitte einen gültigen Versandweg wählen.');
+ const field=doc.getElementById('checkout-email');if(method==='email'&&(!field||!field.reportValidity()))throw Error('Bitte eine gültige E-Mail-Adresse für die Vertragskopie eintragen.');
+ return {copy_delivery:method,customer_email:method==='email'?field.value.trim():''};
 }
 export function checkoutFromForm(doc,montagePolicy){
  const method=doc.getElementById('checkout-copy-delivery')?.value||'email';if(!Object.hasOwn(COPY_DELIVERIES,method))throw Error('Bitte einen gültigen Versandweg wählen.');
@@ -20,9 +25,14 @@ export function renderCheckout(root,offer){
  root.replaceChildren();const c=offer.checkout,isTest=!!(offer.archive_test||offer.demo||offer.test);root.hidden=!c;if(!c)return;
  const el=(tag,text)=>{const e=root.ownerDocument.createElement(tag);e.textContent=text;root.append(e);return e;};
  el('h2',isTest?'Unverbindlicher Test der Abschlussübersicht':'Ihre verbindliche Angebotsannahme');el('p','Sichtwerk - Neubauer · Swen Neubauer · Winterberg 2 · 96361 Steinbach am Wald · 0151 11546112 · sichtwerk.neubauer@gmx.de');
- el('h3','Leistung und Ausführung');el('p',c.description);el('p','Angebot: '+offer.title+' · Kommission: '+offer.commission+' · Freigabe: '+(offer.revision??'Probelauf'));
- el('h3','Gesamtpreis einschließlich Umsatzsteuer');el('p',money(c.total_cents)).className='checkout-price';el('p','Weitere Kosten: '+c.additional_costs);
- el('h3','Zahlung');el('p',c.payment_terms);el('h3','Lieferung / Ausführung');el('p',c.delivery_terms);
+ el('p','Angebot: '+offer.title+' · Kommission: '+offer.commission+' · Freigabe: '+(offer.revision??'Probelauf'));
+ if(c.version===2&&c.mode==='offer_pdf'){
+  el('h3','Leistungen und Bedingungen aus Ihrem Angebot');el('p','Die folgenden Angaben wurden aus der zugehörigen Angebots-PDF übernommen. Bitte prüfen Sie das vollständige Angebot vor der verbindlichen Annahme.');
+  for(const page of c.source_pages){el('h4','Originalangebot - Seite '+page.number+' von '+c.source_pages.length);el('p',page.text||'(Diese Seite enthält keinen auslesbaren Text.)').className='offer-source-text';}
+ }else{el('h3','Leistung und Ausführung');el('p',c.description);}
+ el('h3','Gesamtpreis einschließlich Umsatzsteuer');el('p',money(c.total_cents)).className='checkout-price';
+ if(c.version!==2){el('p','Weitere Kosten: '+c.additional_costs);el('h3','Zahlung');el('p',c.payment_terms);}
+ el('h3','Montagezeit und Voraussetzungen');el('p',c.delivery_terms);
  el('p','Einmaliger Werk-/Montageauftrag, kein Abonnement. Individuelle Angebotsvereinbarungen gehen den AGB vor. Gesetzliche Mängelrechte bleiben bestehen. Es wird kein vorzeitiger Beginn und kein Widerrufsverzicht erklärt; die Bestellwartezeit nach Ziffern 6 und 16 der AGB bleibt erhalten.');
  el('p','Bei bestehendem Widerrufsrecht gelten die beigefügte Belehrung und das Musterformular. Die Funktion „Vertrag widerrufen“ bleibt auch nach Sperrung dieses Angebotslinks erreichbar.');
  el('p',c.copy_delivery==='whatsapp'?'Ihre vollständige Vertragskopie erhalten Sie von Sichtwerk als speicherbare Dateien über den vereinbarten WhatsApp-Chat.':c.copy_delivery==='paper'?'Ihre vollständige Vertragskopie erhalten Sie von Sichtwerk auf Papier.':'Ihre Vertragskopie einschließlich der Unterlagen geht an: '+c.customer_email+'. Bitte lassen Sie eine falsche Adresse vor dem Abschluss durch Sichtwerk korrigieren.');
