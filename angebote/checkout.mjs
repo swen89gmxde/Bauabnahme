@@ -1,4 +1,4 @@
-import {montageCheckout} from './montage.mjs?v=20261109-einheitlich-1';
+import {montageCheckout} from './montage.mjs?v=20261109-versicherung-1';
 export const ORDER_BUTTON='Zahlungspflichtig bestellen';
 export function amountCents(value){
  const v=String(value).trim().replace(/\s/g,'');if(!/^\d{1,8}([.,]\d{1,2})?$/.test(v))throw Error('Bitte den Gesamtpreis ohne Tausenderpunkte, zum Beispiel 1234,56, eintragen.');const [a,b='']=v.split(/[.,]/),n=Number(a)*100+Number(b.padEnd(2,'0'));if(!Number.isSafeInteger(n)||n<1||n>1000000000)throw Error('Bitte einen gültigen Gesamtpreis einschließlich Umsatzsteuer eintragen.');return n;

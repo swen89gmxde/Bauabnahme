@@ -27,7 +27,7 @@ function completionNotificationMessage(array $r,array $n): array {
     $body.="\nDer Kundenlink ist gesperrt.\n\nDiese Nachricht enthält keine PDF, Unterschrift, Kundencodes oder Kunden-Zugangslinks.\n";
     if(!empty($r['customer_copy'])&&customerCopyMethod($r)!=='email')$body.="\nVertragskopie: MANUELLE ÜBERGABE per ".(customerCopyMethod($r)==='paper'?'Papier':'WhatsApp')." erforderlich. Vollständige Unterlagen in der Verwaltung herunterladen und tatsächliche Übergabe bestätigen.\n";
     elseif(!empty($r['customer_copy']))$body.="\nVertragskopie an den Kunden: ".(in_array($r['customer_copy']['state'],['submitted','manual_delivered'],true)?'an Maildienst übergeben oder manuell zugestellt.':'AUSSTEHEND / UNKLAR - bitte unverzüglich in der Verwaltung prüfen.')."\n";
-    if($local)$body.="\nDauerhafte Dokumentenablage: ausschließlich diese PDF auf STRATO. Separate Anlagen werden nach Übergabe der Kundenkopie entfernt.\n";
+    if($local)$body.=!empty($r['insurance'])?"\nDauerhafte Dokumentenablage: Kundenangebot, Versichererzusage, Abtretung und sämtliche Freigabeanlagen unverändert geschützt auf STRATO.\n":"\nDauerhafte Dokumentenablage: ausschließlich diese PDF auf STRATO. Separate Anlagen werden nach Übergabe der Kundenkopie entfernt.\n";
     elseif($single)$body.="\nDauerhafte Dokumentenablage: ausschließlich diese PDF in Google Drive. Separate Anlagen werden nicht archiviert.\n";
     $domain=substr($n['from'],strpos($n['from'],'@')+1);
     return ['to'=>$n['to'],'from'=>$n['from'],'subject'=>$subject,'body'=>$body,'message_id'=>'<sichtwerk.archive.'.$r['id'].'@'.$domain.'>'];

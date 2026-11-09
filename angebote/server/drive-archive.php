@@ -143,11 +143,11 @@ function archivedSignedURL(array $r): ?string {
     return ($r['state']??'')==='completed'&&($r['archive']['state']??'')==='verified'&&is_string($id)&&preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id)?'https://drive.google.com/file/d/'.$id.'/view':null;
 }
 function purgeTemporaryDocuments(array $r): array {
-    if(archiveMode($r)!=='signed_pdf_only'||($r['state']??'')!=='completed'||($r['archive']['state']??'')!=='verified'||($r['local_cleanup']['state']??'')!=='pending')return $r;
+    if((archiveMode($r)!=='signed_pdf_only'&&empty($r['insurance']))||($r['state']??'')!=='completed'||($r['archive']['state']??'')!=='verified'||($r['local_cleanup']['state']??'')!=='pending')return $r;
     if(!empty($r['customer_copy'])&&!in_array($r['customer_copy']['state']??'',['submitted','manual_delivered'],true)){$r['local_cleanup']['last_error']='customer_copy_pending';$r['local_cleanup']['next_attempt']=time()+60;saveJson(recordPath($r['id']).'/record.json',$r);return $r;}
     try{
         // Recheck the surviving Drive copy before every cleanup attempt, including crash recovery.
-        if(archiveProvider($r)==='strato'){verifyStratoArchive($r);}else{
+        if(archiveProvider($r)==='strato'){verifyInsuranceBundle($r);verifyStratoArchive($r);}else{
         $root=$r['archive']['root_id'];$folder=$r['archive']['folder_id'];$rootMeta=driveMetadata($root);$folderMeta=driveMetadata($folder);drivePrivate($rootMeta??[]);drivePrivate($folderMeta??[]);
         if(($rootMeta['mimeType']??'')!=='application/vnd.google-apps.folder'||($folderMeta['mimeType']??'')!=='application/vnd.google-apps.folder'||!in_array($root,$folderMeta['parents']??[],true)||($folderMeta['appProperties']['record']??'')!==$r['id'])throw new RuntimeException('cleanup_archive');
         $stored=$r['archive']['files']['signed'];$file=['key'=>'signed','mime'=>'application/pdf','size'=>$stored['size'],'sha256'=>$r['completion']['sha256']];$remote=driveMetadata($stored['id']);if(!$remote)throw new RuntimeException('cleanup_archive');driveVerifyFile($remote,$file,$folder,$r['id']);
@@ -181,7 +181,7 @@ function retryOwnerArchive(string $id): array {
 function runArchiveQueue(): array {
     global $dataDir;$done=0;$pending=0;$notified=0;$notificationPending=0;$processed=0;
     foreach(glob($dataDir.'/records/*/record.json')?:[] as $path){
-        $r=readJson($path);$archiveDue=($r['state']??'')==='archive_pending'&&($r['archive']['next_attempt']??0)<=time();$noticeDue=($r['state']??'')==='completed'&&($r['notification']['state']??'')==='pending'&&($r['notification']['next_attempt']??0)<=time();$customerCopyDue=in_array($r['state']??'',['archive_pending','completed'],true)&&($r['customer_copy']['state']??'')==='pending'&&($r['customer_copy']['next_attempt']??0)<=time();$cleanupDue=archiveMode($r)==='signed_pdf_only'&&($r['state']??'')==='completed'&&($r['local_cleanup']['state']??'')==='pending'&&($r['local_cleanup']['next_attempt']??0)<=time();if(!$archiveDue&&!$noticeDue&&!$cleanupDue&&!$customerCopyDue)continue;
+        $r=readJson($path);$archiveDue=($r['state']??'')==='archive_pending'&&($r['archive']['next_attempt']??0)<=time();$noticeDue=($r['state']??'')==='completed'&&($r['notification']['state']??'')==='pending'&&($r['notification']['next_attempt']??0)<=time();$customerCopyDue=in_array($r['state']??'',['archive_pending','completed'],true)&&($r['customer_copy']['state']??'')==='pending'&&($r['customer_copy']['next_attempt']??0)<=time();$cleanupDue=(archiveMode($r)==='signed_pdf_only'||!empty($r['insurance']))&&($r['state']??'')==='completed'&&($r['local_cleanup']['state']??'')==='pending'&&($r['local_cleanup']['next_attempt']??0)<=time();if(!$archiveDue&&!$noticeDue&&!$cleanupDue&&!$customerCopyDue)continue;
         $scope=lockPortal('scope:'.$r['scope']);$record=lockPortal('record:'.$r['id']);
         try{$r=sendCustomerCopy(recordById($r['id']));if($r['state']==='archive_pending'){$r=runOfferArchive($r);if($r['state']==='completed')$done++;else $pending++;}elseif($r['state']==='completed'){$r=notifyCompletedOffer(purgeTemporaryDocuments($r));if(($r['notification']['state']??'')==='submitted')$notified++;else $notificationPending++;}$processed++;}
         finally{releasePortal($record);releasePortal($scope);}

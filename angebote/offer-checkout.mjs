@@ -1,6 +1,6 @@
-import {extractOffer,textRows} from './offer-import.mjs?v=20261109-einheitlich-1';
-import {montageCheckout} from './montage.mjs?v=20261109-einheitlich-1';
-import {amountCents} from './checkout.mjs?v=20261109-einheitlich-1';
+import {extractOffer,textRows} from './offer-import.mjs?v=20261109-versicherung-1';
+import {montageCheckout} from './montage.mjs?v=20261109-versicherung-1';
+import {amountCents} from './checkout.mjs?v=20261109-versicherung-1';
 
 // Read-only snapshot of the selected original PDF. Never infer net/gross amounts or costs.
 export function checkoutFromPDF(pages,sourceSHA,montagePolicy,delivery={copy_delivery:'whatsapp',customer_email:''}){

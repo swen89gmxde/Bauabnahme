@@ -1,5 +1,6 @@
-import {validateAuthorityReceipt} from './authority.mjs?v=20261109-einheitlich-1';
-import {appendMontagePage} from './montage.mjs?v=20261109-einheitlich-1';
+import {appendInsurancePage} from './insurance.mjs?v=20261109-versicherung-1';
+import {validateAuthorityReceipt} from './authority.mjs?v=20261109-versicherung-1';
+import {appendMontagePage} from './montage.mjs?v=20261109-versicherung-1';
 export const LEGAL_CONSENT=Object.freeze({version:1,text:'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'});
 export const BUSINESS_CONSENT=Object.freeze({version:2,text:'Ich stimme der Geltung der AGB zu. Ich bestätige die Beauftragung für den im Angebot genannten Geschäftskunden zu dessen gewerblichen oder selbständigen beruflichen Zwecken.'});
 export function attachmentInfo(file){
@@ -60,6 +61,7 @@ export async function stampPDF(bytes,layout,images,PDFLib,options={}){
   doc.catalog.set(PDFLib.PDFName.of('SichtwerkAuthority'),PDFLib.PDFHexString.fromText(JSON.stringify(options.authority)));
  }
  await appendMontagePage(doc,options.checkout,PDFLib,options);
+ await appendInsurancePage(doc,options.insurance,PDFLib,options);
  return doc.save({useObjectStreams:false,updateFieldAppearances:false});
 }
 export function germanDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('Bitte ein gültiges Datum wählen.');const [y,m,d]=value.split('-');const date=new Date(Number(y),Number(m)-1,Number(d));if(date.getFullYear()!==+y||date.getMonth()!==+m-1||date.getDate()!==+d)throw Error('Bitte ein gültiges Datum wählen.');return `${d}.${m}.${y}`;}

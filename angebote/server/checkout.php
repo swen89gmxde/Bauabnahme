@@ -57,11 +57,11 @@ function pdfCheckoutSummaryText(array $r): string {
     foreach($c['source_pages'] as $page)$text.="\nOriginalangebot - Seite ".$page['number']."\n".$page['text']."\n";
     $text.="\nGesamtpreis einschließlich Umsatzsteuer: ".euroCents($c['total_cents'])."\n\nMontagezeit und Voraussetzungen:\n".$c['delivery_terms']."\n\nEinmaliger Werk-/Montageauftrag, kein Abonnement. Individuelle Angebotsvereinbarungen gehen vor. Gesetzliche Rechte bleiben bestehen.\nVertragskopie: ".(['email'=>'per E-Mail an '.$c['customer_email'],'whatsapp'=>'als speicherbare Dateien per WhatsApp, manuell durch Sichtwerk','paper'=>'auf Papier, manuell durch Sichtwerk'][customerCopyMethod($r)]).".\n\nBei bestehendem gesetzlichen Widerrufsrecht gelten die beigefügten Unterlagen. Die unabhängige Widerrufsfunktion bleibt unter ".withdrawalURL()." erreichbar. Andere zulässige Widerrufswege bleiben bestehen.\n";
     if(isBusinessCheckout($c))$text.="\nGeschäftskundenauftrag: Der im Angebot genannte Unternehmer ist Auftraggeber. Es wird kein freiwilliges Verbraucherwiderrufsrecht eingeräumt. Die vertragliche Mindestwartezeit nach Ziffern 6 und 16 der AGB bleibt bestehen.\n";
-    return $text.authoritySummaryText($r);
+    return $text.authoritySummaryText($r).insuranceSummaryText($r);
 }
 function customerCopyFiles(array $r): array {
-    $dir=recordPath($r['id']);$files=[['path'=>$dir.'/signed.pdf','name'=>'Unterschriebenes_Angebot.pdf','mime'=>'application/pdf','sha256'=>$r['completion']['sha256']]];
-    foreach($r['attachments'] as $f)$files[]=['path'=>$dir.'/asset-'.$f['id'],'name'=>$f['name'],'mime'=>$f['mime'],'sha256'=>$f['sha256']];
+    $dir=recordPath($r['id']);$files=[['path'=>!empty($r['insurance'])&&($r['archive']['state']??'')==='verified'?ownerSignedPath($r):$dir.'/signed.pdf','name'=>'Unterschriebenes_Angebot.pdf','mime'=>'application/pdf','sha256'=>$r['completion']['sha256']]];
+    foreach($r['attachments'] as $f)$files[]=['path'=>portalAssetPath($r,'asset-'.$f['id']),'name'=>$f['name'],'mime'=>$f['mime'],'sha256'=>$f['sha256']];
     $total=0;foreach($files as $f){if(!is_file($f['path'])||is_link($f['path'])||!hash_equals($f['sha256'],hash_file('sha256',$f['path'])))throw new RuntimeException('customer_copy_source');$total+=filesize($f['path']);}if($total>(customerCopyMethod($r)==='email'?11:61)*1024*1024)throw new RuntimeException('customer_copy_size');return $files;
 }
 function submitCustomerCopy(array $message,array $settings,array $files): bool {

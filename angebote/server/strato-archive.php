@@ -26,10 +26,10 @@ function verifyStratoArchive(array $r): string {
 function ownerSignedPath(array $r): string {
     if(archiveProvider($r)!=='strato')return recordPath($r['id']).'/signed.pdf';
     if(($r['state']??'')!=='completed'||($r['archive']['state']??'')!=='verified')abortPortal('Die Archivierung ist noch nicht bestätigt.',409);
-    try{return verifyStratoArchive($r);}catch(Throwable){abortPortal('Die Archivdatei konnte nicht geprüft werden. Bitte die Sicherung kontrollieren.',503,'strato_archive_checksum');}
+    try{verifyInsuranceBundle($r);return verifyStratoArchive($r);}catch(Throwable){abortPortal('Die Archivdatei konnte nicht geprüft werden. Bitte die Sicherung kontrollieren.',503,'strato_archive_checksum');}
 }
 function signedSavedLocally(array $r): bool {
-    if(archiveProvider($r)==='strato'&&($r['archive']['state']??'')==='verified'){try{verifyStratoArchive($r);return true;}catch(Throwable){return false;}}
+    if(archiveProvider($r)==='strato'&&($r['archive']['state']??'')==='verified'){try{verifyInsuranceBundle($r);verifyStratoArchive($r);return true;}catch(Throwable){return false;}}
     return is_file(recordPath($r['id']).'/signed.pdf');
 }
 function runOfferArchive(array $r): array {return archiveProvider($r)==='strato'?runStratoArchive($r):runDriveArchive($r);}
@@ -45,7 +45,7 @@ function runStratoArchive(array $r): array {
             finally{if(is_file($tmp))unlink($tmp);}
         }
         $r['archive']['files']['signed']=['sha256'=>$sha,'size'=>$size,'verified_at'=>gmdate(DATE_ATOM)];
-        verifyStratoArchive($r);
+        verifyStratoArchive($r);if(!empty($r['insurance']))$r=archiveInsuranceBundle($r);
         $r['archive']['state']='verified';$r['archive']['verified_at']=gmdate(DATE_ATOM);$r['state']='completed';$r['completion']['completed_at']=gmdate(DATE_ATOM);
         $r['notification']=['state'=>'pending','requested_at'=>gmdate(DATE_ATOM),'attempts'=>0,'next_attempt'=>0];
         $r['local_cleanup']=['state'=>'pending','next_attempt'=>0];unset($r['archive']['last_error']);$r['archive']['next_attempt']=0;

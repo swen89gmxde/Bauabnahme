@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer"><title>Zahlungszusage bestätigen | Sichtwerk - Neubauer</title><link rel="stylesheet" href="style.css?v=20261109-versicherung-1"><script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script><script type="module" src="insurance-app.mjs?v=20261109-versicherung-1"></script></head>
+<body><header class="brand"><a href="./"><span class="brandmark">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Zahlungszusage der Versicherung</small></span></a></header><main>
+<div id="insurance-status" class="message" role="status" hidden></div>
+<section id="insurance-loading" class="card"><h1>Zahlungszusage wird geöffnet …</h1></section>
+<section id="insurance-error" class="card" hidden><h1>Dieser Zugang ist nicht verfügbar.</h1><p id="insurance-error-text"></p><p>Bitte wenden Sie sich an Sichtwerk - Neubauer.</p></section>
+<section id="insurance-main" class="card" hidden>
+<div id="insurance-demo" class="notice" hidden><b>Unverbindliches Muster</b><p>Nur zum Ausprobieren. Es entsteht keine Zahlungszusage und kein Kundenauftrag. Keine echten Daten eintragen.</p></div>
+<p class="eyebrow">Schritt 1 · Versicherung</p><h1>Zahlungszusage bestätigen</h1><p>Bitte prüfen Sie das Angebot und die Anlagen. Der Kunde nimmt das Angebot anschließend selbst an.</p><p id="insurance-offer-label"></p>
+<a id="insurance-original" class="secondary wide" target="_blank" rel="noopener">Vollständiges Angebot öffnen ↗</a><div id="insurance-documents" class="download-list"></div>
+<form id="insurance-form">
+<label for="insurance-company">Versicherungsgesellschaft (genaue Bezeichnung)</label><input id="insurance-company" autocomplete="organization" maxlength="160" required>
+<label for="insurance-claim">Schadennummer</label><input id="insurance-claim" maxlength="100" required>
+<p id="insurance-total" class="notice"></p>
+<label for="insurance-covered">Übernommener Betrag einschließlich Umsatzsteuer (EUR)</label><input id="insurance-covered" inputmode="decimal" placeholder="z. B. 1234,56" required><p id="insurance-share" class="hint" aria-live="polite">Der verbleibende Kundenanteil wird automatisch angezeigt.</p>
+<h2>Verbindliche Zahlungszusage</h2><p id="insurance-terms"></p>
+<label for="insurance-name">Ihr vollständiger Name</label><input id="insurance-name" autocomplete="name" maxlength="100" required>
+<label for="insurance-role">Ihre Funktion / Vertretungsbefugnis</label><input id="insurance-role" autocomplete="organization-title" maxlength="100" placeholder="z. B. bevollmächtigter Sachbearbeiter" required>
+<label for="insurance-date">Datum</label><input id="insurance-date" type="date" required>
+<label for="insurance-signature">Ihre Unterschrift für den Versicherer</label><p class="hint">Mit dem Finger oder der Maus im weißen Feld unterschreiben.</p><div class="signature-wrap"><canvas id="insurance-signature" aria-label="Unterschrift des Versicherers"></canvas><span class="signature-line" aria-hidden="true"></span></div><button id="insurance-clear" class="secondary" type="button">Unterschrift neu schreiben</button>
+<label class="check"><input id="insurance-confirm" type="checkbox" required><span id="insurance-confirm-text"></span></label>
+<button class="primary wide" id="insurance-preview-button" type="submit">Zahlungszusage zur Prüfung erstellen →</button>
+</form>
+<section id="insurance-preview" hidden><h2>Angaben und Unterschrift prüfen</h2><p id="insurance-preview-summary"></p><a id="insurance-preview-pdf" class="secondary wide" target="_blank" rel="noopener">Vollständige Zahlungszusage prüfen ↗</a><p>Erst der folgende Abschlussbutton übermittelt Ihre verbindliche Erklärung. Sie erteilen damit keinen Auftrag im Namen des Kunden.</p><button id="insurance-submit" class="primary wide">Zahlungszusage verbindlich abgeben</button><button id="insurance-correct" class="quiet wide">← Angaben korrigieren</button></section>
+<section id="insurance-done" hidden><h2>Zahlungszusage gespeichert</h2><p id="insurance-done-text">Ihre Erklärung wurde unverändert und geschützt auf STRATO gespeichert. Sichtwerk kann nun den Kundenlink erstellen. Der Kunde hat das Angebot noch nicht angenommen.</p><a id="insurance-download" class="secondary wide" download>Zahlungszusage für Ihre Unterlagen speichern</a><p class="hint">Dieser Zugang ist nach Abschluss gesperrt. Die PDF bleibt in diesem geöffneten Fenster speicherbar.</p></section>
+</section></main><footer>Sichtwerk - Neubauer · <a href="../impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="widerruf.php">Vertrag widerrufen</a></footer></body></html>
