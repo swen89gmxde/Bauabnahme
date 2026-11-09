@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/authority.php';
 require_once __DIR__.'/drive-archive.php';
 require_once __DIR__.'/strato-archive.php';
 require_once __DIR__.'/checkout.php';
@@ -56,7 +57,7 @@ function checkUpload(array $f,bool $pdfOnly=false): array {
 function uploadedList(string $key): array { $files=$_FILES[$key]??null;if(!$files)return [];if(!is_array($files['name']))return [$files];$out=[];foreach($files['name'] as $i=>$n)if(($files['error'][$i]??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE)$out[]=['name'=>$n,'tmp_name'=>$files['tmp_name'][$i],'error'=>$files['error'][$i],'size'=>$files['size'][$i]];return $out; }
 function legalMasters(): array { global $dataDir;return readJson($dataDir.'/legal/current.json'); }
 function publicFiles(array $files): array {return array_map(fn($f)=>array_intersect_key($f,array_flip(['id','name','mime','size','sha256','role','version'])), $files);}
-function publicOffer(array $r,string $id): array {return array_intersect_key($r,array_flip(['title','filename','layout','sha256','expires','pageCount','customer_name','commission','revision','legal_generation']))+['attachments'=>publicFiles($r['attachments']),'csrf'=>$_SESSION['csrf'],'proof'=>$_SESSION['customer'][$id]['proof'],'archive_pending'=>$r['state']==='archive_pending','archive_test'=>($r['archive_test']??false)===true,'archive_mode'=>archiveMode($r),'archive_provider'=>archiveProvider($r),'copy_consent'=>$r['copy_consent']??null,'checkout'=>$r['checkout']??null,'checkout_hash'=>isset($r['checkout'])?checkoutHash($r['checkout']):null,'consent'=>legalConsentDefinition(($r['archive_test']??false)===true)];}
+function publicOffer(array $r,string $id): array {return array_intersect_key($r,array_flip(['title','filename','layout','sha256','expires','pageCount','customer_name','commission','revision','legal_generation']))+['attachments'=>publicFiles($r['attachments']),'csrf'=>$_SESSION['csrf'],'proof'=>$_SESSION['customer'][$id]['proof'],'archive_pending'=>$r['state']==='archive_pending','archive_test'=>($r['archive_test']??false)===true,'archive_mode'=>archiveMode($r),'archive_provider'=>archiveProvider($r),'authority'=>$r['authority']??null,'copy_consent'=>$r['copy_consent']??null,'checkout'=>$r['checkout']??null,'checkout_hash'=>isset($r['checkout'])?checkoutHash($r['checkout']):null,'consent'=>legalConsentDefinition(($r['archive_test']??false)===true)];}
 function rateLimit(string $key,callable $check): bool { global $dataDir,$config;$key=hash_hmac('sha256',$key.'|'.($_SERVER['REMOTE_ADDR']??''),(string)$config['password_hash']);$h=lockPortal('rate:'.$key);directory($dataDir.'/rates');$path=$dataDir.'/rates/'.$key.'.json';$r=readJson($path);if(time()-($r['start']??0)>=900)$r=['start'=>time(),'attempts'=>0];if(($r['attempts']??0)>=6)abortPortal('Zu viele Versuche. Bitte in 15 Minuten erneut versuchen.',429,'rate_limit');$ok=$check();$r['attempts']=$ok?0:($r['attempts']??0)+1;saveJson($path,$r);releasePortal($h);return $ok; }
 function legalUpload(array $file,string $role,string $version): array {
  global $dataDir;if(!in_array($role,['agb','widerruf'],true)||!$version)abortPortal('Bitte Vorlagentyp und Versionsstand angeben.');$f=checkUpload($file,true);$h=lockPortal('legal');directory($dataDir.'/legal');$current=legalMasters();$filename=$role.'-'.$f['sha256'].'.pdf';if(!is_file($dataDir.'/legal/'.$filename)&&!copy($f['tmp'],$dataDir.'/legal/'.$filename))abortPortal('Die Vertragsvorlage konnte nicht gespeichert werden.',503);
@@ -79,6 +80,7 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  // New releases use the 256-bit personal link only. Keep legacy PIN records unchanged.
  $requireCode=false;$code=null;
  $r=['schema'=>2,'archive_mode'=>newArchiveMode(),'archive_provider'=>newArchiveProvider(),'id'=>$id,'scope'=>$scope,'customer_id'=>$customer,'customer_name'=>$customerName,'commission'=>$commission,'revision'=>$revision,'title'=>$title,'filename'=>$f['name'],'layout'=>$safe,'sha256'=>$f['sha256'],'pageCount'=>$count,'state'=>'active','created_at'=>gmdate(DATE_ATOM),'created'=>time(),'expires'=>time()+max(1,min(30,(int)($config['lifetime_days']??14)))*86400,'require_code'=>$requireCode,'code_hash'=>$requireCode?password_hash($code,PASSWORD_DEFAULT):null,'legal_generation'=>$legal['generation'],'attachments'=>$attachments];
+ if(!$archiveTest||($meta['authority_test']??false)===true)$r['authority']=authorityDefinition($customerName);
  if($checkout){$r['checkout']=$checkout;if(isset($checkout['copy_delivery'])&&($copyConsent=copyConsentDefinition($checkout['copy_delivery'])))$r['copy_consent']=$copyConsent;}
  if($archiveTest)$r['archive_test']=true;
  saveJson($stage.'/record.json',$r);if(!rename($stage,recordPath($id)))abortPortal('Das Angebot konnte nicht freigegeben werden.',503);saveJson($dataDir.'/scopes/'.$scope.'.json',['active_id'=>$id,'revision'=>$revision]);if($oldId&&$oldId!==$id){lockPortal('record:'.$oldId);$old=recordById($oldId);if($old['state']==='active'){$old['state']='replaced';$old['closed_at']=gmdate(DATE_ATOM);saveJson(recordPath($oldId).'/record.json',$old);}}
@@ -95,7 +97,7 @@ function requireArchiveTestLegal(array $masters): void {
   $stored=$master['stored']??'';if(!is_string($stored)||basename($stored)!==$stored||!is_file($dataDir.'/legal/'.$stored)||!hash_equals((string)$entry['sha256'],hash_file('sha256',$dataDir.'/legal/'.$stored)))abortPortal('Eine Vertragsvorlage für den Archivtest stimmt nicht mit dem freigegebenen Stand überein.',409);
  }
 }
-function createArchiveTest(array $pdf,array $extra,bool $checkoutTest=false): array {
+function createArchiveTest(array $pdf,array $extra,bool $checkoutTest=false,bool $authorityTest=false): array {
  global $config;
  if(($config['releases_enabled']??true)!==false)abortPortal('Der Einrichtungstest ist nur bei gesperrten Kundenfreigaben verfügbar.',409);
  if(newArchiveProvider()==='drive'&&($config['drive_archive']['connection_verified']??false)!==true)abortPortal('Die historische Drive-Verbindung ist noch nicht geprüft.',409);
@@ -105,14 +107,15 @@ function createArchiveTest(array $pdf,array $extra,bool $checkoutTest=false): ar
  foreach([$pdf,$extra[0]] as $i=>$upload){$file=checkUpload($upload,true);if(!is_file($approved[$i])||!hash_equals(hash_file('sha256',$approved[$i]),$file['sha256']))abortPortal('Für den Archivtest sind ausschließlich die vorgegebenen Musterunterlagen erlaubt.',409);}
  $demo=readJson(dirname(__DIR__).'/demo.json');if(!is_array($demo['layout']??null))abortPortal('Die Testvorlage ist nicht verfügbar.',503);
  $pdf['name']='ARCHIVTEST_Musterangebot.pdf';$extra[0]['name']='ARCHIVTEST_Zusatzanlage.pdf';
- return createOffer(['title'=>'ARCHIVTEST - KEIN KUNDENAUFTRAG','customer_id'=>'__ARCHIVTEST__','customer_name'=>'Testkunde Sichtwerk - kein Auftrag','commission'=>newArchiveProvider()==='strato'?'ARCHIVTEST-STRATO':'ARCHIVTEST-Drive','checkout_test'=>$checkoutTest,'layout'=>$demo['layout'],'pageCount'=>4],$pdf,$extra,true);
+ return createOffer(['title'=>'ARCHIVTEST - KEIN KUNDENAUFTRAG','customer_id'=>'__ARCHIVTEST__','customer_name'=>'Testkunde Sichtwerk - kein Auftrag','commission'=>newArchiveProvider()==='strato'?'ARCHIVTEST-STRATO':'ARCHIVTEST-Drive','checkout_test'=>$checkoutTest,'authority_test'=>$authorityTest,'layout'=>$demo['layout'],'pageCount'=>4],$pdf,$extra,true);
 }
 function legalConsentDefinition(bool $archiveTest=false): array {return $archiveTest?['version'=>1001,'text'=>'Im Archivtest: Ich probiere die Pflichtbestätigung zu AGB und Widerrufsbelehrung einschließlich Musterformular aus. Es entsteht kein Auftrag.','test'=>true]:['version'=>1,'text'=>'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'];}
 function requireLegalConsent(array $meta,int $version): void {if(($meta['legal_consent']??null)!==true||($meta['consent_version']??null)!==$version)abortPortal('Bitte das Pflichtfeld zu AGB und Widerrufsbelehrung aktiv anhaken.',400,'legal_consent_required');}
 function completeOffer(string $token,array $meta,array $file): array {
- [$id,$r]=lockRecordByToken($token);requireCustomer($id,$r);requireOrderConsent($r,$meta);$key=(string)($meta['request_id']??'');if(!preg_match('/^[a-f0-9]{32}$/D',$key))abortPortal('Bitte die PDF erneut vorbereiten.');$f=checkUpload($file,true);
+ [$id,$r]=lockRecordByToken($token);requireCustomer($id,$r);requireOrderConsent($r,$meta);$authority=requireAuthority($r,$meta);$key=(string)($meta['request_id']??'');if(!preg_match('/^[a-f0-9]{32}$/D',$key))abortPortal('Bitte die PDF erneut vorbereiten.');$f=checkUpload($file,true);
  $proof=(string)($meta['proof']??'');if(!hash_equals($_SESSION['customer'][$id]['proof'],$proof))abortPortal('Bitte den Angebotslink erneut öffnen.',403);
  if(in_array($r['state'],['archive_pending','completed'],true)){
+  if(isset($r['completion']['authority'])&&array_diff_key($r['completion']['authority'],['accepted_at'=>true])!==$authority)abortPortal('Die gespeicherte Eigentums-/Vertretungserklärung kann nicht verändert werden.',410,'signature_saved');
   if(isset($r['completion']['legal_consent']))requireLegalConsent($meta,$r['completion']['legal_consent']['version']);
   if(!hash_equals($r['completion']['request_hash'],hash('sha256',$key))||!hash_equals($r['completion']['sha256'],$f['sha256'])||($meta['name']??'')!==$r['completion']['name']||($meta['date']??'')!==$r['completion']['date']||($meta['source_sha256']??'')!==$r['sha256'])abortPortal('Die Unterschrift ist bereits gespeichert und kann nicht überschrieben werden.',410,'signature_saved');
   $documents=$meta['documents']??[];if(!is_array($documents))abortPortal('Die Dokumentliste ist ungültig.',400);ksort($documents);$expected=$r['completion']['documents'];ksort($expected);if($documents!==$expected)abortPortal('Der Unterlagenstand stimmt nicht.',409);
@@ -126,6 +129,7 @@ function completeOffer(string $token,array $meta,array $file): array {
  if(archiveProvider($r)==='drive')$drive=driveSettings();$tmp=recordPath($id).'/signed-staging.pdf';
  if(!copy($f['tmp'],$tmp)||!hash_equals($f['sha256'],hash_file('sha256',$tmp))||!rename($tmp,recordPath($id).'/signed.pdf'))abortPortal('Die unterschriebene PDF konnte nicht gespeichert werden. Bitte erneut versuchen.',503);
  $acceptedAt=gmdate(DATE_ATOM);$consent+=['accepted_at'=>$acceptedAt,'documents'=>$legalFiles];$r['state']='archive_pending';$r['completion']=['name'=>$name,'date'=>$date,'accepted_at'=>$acceptedAt,'source_sha256'=>$r['sha256'],'sha256'=>$f['sha256'],'request_hash'=>hash('sha256',$key),'documents'=>$expected,'legal_consent'=>$consent];
+ if($authority)$r['completion']['authority']=$authority+['accepted_at'=>$acceptedAt];
  $r['archive']=['state'=>'pending','root_id'=>$drive['folder_id']??null,'files'=>[],'attempts'=>0,'next_attempt'=>0];
  if(isset($r['checkout'])){$r['completion']['order_consent']=['accepted'=>true,'checkout_hash'=>checkoutHash($r['checkout']),'button'=>!empty($r['archive_test'])?'Archivtest abschließen':'Zahlungspflichtig bestellen','accepted_at'=>$acceptedAt];$r['customer_copy']=['state'=>customerCopyMethod($r)==='email'?'pending':'manual_required','requested_at'=>$acceptedAt,'attempts'=>0,'next_attempt'=>0];if(!empty($r['copy_consent']))$r['completion']['copy_consent']=$r['copy_consent']+['accepted'=>true,'accepted_at'=>$acceptedAt];}
  saveJson(recordPath($id).'/record.json',$r);return archiveResult(runOfferArchive(sendCustomerCopy($r)));

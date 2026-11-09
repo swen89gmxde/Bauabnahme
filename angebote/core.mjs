@@ -1,3 +1,4 @@
+import {validateAuthorityReceipt} from './authority.mjs?v=20261109-eigentum-1';
 export const LEGAL_CONSENT=Object.freeze({version:1,text:'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'});
 export function attachmentInfo(file){
  const ext=file.name?.split('.').pop().toLowerCase(),types={pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
@@ -21,6 +22,7 @@ export function validateLayout(layout,pages){
  return layout;
 }
 export function rejectExistingSignatures(doc,PDFLib){
+ if(doc.catalog.get(PDFLib.PDFName.of('SichtwerkAuthority')))throw Error('Diese PDF enthält bereits eine abgeschlossene Erklärung. Bitte das ursprüngliche ununterzeichnete Angebot verwenden.');
  if(!doc.catalog.get(PDFLib.PDFName.of('AcroForm')))return;
  for(const f of doc.getForm().getFields()){
   if(f instanceof PDFLib.PDFSignature && f.acroField.dict.get(PDFLib.PDFName.of('V')))throw Error('Diese PDF wurde bereits digital unterschrieben. Bitte die ursprüngliche, ununterzeichnete Datei verwenden.');
@@ -48,6 +50,12 @@ export async function stampPDF(bytes,layout,images,PDFLib,options={}){
  if(options.checkout)doc.catalog.set(PDFLib.PDFName.of('SichtwerkCheckout'),PDFLib.PDFHexString.fromText(JSON.stringify(options.checkout)));
  if(options.copyConsent){const c=options.copyConsent;if(c.accepted!==true||!Number.isInteger(c.version)||typeof c.text!=='string'||!['email','whatsapp'].includes(c.delivery))throw Error('Die Zustimmung zur digitalen Vertragskopie fehlt.');doc.catalog.set(PDFLib.PDFName.of('SichtwerkCopyConsent'),PDFLib.PDFHexString.fromText(JSON.stringify(c)));}
  if(options.consent){const c=options.consent;if(c.accepted!==true||!Number.isInteger(c.version)||typeof c.text!=='string')throw Error('Die Pflichtbestätigung zu den Vertragsunterlagen fehlt.');doc.catalog.set(PDFLib.PDFName.of('SichtwerkConsent'),doc.context.obj({Version:c.version,Accepted:true,Text:PDFLib.PDFHexString.fromText(c.text),Test:!!c.test}));}
+ if(options.authority){
+  validateAuthorityReceipt(options.authority);if(!images.authority)throw Error('Die lesbare Eigentums-/Vertretungserklärung fehlt.');
+  const protocol=doc.addPage([595.276,841.89]),image=await doc.embedPng(images.authority);protocol.drawImage(image,{x:0,y:0,width:protocol.getWidth(),height:protocol.getHeight()});
+  if(options.testLabel)protocol.drawText('PROBELAUF - KEINE ANGEBOTSANNAHME',{x:36,y:24,size:10,color:PDFLib.rgb(.7,0,0)});
+  doc.catalog.set(PDFLib.PDFName.of('SichtwerkAuthority'),PDFLib.PDFHexString.fromText(JSON.stringify(options.authority)));
+ }
  return doc.save({useObjectStreams:false,updateFieldAppearances:false});
 }
 export function germanDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('Bitte ein gültiges Datum wählen.');const [y,m,d]=value.split('-');const date=new Date(Number(y),Number(m)-1,Number(d));if(date.getFullYear()!==+y||date.getMonth()!==+m-1||date.getDate()!==+d)throw Error('Bitte ein gültiges Datum wählen.');return `${d}.${m}.${y}`;}

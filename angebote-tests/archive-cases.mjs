@@ -1,3 +1,4 @@
+import {syntheticAuthority} from './checkout-fixture.mjs';
 // Executed inside backend.mjs with its synthetic clients and Google HTTP mock.
 export async function archiveCases(t){
  const {fs,path,privateDir,create,meta,unlock,client,expect,admin,alice,bob,json,post,file,source,signed,randomBytes,runWorker,checks}=t;
@@ -6,7 +7,7 @@ export async function archiveCases(t){
  const readRecord=id=>JSON.parse(fs.readFileSync(path.join(privateDir,'data/records',id,'record.json')));
  const saveRecord=r=>fs.writeFileSync(path.join(privateDir,'data/records',r.id,'record.json'),JSON.stringify(r));
  const pending=await create(meta('PENDING','ARCHIVE-1'),{'attachments[0]':file(source,'Anlage.pdf')});const p=await unlock(alice,pending);
- const metadata={order_consent:true,checkout_hash:p.checkout_hash,name:'Testperson Archiv',date:'2026-10-30',legal_consent:true,consent_version:1,request_id:randomBytes(16).toString('hex'),source_sha256:p.sha256,proof:p.proof,documents:Object.fromEntries(p.attachments.map(f=>[f.id,f.sha256]))};
+ const metadata={authority:syntheticAuthority(p),order_consent:true,checkout_hash:p.checkout_hash,name:'Testperson Archiv',date:'2026-10-30',legal_consent:true,consent_version:1,request_id:randomBytes(16).toString('hex'),source_sha256:p.sha256,proof:p.proof,documents:Object.fromEntries(p.attachments.map(f=>[f.id,f.sha256]))};
  const complete=(m=metadata,pdf=signed)=>({method:'POST',token:pending.token,body:{pdf:file(pdf),metadata:JSON.stringify(m)}});
  await expect(alice,'archive-progress',409,post({proof:p.proof},pending.token));
  setMock({fail_upload:true});let r=json(await expect(alice,'complete',202,complete()));assert(r.archive_pending&&r.saved_locally&&!r.ok);
@@ -31,14 +32,14 @@ export async function archiveCases(t){
  for(const action of ['access','offer','document','attachment&id='+p.attachments[0].id])await expect(alice,action,410,{token:pending.token});
  await expect(alice,'archive-progress',200,post({proof:p.proof},pending.token));await expect(alice,'complete',200,complete());
  const count=JSON.parse(fs.readFileSync(mockPath)).uploads;await expect(admin,'archive-retry',200,post({id:pending.id}));assert.equal(JSON.parse(fs.readFileSync(mockPath)).uploads,count);checks();
- const timeout=await create(meta('TIMEOUT','ARCHIVE-2'));const w=await unlock(alice,timeout);const tm={...metadata,request_id:randomBytes(16).toString('hex'),proof:w.proof,source_sha256:w.sha256,documents:Object.fromEntries(w.attachments.map(f=>[f.id,f.sha256]))};
+ const timeout=await create(meta('TIMEOUT','ARCHIVE-2'));const w=await unlock(alice,timeout);const tm={...metadata,authority:syntheticAuthority(w),request_id:randomBytes(16).toString('hex'),proof:w.proof,source_sha256:w.sha256,documents:Object.fromEntries(w.attachments.map(f=>[f.id,f.sha256]))};
  setMock({timeout_after_upload:true});await expect(alice,'complete',202,{method:'POST',token:timeout.token,body:{pdf:file(signed),metadata:JSON.stringify(tm)}});
  const uploadedAfterTimeout=JSON.parse(fs.readFileSync(mockPath)).uploads;const state=readRecord(timeout.id);assert.equal(state.state,'archive_pending');assert.ok(state.archive.files.signed.id);checks(2);
  await expect(admin,'owner-file&id='+timeout.id+'&kind=signed',200);
  await expect(admin,'archive-retry',200,post({id:timeout.id}));const final=readRecord(timeout.id);assert.equal(final.state,'completed');assert.equal(JSON.parse(fs.readFileSync(mockPath)).uploads-uploadedAfterTimeout,Object.keys(final.archive.files).length-1);checks(2);
  // A multi-batch archive resumes from its persisted cursor without the customer's browser.
  const configPathBatch=path.join(privateDir,'config.php'),configBatch=fs.readFileSync(configPathBatch,'utf8');fs.writeFileSync(configPathBatch,configBatch.replace("'batch_size'=>20","'batch_size'=>1"));
- const batch=await create(meta('BATCH','ARCHIVE-3'));const bm=await unlock(alice,batch);const batchMeta={...metadata,request_id:randomBytes(16).toString('hex'),proof:bm.proof,source_sha256:bm.sha256,documents:Object.fromEntries(bm.attachments.map(f=>[f.id,f.sha256]))};
+ const batch=await create(meta('BATCH','ARCHIVE-3'));const bm=await unlock(alice,batch);const batchMeta={...metadata,authority:syntheticAuthority(bm),request_id:randomBytes(16).toString('hex'),proof:bm.proof,source_sha256:bm.sha256,documents:Object.fromEntries(bm.attachments.map(f=>[f.id,f.sha256]))};
  await expect(alice,'complete',202,{method:'POST',token:batch.token,body:{pdf:file(signed),metadata:JSON.stringify(batchMeta)}});
  let batchState=readRecord(batch.id);assert.equal(batchState.state,'archive_pending');assert.equal(Object.values(batchState.archive.files).filter(x=>x.verified_at).length,1);checks(2);
  const list=json(await expect(admin,'list',200));assert.equal(list.records.find(x=>x.id===batch.id).archive_state,'pending');checks();

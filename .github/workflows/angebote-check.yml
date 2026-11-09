@@ -79,3 +79,8 @@ jobs:
         env:
           PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
         run: node angebote-tests/manual-copy.mjs
+
+      - name: Eigentums- und Vertretungserklaerung vor Abschluss pruefen
+        env:
+          PHP_WASM_MODULE_ROOT: ${{ runner.temp }}/portal-tests/node_modules
+        run: node angebote-tests/authority.mjs

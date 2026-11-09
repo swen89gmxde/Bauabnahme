@@ -43,5 +43,17 @@
       "id": "demo-widerruf",
       "demoPath": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-11-08_Portal.pdf"
     }
-  ]
+  ],
+  "authority": {
+    "version": 1,
+    "principal_name": "Unverbindlicher Musterkunde",
+    "roles": {
+      "sole_owner": "Im eigenen Namen als Alleineigentümer.",
+      "co_owner": "Im eigenen Namen bei Miteigentum.",
+      "non_owner": "Im eigenen Namen ohne Eigentümerstellung.",
+      "representative": "Als bevollmächtigter Vertreter des im Angebot genannten Auftraggebers."
+    },
+    "notice": "Erforderliche Eigentümerzustimmungen und Vertretungsnachweise sind vor Herstellerbestellung beziehungsweise Ausführung vorzulegen. Wer im eigenen Namen beauftragt, bleibt Vertragspartner und Zahlungsschuldner. Bei wirksamer Vertretung wird der im Angebot genannte Vertretene Vertragspartner. Diese Auswahl ersetzt keinen erforderlichen Zustimmungs- oder Vollmachtsnachweis.",
+    "confirmation": "Ich bestätige meine gewählte Erklärung zu Eigentum und Beauftragung."
+  }
 }

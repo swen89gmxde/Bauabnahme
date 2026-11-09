@@ -1,1 +1,2 @@
 export const syntheticCheckout={version:1,contract_type:'work_consumer',description:'Synthetic window installation - no real customer',total_cents:123456,additional_costs:'None',payment_terms:'Synthetic payment terms, no real order.',delivery_terms:'Synthetic delivery date only.',customer_email:'customer@example.test',checked_against_offer:true};
+export const syntheticAuthority=offer=>offer.authority?{version:offer.authority.version,role:'sole_owner',principal_name:offer.authority.principal_name,accepted:true}:undefined;

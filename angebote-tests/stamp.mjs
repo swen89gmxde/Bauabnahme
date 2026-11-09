@@ -1,4 +1,5 @@
 import {syntheticCheckout} from './checkout-fixture.mjs';
+import {authorityDefinition,authorityReceipt} from '../angebote/authority.mjs';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -21,4 +22,12 @@ const detected=detectLayout([{width:596,height:842,items:[{text:'Ort/Datum:',x:7
 const copyConsent={version:1,delivery:'whatsapp',accepted:true,text:'Synthetic consent to a digital customer copy.'};
 const copySigned=await PDFLib.PDFDocument.load(await stampPDF(demo,meta.layout,{signature,date},PDFLib,{copyConsent}));assert.deepEqual(JSON.parse(copySigned.catalog.lookup(PDFLib.PDFName.of('SichtwerkCopyConsent'),PDFLib.PDFHexString).decodeText()),copyConsent);checks++;
 await assert.rejects(stampPDF(demo,meta.layout,{signature,date},PDFLib,{copyConsent:{...copyConsent,accepted:false}}));checks++;
-console.log(JSON.stringify({checks,result:'passed',pagesPreserved:true,output:'internal synthetic tests only'}));
+const authority=authorityReceipt(authorityDefinition('Synthetic principal'),'representative','Synthetic signatory','2026-11-09',true);
+const authorityBytes=await stampPDF(demo,meta.layout,{signature,date,authority:signature},PDFLib,{authority}),authorityPDF=await PDFLib.PDFDocument.load(authorityBytes);
+assert.equal(authorityPDF.getPageCount(),d.getPageCount()+1);checks++;
+for(let i=0;i<d.getPageCount();i++){assert.deepEqual(authorityPDF.getPage(i).getSize(),d.getPage(i).getSize());checks++;}
+assert.deepEqual(JSON.parse(authorityPDF.catalog.lookup(PDFLib.PDFName.of('SichtwerkAuthority'),PDFLib.PDFHexString).decodeText()),authority);checks++;
+await assert.rejects(stampPDF(demo,meta.layout,{signature,date},PDFLib,{authority}));checks++;
+await assert.rejects(stampPDF(demo,meta.layout,{signature,date,authority:signature},PDFLib,{authority:{...authority,accepted:false}}));checks++;
+await assert.rejects(stampPDF(authorityBytes,meta.layout,{signature,date},PDFLib));checks++;
+console.log(JSON.stringify({checks,result:'passed',pagesPreserved:true,authorityProtocolAppended:true,output:'internal synthetic tests only'}));
