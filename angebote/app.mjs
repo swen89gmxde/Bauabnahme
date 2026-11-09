@@ -1,11 +1,11 @@
-import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-montage-1';
-import {extractOffer,resetOfferFields,applyOfferImport} from './offer-import.mjs?v=20261109-montage-1';
-import {ORDER_BUTTON,checkoutFromForm,renderCheckout,syncCopyDelivery} from './checkout.mjs?v=20261109-montage-1';
-import {validateMontagePolicy} from './montage.mjs?v=20261109-montage-1';
+import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-montage-2';
+import {extractOffer,resetOfferFields,applyOfferImport} from './offer-import.mjs?v=20261109-montage-2';
+import {ORDER_BUTTON,checkoutFromForm,renderCheckout,syncCopyDelivery} from './checkout.mjs?v=20261109-montage-2';
+import {validateMontagePolicy} from './montage.mjs?v=20261109-montage-2';
 import {protectSignatureTouch} from './signature-touch.mjs?v=20261106-touch-1';
 import {RETURN_EMAIL,returnMail,canShareFile,returnSignedPDF} from './return.mjs?v=20261106-ruecksendung-1';
 import * as pdfjs from './vendor/pdf.min.mjs';
-import {LEGAL_CONSENT,attachmentInfo,validateAttachments,validateLayout,rejectExistingSignatures,stampPDF,germanDate,signedName,detectLayout,readEmbeddedLayout} from './core.mjs?v=20261109-montage-1';
+import {LEGAL_CONSENT,attachmentInfo,validateAttachments,validateLayout,rejectExistingSignatures,stampPDF,germanDate,signedName,detectLayout,readEmbeddedLayout} from './core.mjs?v=20261109-montage-2';
 pdfjs.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.min.mjs',import.meta.url).href;
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),fragment=new URLSearchParams(location.hash.slice(1));
 let bytes,offer,pdf,pageNumber=1,pad,signedFile,signedURL,originalURL,csrf='',serverAvailable=false,ownerPDF,ownerBytes,ownerLayout,ownerPage=1,pickMode='',ownerTitle='',currentToken='',preparedToken='',renderSerial=0,ownerRenderSerial=0;
@@ -51,7 +51,7 @@ async function createSigned(e){e.preventDefault();if(completionLocked||signature
  $('finalize-offer').disabled=false;configureReturn();
  }catch(error){showStage('sign');message(error.message||'Die PDF konnte nicht erstellt werden. Bitte noch einmal versuchen.');}finally{button.disabled=false;button.textContent='Unterschrift ins Angebot einsetzen →';}}
 function configureReturn(){
- if(offer.checkout&&!offer.archive_test)$('finalize-offer').textContent=ORDER_BUTTON;
+ if(offer.demo||offer.test)$('finalize-offer').textContent='Musterabschluss testen';else if(offer.checkout&&!offer.archive_test)$('finalize-offer').textContent=ORDER_BUTTON;
  $('optional-sharing').open=false;
  const supported=canShareFile(navigator,signedFile);
  $('email-options').hidden=true;$('show-email-options').hidden=!supported;
@@ -62,7 +62,7 @@ function configureReturn(){
  $('email-draft').href=returnMail({title:offer.title,name:signingData?.name,demo:offer.demo||offer.archive_test});
  $('download-email-pdf').href=signedURL;$('download-email-pdf').download=signedFile.name;
  $('finalize-hint').textContent=offer.archive_mode==='signed_pdf_only'&&!offer.demo?(offer.archive_test?'Mit „Archivtest abschließen“ wird nur die unterschriebene Muster-PDF im geschützten Archiv von Sichtwerk gesichert und geprüft. Danach wird der Testlink gesperrt. Es entsteht kein Auftrag.':'Mit „Unterschrift abschließen“ wird Ihre unterschriebene Angebots-PDF im geschützten Archiv von Sichtwerk gesichert und geprüft. Danach wird der Angebotslink gesperrt. Ein zusätzliches Zurücksenden ist nicht erforderlich.'):offer.archive_test?'Mit „Archivtest abschließen“ wird dieses Musterpaket auf STRATO und in Google Drive gesichert und zurückgeprüft. Danach wird der Testlink gesperrt. Es entsteht kein Auftrag.':offer.demo?'Mit dem Musterabschluss testen Sie den Ablauf. Es erfolgt keine automatische Übertragung oder Archivierung. Danach können Sie die Test-PDF selbst teilen oder speichern.':'Mit „Unterschrift abschließen“ werden Ihre Unterlagen geschützt an Sichtwerk übertragen. Nach bestätigter Archivierung wird der Angebotslink gesperrt. Ein zusätzliches Zurücksenden ist nicht erforderlich. Sichtwerk wird nach bestätigter Ablage automatisch benachrichtigt.';
- if(offer.checkout&&!offer.archive_test)$('finalize-hint').textContent='Mit „'+ORDER_BUTTON+'“ nehmen Sie das oben bezeichnete Angebot zahlungspflichtig an. Ihre Unterschrift wird übermittelt. Der Angebotslink wird erst nach bestätigter Archivierung gesperrt. Sie müssen nichts zurückschicken.';
+ if(offer.checkout&&!offer.archive_test&&!offer.demo&&!offer.test)$('finalize-hint').textContent='Mit „'+ORDER_BUTTON+'“ nehmen Sie das oben bezeichnete Angebot zahlungspflichtig an. Ihre Unterschrift wird übermittelt. Der Angebotslink wird erst nach bestätigter Archivierung gesperrt. Sie müssen nichts zurückschicken.';
  $('return-storage').textContent=offer.archive_mode==='signed_pdf_only'&&!offer.demo?'Ihre unterschriebene PDF ist im geschützten Archiv von Sichtwerk gesichert. Sie müssen nichts zurückschicken. Hier können Sie Ihre eigene Kopie speichern.':offer.demo?'Probelauf: Es wurden keine Unterlagen automatisch an Sichtwerk übertragen oder archiviert. Sie können die Test-PDF jetzt selbst teilen oder speichern.':'Ihre Unterlagen wurden geschützt an Sichtwerk übertragen und archiviert. Sie müssen nichts zurückschicken. Hier können Sie Ihre eigene Kopie speichern.';
  $('send-status').textContent='Zusätzliches Teilen ist noch nicht erfolgt. Die Übergabe an eine App bestätigt keinen Eingang.';
 }
