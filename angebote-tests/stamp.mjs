@@ -18,4 +18,7 @@ const consent=withConsent.catalog.lookup(PDFLib.PDFName.of('SichtwerkConsent'),P
 await assert.rejects(stampPDF(demo,meta.layout,{signature,date},PDFLib,{consent:{...LEGAL_CONSENT,accepted:false}}));checks++;
 assert.equal(germanDate('2026-10-29'),'29.10.2026');assert.throws(()=>germanDate('2026-02-31'));assert.equal(signedName('Mein Angebot.pdf'),'Mein Angebot_unterschrieben.pdf');checks+=3;
 const detected=detectLayout([{width:596,height:842,items:[{text:'Ort/Datum:',x:71,y:242,w:53,h:10},{text:'Unterschrift:',x:71,y:254,w:58,h:10},{text:'2. VERSICHERUNG',x:71,y:290,w:350,h:10}]}]);assert.equal(detected.page,0);assert.ok(detected.signature.y+detected.signature.h<290);assert.equal(detectLayout([{width:596,height:842,items:[]}]),null);checks+=3;
+const copyConsent={version:1,delivery:'whatsapp',accepted:true,text:'Synthetic consent to a digital customer copy.'};
+const copySigned=await PDFLib.PDFDocument.load(await stampPDF(demo,meta.layout,{signature,date},PDFLib,{copyConsent}));assert.deepEqual(JSON.parse(copySigned.catalog.lookup(PDFLib.PDFName.of('SichtwerkCopyConsent'),PDFLib.PDFHexString).decodeText()),copyConsent);checks++;
+await assert.rejects(stampPDF(demo,meta.layout,{signature,date},PDFLib,{copyConsent:{...copyConsent,accepted:false}}));checks++;
 console.log(JSON.stringify({checks,result:'passed',pagesPreserved:true,output:'internal synthetic tests only'}));

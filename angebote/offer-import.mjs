@@ -96,6 +96,7 @@ export function extractOffer(pages){
 
 const INPUTS=['customer-id','customer-name','commission-id','checkout-type','checkout-description','checkout-total','checkout-costs','checkout-payment','checkout-delivery','checkout-email'];
 export function resetOfferFields(doc){
+ if(doc.getElementById('checkout-copy-delivery'))doc.getElementById('checkout-copy-delivery').value='email';
  for(const id of INPUTS){const e=doc.getElementById(id);e.value=id==='checkout-type'?'work_consumer':'';e.removeAttribute('data-imported');doc.getElementById(id+'-import-note')?.remove();}
  doc.getElementById('checkout-checked').checked=false;
 }
@@ -103,5 +104,5 @@ export function applyOfferImport(doc,result){
  for(const id of INPUTS){const e=doc.getElementById(id),value=result.fields[id];if(value)e.value=value;const note=doc.createElement('p');note.id=id+'-import-note';note.className='hint import-note';note.textContent=result.notes[id]||'Aus der Angebots-PDF übernommen.';if(value){e.dataset.imported='true';note.dataset.imported='true';}e.insertAdjacentElement('afterend',note);}
  doc.getElementById('checkout-checked').checked=false;
  const missing=INPUTS.filter(id=>!doc.getElementById(id).value.trim());
- doc.getElementById('offer-import-status').textContent=`${Object.keys(result.fields).length} Angaben aus der PDF übernommen. ${missing.length?'Fehlende Angaben ergänzen und übernommene Daten prüfen.':'Bitte die übernommenen Daten prüfen.'}`+(result.warnings.length?' '+result.warnings.join(' '):'');
+ doc.getElementById('offer-import-status').textContent=`${Object.keys(result.fields).length} Angaben aus der PDF übernommen. Bitte die übernommenen Daten und den Versandweg prüfen. Markierte Pflichtangaben ergänzen.`+(result.warnings.length?' '+result.warnings.join(' '):'');
 }
