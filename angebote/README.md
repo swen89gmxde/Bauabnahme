@@ -1,3 +1,17 @@
+# Aktueller Betriebsstand: STRATO-Archiv, 09.11.2026
+
+Neue Freigaben archivieren ausschließlich die unveränderte unterschriebene PDF im privaten STRATO-Datenverzeichnis `records/<id>/archive/signed.pdf`, außerhalb von `www`. Standardanbieter: `strato`; `archive_provider=drive` ist ausschließlich der explizite historische Kompatibilitätsmodus. Bestehende Freigaben ohne Anbieterkennung bleiben unverändert Drive-Freigaben. Neue STRATO-Freigaben benötigen keine Google-Konfiguration.
+
+Zugriff: https://www.sichtwerk-neubauer.de/angebote/?vorbereiten=1 → mit Verwaltungspasswort anmelden → **Meine Vorgänge anzeigen** → **Unterschriebene PDF laden**. Keine öffentliche Archivadresse und kein Kundenlink. Download prüft Autorisierung, Größe und SHA-256.
+
+Archivkopie atomar schreiben, durch erneutes Lesen prüfen, Abschluss speichern, Kundenlink sperren. Die erforderliche Vertragskopie samt Anlagen geht unmittelbar nach Annahme an die vor Freigabe hinterlegte Kundenadresse. Erst nach bestätigter Mailübergabe oder tatsächlicher manueller Übermittlung und erneuter Archivprüfung temporäre Originale, Anlagen und Zwischen-PDF entfernen. Die permanente STRATO-PDF bleibt erhalten. Fehler behalten Quellen und denselben Abschlussversuch; keine zweite Unterschrift erzeugen. Die unabhängige Widerrufsfunktion bleibt erreichbar.
+
+Produktive Kundenfreigaben bleiben entsprechend der privaten Konfiguration gesperrt. Ein unverbindlicher Archivtest ist ohne Google möglich. Hintergrunddienst und unabhängige Backups sind nicht automatisch eingerichtet; ausstehende Vorgänge regelmäßig in der Verwaltung kontrollieren und konkrete STRATO-Backupabdeckung prüfen. Historische Drive-Archive weder automatisch migrieren noch löschen. Die folgenden Abschnitte dokumentieren frühere Entwicklungsstände; bei abweichenden Speicherangaben gilt dieser aktuelle Abschnitt.
+
+Prüfung: `node angebote-tests/strato-archive.mjs`, bestehende Sicherheits-/Versandtests und `node angebote-tests/check-legal.mjs`. AGB und Widerrufsvorlagen werden durch die Speicherumstellung nicht inhaltlich geändert.
+
+---
+
 # Kommissionsbezogenes Angebotsportal
 
 Aktuelle Ablagepolitik seit 08.11.2026: Neue Freigaben speichern dauerhaft ausschließlich die unveränderte unterschriebene PDF in Google Drive. STRATO dient bis zur bestätigten Sicherung nur als private Zwischenablage für Dokumente. Bereits bestehende Freigaben und Archive behalten ihren ursprünglich erfassten Umfang. Historische Installationsberichte weiter unten beschreiben den jeweils damaligen Stand.

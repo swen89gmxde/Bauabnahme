@@ -8,6 +8,7 @@ return [
     // Keep false until the protected setup and complete archive tests are finished.
     'releases_enabled' => false,
     // Captured for each new release; existing releases keep their original policy.
+    'archive_provider' => 'strato',
     'archive_mode' => 'signed_pdf_only',
     // New completed archives notify the owner through the STRATO PHP mail service.
     // A successful handoff is not proof of inbox delivery. No PDF/signature is mailed.
@@ -17,7 +18,7 @@ return [
         'from' => 'info@sichtwerk-neubauer.de',
     ],
     // Mandatory before customer releases. OAuth credentials stay in this private file.
-    // Use a private, app-authorized Drive folder; never an 'anyone with link' folder.
+    // Optional legacy credentials only: new STRATO releases do not use Google Drive.
     'drive_archive' => [
         'folder_id' => '',
         'client_id' => '',

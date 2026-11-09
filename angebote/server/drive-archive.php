@@ -133,11 +133,12 @@ function runDriveArchive(array $r): array {
 // Missing policy means a historic full-package release. Never migrate it by inference.
 function archiveMode(array $r): string {return $r['archive_mode']??'full_package';}
 function newArchiveMode(): string {
-    global $config;$mode=$config['archive_mode']??'signed_pdf_only';
+    global $config;$mode=newArchiveProvider()==='strato'?'signed_pdf_only':($config['archive_mode']??'signed_pdf_only');
     if(!in_array($mode,['signed_pdf_only','full_package'],true))abortPortal('Die Ablageeinstellung ist ungültig.',503);
     return $mode;
 }
 function archivedSignedURL(array $r): ?string {
+    if(archiveProvider($r)!=='drive')return null;
     $id=$r['archive']['files']['signed']['id']??'';
     return ($r['state']??'')==='completed'&&($r['archive']['state']??'')==='verified'&&is_string($id)&&preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id)?'https://drive.google.com/file/d/'.$id.'/view':null;
 }
@@ -146,9 +147,11 @@ function purgeTemporaryDocuments(array $r): array {
     if(!empty($r['customer_copy'])&&!in_array($r['customer_copy']['state']??'',['submitted','manual_delivered'],true)){$r['local_cleanup']['last_error']='customer_copy_pending';$r['local_cleanup']['next_attempt']=time()+60;saveJson(recordPath($r['id']).'/record.json',$r);return $r;}
     try{
         // Recheck the surviving Drive copy before every cleanup attempt, including crash recovery.
+        if(archiveProvider($r)==='strato'){verifyStratoArchive($r);}else{
         $root=$r['archive']['root_id'];$folder=$r['archive']['folder_id'];$rootMeta=driveMetadata($root);$folderMeta=driveMetadata($folder);drivePrivate($rootMeta??[]);drivePrivate($folderMeta??[]);
         if(($rootMeta['mimeType']??'')!=='application/vnd.google-apps.folder'||($folderMeta['mimeType']??'')!=='application/vnd.google-apps.folder'||!in_array($root,$folderMeta['parents']??[],true)||($folderMeta['appProperties']['record']??'')!==$r['id'])throw new RuntimeException('cleanup_archive');
         $stored=$r['archive']['files']['signed'];$file=['key'=>'signed','mime'=>'application/pdf','size'=>$stored['size'],'sha256'=>$r['completion']['sha256']];$remote=driveMetadata($stored['id']);if(!$remote)throw new RuntimeException('cleanup_archive');driveVerifyFile($remote,$file,$folder,$r['id']);
+        }
         $dir=recordPath($r['id']);$files=['original.pdf'=>$r['sha256'],'signed.pdf'=>$r['completion']['sha256']];
         foreach($r['attachments'] as $attachment){if(!preg_match('/^[a-f0-9]{32}$/D',$attachment['id']))throw new RuntimeException('cleanup_path');$files['asset-'.$attachment['id']]=$attachment['sha256'];}
         // Only the explicitly recorded temporary files are eligible. Never recurse or follow links.
@@ -159,20 +162,20 @@ function purgeTemporaryDocuments(array $r): array {
     saveJson(recordPath($r['id']).'/record.json',$r);return $r;
 }
 function archiveResult(array $r): array {
-    return ['ok'=>$r['state']==='completed','archive_pending'=>$r['state']==='archive_pending','completed_at'=>$r['completion']['completed_at']??null,'customer_copy_state'=>$r['customer_copy']['state']??null,'saved_locally'=>is_file(recordPath($r['id']).'/signed.pdf'),'retry_after'=>max(2,min(900,($r['archive']['next_attempt']??0)-time()))];
+    return ['ok'=>$r['state']==='completed','archive_pending'=>$r['state']==='archive_pending','completed_at'=>$r['completion']['completed_at']??null,'customer_copy_state'=>$r['customer_copy']['state']??null,'saved_locally'=>signedSavedLocally($r),'retry_after'=>max(2,min(900,($r['archive']['next_attempt']??0)-time()))];
 }
 function retryCustomerArchive(string $token,array $input): array {
     [$id,$r]=lockRecordByToken($token);requireCustomer($id,$r);
     if(!hash_equals($_SESSION['customer'][$id]['proof'],(string)($input['proof']??'')))abortPortal('Bitte den Angebotslink erneut öffnen.',403);
     if($r['state']==='completed')return archiveResult($r);
     activeRecord($r);if($r['state']!=='archive_pending')abortPortal('Es liegt noch keine abgeschlossene Unterschrift vor.',409);
-    if(($r['archive']['next_attempt']??0)<=time())$r=runDriveArchive(sendCustomerCopy($r));return archiveResult($r);
+    if(($r['archive']['next_attempt']??0)<=time())$r=runOfferArchive(sendCustomerCopy($r));return archiveResult($r);
 }
 function retryOwnerArchive(string $id): array {
     $r=recordById($id);lockPortal('scope:'.$r['scope']);lockPortal('record:'.$id);$r=recordById($id);
     if($r['state']==='completed')return archiveResult(purgeTemporaryDocuments($r));
     if($r['state']!=='archive_pending')abortPortal('Dieser Vorgang wartet nicht auf eine Archivierung.',409);
-    return archiveResult(runDriveArchive(sendCustomerCopy($r)));
+    return archiveResult(runOfferArchive(sendCustomerCopy($r)));
 }
 
 function runArchiveQueue(): array {
@@ -180,7 +183,7 @@ function runArchiveQueue(): array {
     foreach(glob($dataDir.'/records/*/record.json')?:[] as $path){
         $r=readJson($path);$archiveDue=($r['state']??'')==='archive_pending'&&($r['archive']['next_attempt']??0)<=time();$noticeDue=($r['state']??'')==='completed'&&($r['notification']['state']??'')==='pending'&&($r['notification']['next_attempt']??0)<=time();$customerCopyDue=in_array($r['state']??'',['archive_pending','completed'],true)&&($r['customer_copy']['state']??'')==='pending'&&($r['customer_copy']['next_attempt']??0)<=time();$cleanupDue=archiveMode($r)==='signed_pdf_only'&&($r['state']??'')==='completed'&&($r['local_cleanup']['state']??'')==='pending'&&($r['local_cleanup']['next_attempt']??0)<=time();if(!$archiveDue&&!$noticeDue&&!$cleanupDue&&!$customerCopyDue)continue;
         $scope=lockPortal('scope:'.$r['scope']);$record=lockPortal('record:'.$r['id']);
-        try{$r=sendCustomerCopy(recordById($r['id']));if($r['state']==='archive_pending'){$r=runDriveArchive($r);if($r['state']==='completed')$done++;else $pending++;}elseif($r['state']==='completed'){$r=notifyCompletedOffer(purgeTemporaryDocuments($r));if(($r['notification']['state']??'')==='submitted')$notified++;else $notificationPending++;}$processed++;}
+        try{$r=sendCustomerCopy(recordById($r['id']));if($r['state']==='archive_pending'){$r=runOfferArchive($r);if($r['state']==='completed')$done++;else $pending++;}elseif($r['state']==='completed'){$r=notifyCompletedOffer(purgeTemporaryDocuments($r));if(($r['notification']['state']??'')==='submitted')$notified++;else $notificationPending++;}$processed++;}
         finally{releasePortal($record);releasePortal($scope);}
         if($processed>=5)break;
     }

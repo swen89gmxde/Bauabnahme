@@ -16,15 +16,18 @@ function completionNotificationStatus(array $r): array {
 }
 function completionNotificationMessage(array $r,array $n): array {
     $folder=(string)($r['archive']['folder_id']??'');
-    if(!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$folder))throw new RuntimeException('notification_archive');
+    $local=archiveProvider($r)==='strato';
+    if(!$local&&!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$folder))throw new RuntimeException('notification_archive');
     $line=static fn($s)=>trim(preg_replace('/[\x00-\x1f\x7f]+/u',' ',(string)$s)??'');
     $test=!empty($r['archive_test']);$single=archiveMode($r)==='signed_pdf_only';
     $subject=($test?'ARCHIVTEST - ':'').'Unterschriebenes Angebot im Archiv';
-    $body=($test?"ARCHIVTEST - KEIN KUNDENAUFTRAG\n\n":"").($single?"Die unterschriebene Angebots-PDF wurde in Google Drive geprüft gespeichert.\n\n":"Ein unterschriebenes Angebot und das vollständige Unterlagenpaket wurden auf STRATO und in Google Drive geprüft gespeichert.\n\n");
+    $body=($test?"ARCHIVTEST - KEIN KUNDENAUFTRAG\n\n":"").($local?"Die unterschriebene Angebots-PDF wurde im geschützten STRATO-Archiv geprüft gespeichert.\n\n":($single?"Die unterschriebene Angebots-PDF wurde in Google Drive geprüft gespeichert.\n\n":"Ein unterschriebenes Angebot und das vollständige Unterlagenpaket wurden auf STRATO und in Google Drive geprüft gespeichert.\n\n"));
     foreach(['Kunde'=>$r['customer_name'],'Kommission'=>$r['commission'],'Angebot'=>$r['title'],'Freigabe'=>$r['revision'],'Unterschriftsdatum'=>$r['completion']['date'],'Archiv bestätigt'=>$r['archive']['verified_at']] as $label=>$value)$body.=$label.': '.$line($value)."\n";
-    $body.="\nGeschütztes Archiv (Anmeldung mit dem verbundenen Google-Konto erforderlich):\nhttps://drive.google.com/drive/folders/".$folder."\n\nDer Kundenlink ist gesperrt.\n\nDiese Nachricht enthält keine PDF, Unterschrift, Kundencodes oder Kunden-Zugangslinks.\n";
+    $body.=$local?"\nGeschütztes STRATO-Archiv (Anmeldung mit dem Verwaltungspasswort erforderlich):\n".rtrim($GLOBALS['config']['origin'],'/')."/angebote/?vorbereiten=1#archiv\nDort: Meine Vorgänge anzeigen – unterschriebene PDF herunterladen.\n":"\nGeschütztes Archiv (Anmeldung mit dem verbundenen Google-Konto erforderlich):\nhttps://drive.google.com/drive/folders/".$folder."\n";
+    $body.="\nDer Kundenlink ist gesperrt.\n\nDiese Nachricht enthält keine PDF, Unterschrift, Kundencodes oder Kunden-Zugangslinks.\n";
     if(!empty($r['customer_copy']))$body.="\nVertragskopie an den Kunden: ".(in_array($r['customer_copy']['state'],['submitted','manual_delivered'],true)?'an Maildienst übergeben oder manuell zugestellt.':'AUSSTEHEND / UNKLAR - bitte unverzüglich in der Verwaltung prüfen.')."\n";
-    if($single)$body.="\nDauerhafte Dokumentenablage: ausschließlich diese PDF in Google Drive. Separate Anlagen werden nicht archiviert.\n";
+    if($local)$body.="\nDauerhafte Dokumentenablage: ausschließlich diese PDF auf STRATO. Separate Anlagen werden nach Übergabe der Kundenkopie entfernt.\n";
+    elseif($single)$body.="\nDauerhafte Dokumentenablage: ausschließlich diese PDF in Google Drive. Separate Anlagen werden nicht archiviert.\n";
     $domain=substr($n['from'],strpos($n['from'],'@')+1);
     return ['to'=>$n['to'],'from'=>$n['from'],'subject'=>$subject,'body'=>$body,'message_id'=>'<sichtwerk.archive.'.$r['id'].'@'.$domain.'>'];
 }
