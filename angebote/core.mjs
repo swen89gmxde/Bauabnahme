@@ -1,6 +1,7 @@
-import {validateAuthorityReceipt} from './authority.mjs?v=20261109-montage-1';
-import {appendMontagePage} from './montage.mjs?v=20261109-montage-1';
+import {validateAuthorityReceipt} from './authority.mjs?v=20261109-einheitlich-1';
+import {appendMontagePage} from './montage.mjs?v=20261109-einheitlich-1';
 export const LEGAL_CONSENT=Object.freeze({version:1,text:'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'});
+export const BUSINESS_CONSENT=Object.freeze({version:2,text:'Ich stimme der Geltung der AGB zu. Ich bestätige die Beauftragung für den im Angebot genannten Geschäftskunden zu dessen gewerblichen oder selbständigen beruflichen Zwecken.'});
 export function attachmentInfo(file){
  const ext=file.name?.split('.').pop().toLowerCase(),types={pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
  if(!types[ext])throw Error('Bitte PDF, Word (.doc/.docx), JPG, PNG oder WebP auswählen. Zeichnungen bitte als PDF exportieren.');

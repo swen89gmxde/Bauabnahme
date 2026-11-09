@@ -1,4 +1,4 @@
-import {montageCheckout} from './montage.mjs?v=20261109-montage-1';
+import {montageCheckout} from './montage.mjs?v=20261109-einheitlich-1';
 export const ORDER_BUTTON='Zahlungspflichtig bestellen';
 export function amountCents(value){
  const v=String(value).trim().replace(/\s/g,'');if(!/^\d{1,8}([.,]\d{1,2})?$/.test(v))throw Error('Bitte den Gesamtpreis ohne Tausenderpunkte, zum Beispiel 1234,56, eintragen.');const [a,b='']=v.split(/[.,]/),n=Number(a)*100+Number(b.padEnd(2,'0'));if(!Number.isSafeInteger(n)||n<1||n>1000000000)throw Error('Bitte einen gültigen Gesamtpreis einschließlich Umsatzsteuer eintragen.');return n;
@@ -32,9 +32,9 @@ export function renderCheckout(root,offer){
  }else{el('h3','Leistung und Ausführung');el('p',c.description);}
  el('h3','Gesamtpreis einschließlich Umsatzsteuer');el('p',money(c.total_cents)).className='checkout-price';
  if(c.version!==2){el('p','Weitere Kosten: '+c.additional_costs);el('h3','Zahlung');el('p',c.payment_terms);}
- el('h3','Montagezeit und Voraussetzungen');el('p',c.delivery_terms);
+ el('p',c.contract_type==='work_business'?'Geschäftskundenauftrag für den im Angebot genannten Unternehmer. Der Unterzeichner bestätigt seine Befugnis zur Annahme.':'Privatkundenauftrag.');el('h3','Montagezeit und Voraussetzungen');el('p',c.delivery_terms);
  el('p','Einmaliger Werk-/Montageauftrag, kein Abonnement. Individuelle Angebotsvereinbarungen gehen den AGB vor. Gesetzliche Mängelrechte bleiben bestehen. Es wird kein vorzeitiger Beginn und kein Widerrufsverzicht erklärt; die Bestellwartezeit nach Ziffern 6 und 16 der AGB bleibt erhalten.');
- el('p','Bei bestehendem Widerrufsrecht gelten die beigefügte Belehrung und das Musterformular. Die Funktion „Vertrag widerrufen“ bleibt auch nach Sperrung dieses Angebotslinks erreichbar.');
+ el('p',c.contract_type==='work_business'?'Für diesen Geschäftskundenauftrag wird kein freiwilliges Verbraucherwiderrufsrecht eingeräumt. Die vertragliche Mindestwartezeit nach Ziffern 6 und 16 der AGB bleibt bestehen.':'Bei bestehendem Widerrufsrecht gelten die beigefügte Belehrung und das Musterformular. Die Funktion „Vertrag widerrufen“ bleibt auch nach Sperrung dieses Angebotslinks erreichbar.');
  el('p',c.copy_delivery==='whatsapp'?'Ihre vollständige Vertragskopie erhalten Sie von Sichtwerk als speicherbare Dateien über den vereinbarten WhatsApp-Chat.':c.copy_delivery==='paper'?'Ihre vollständige Vertragskopie erhalten Sie von Sichtwerk auf Papier.':'Ihre Vertragskopie einschließlich der Unterlagen geht an: '+c.customer_email+'. Bitte lassen Sie eine falsche Adresse vor dem Abschluss durch Sichtwerk korrigieren.');
  el('p',offer.archive_test?'ARCHIVTEST: Es entsteht kein Auftrag und keine Zahlungspflicht. Die Test-Vertragskopie geht ausschließlich an Sichtwerk.':isTest?'PROBELAUF: Es entsteht kein Auftrag und keine Zahlungspflicht. Die Muster-PDF bleibt in diesem Browser.':'Mit „'+ORDER_BUTTON+'“ nehmen Sie dieses Angebot zahlungspflichtig an. Im Portal wird kein Geld eingezogen.');
 }

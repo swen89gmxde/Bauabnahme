@@ -1,3 +1,7 @@
+# Gemeinsame AGB und Geschäftskunden seit 09.11.2026
+
+Die gemeinsame AGB-Fassung 09.11.2026 gilt für Privatkunden, Geschäftskunden und Versicherungsfälle. Neue Freigaben verwenden dieselbe AGB. Die Inhaberauswahl Privatkunde/Geschäftskunde wird aus der PDF vorgeschlagen und vor Freigabe geprüft. Geschäftskunden erhalten nur AGB und freigegebene Anlagen, eine eingefrorene AGB-/Unternehmerbestätigung und eine aktive Erklärung zur Vertretungsbefugnis. Verbraucher behalten die passende Widerrufsbelehrung samt Musterformular und ihre vier Eigentums-/Vertretungsoptionen. Kundenart und Erklärungen werden serverseitig geprüft; alte Pakete bleiben unverändert. Versicherungszahlung ist keine eigene Kundenart, keine automatische Vertragsübernahme und keine bindende Kostenübernahme. Eine gesonderte verbindliche Versichererzusage wird als Anlage benötigt. Die vertragliche Mindestwartezeit von 14 Tagen bleibt für alle bestehen. Reine Warenkäufe und Verbraucherbauverträge benötigen weiterhin einen gesonderten passenden Ablauf.
+
 # Angebotsportal: Regeln für Änderungen
 
 - Kundenunterlagen und Unterschriften niemals in dieses öffentliche Repository aufnehmen. Öffentliche allgemeine AGB und Widerrufsvorlagen liegen ausschließlich in `vertragsunterlagen/`.

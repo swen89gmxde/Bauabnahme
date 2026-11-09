@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261109-pdf-1">
+<link rel="stylesheet" href="style.css?v=20261109-einheitlich-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261109-pdf-1"></script>
+<script type="module" src="app.mjs?v=20261109-einheitlich-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -38,7 +38,7 @@
 <div class="signature-wrap"><canvas id="signature" aria-label="Hier mit dem Finger unterschreiben"></canvas><span class="signature-line" aria-hidden="true"></span></div>
 <button type="button" id="clear-signature" class="secondary">Unterschrift neu schreiben</button>
 <label class="check"><input id="confirm" type="checkbox" required><span id="confirm-text">Ich habe das Angebot und die dazu bereitgestellten Unterlagen gelesen und nehme das Angebot unverändert an.</span></label>
-<section aria-label="AGB und Widerrufsbelehrung"><p class="hint">Bitte beachten Sie vor dem Abschluss die AGB und die Widerrufsbelehrung einschließlich Muster-Widerrufsformular. Hier können Sie beide Unterlagen einsehen und speichern.</p><div id="sign-document-list" class="download-list"></div>
+<section id="legal-consent-section" aria-label="AGB und Widerrufsbelehrung"><p id="legal-intro" class="hint">Bitte beachten Sie vor dem Abschluss die AGB und die Widerrufsbelehrung einschließlich Muster-Widerrufsformular. Hier können Sie beide Unterlagen einsehen und speichern.</p><div id="sign-document-list" class="download-list"></div>
 <label class="check"><input id="legal-confirm" name="legal_consent" type="checkbox" required><span><span id="legal-confirm-text">Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.</span> <b>(Pflichtfeld)</b></span></label></section>
 <button type="submit" id="create-pdf" class="primary wide">Unterschrift ins Angebot einsetzen →</button>
 <button type="button" id="back-review" class="quiet wide">← Angebot noch einmal ansehen</button>
@@ -78,6 +78,8 @@
 <div id="offer-fields" hidden>
 <div class="owner-details"><h2>Kunde und Kommission</h2><label for="customer-id">Kundennummer / eindeutige Kundenkennung</label><input id="customer-id" maxlength="100" required placeholder="z. B. K-10023"><label for="customer-name">Kundenname</label><input id="customer-name" maxlength="160" required placeholder="Vorname und Nachname / Firma"><label for="commission-id">Kommission / Angebotsnummer</label><input id="commission-id" maxlength="100" required placeholder="z. B. AG-2026-10-0162"><p class="hint">Der Kunde öffnet sein Angebot direkt über den persönlichen Link. Bitte nur dem vorgesehenen Kunden senden.</p></div>
 
+<section class="owner-details"><h2>Privatkunde oder Geschäftskunde</h2><label for="customer-kind">Kundenart dieses Auftrags</label><select id="customer-kind" required><option value="work_consumer">Privatkunde</option><option value="work_business">Geschäftskunde</option></select><p class="hint">Vorschlag anhand der PDF. Entscheidend sind der tatsächliche Auftraggeber und der Vertragszweck. Eine Versicherungszahlung ändert die Kundenart nicht. Wenn die Versicherung selbst Auftraggeber ist, Geschäftskunde wählen. Versicherungs-Zahlungszusagen weiterhin als gesonderte Anlage beifügen.</p></section>
+
 <section id="copy-preparation" class="owner-details"><h2>Vertragskopie übermitteln</h2>
 <label for="checkout-copy-delivery">Vertragskopie an den Kunden übermitteln</label><select id="checkout-copy-delivery" required><option value="email">E-Mail (automatisch)</option><option value="whatsapp" selected>WhatsApp (manuell)</option><option value="paper">Papier (manuell)</option></select>
 <div id="checkout-email-area"><label for="checkout-email">E-Mail des Kunden für die Vertragskopie</label><input id="checkout-email" type="email" maxlength="254" autocomplete="off" required></div>
@@ -90,7 +92,7 @@
 <p>Hier können Sie Zeichnungen, Sondervereinbarungen und andere Unterlagen für dieses Angebot hinzufügen. Bei Bedarf sind auch Bilder möglich.</p>
 <label for="extra-files">Dokumente oder Bilder hinzufügen</label><input id="extra-files" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" aria-describedby="extra-file-hint extra-file-summary">
 <p id="extra-file-hint" class="hint">Zeichnungen bitte als PDF. Außerdem möglich: Word (.doc/.docx), JPG, PNG und WebP. Bis zu 12 Anlagen. E-Mail-Vertragskopie: zusammen höchstens 10 MB. Bei manueller Übergabe über WhatsApp oder auf Papier: zusammen höchstens 60 MB einschließlich Vertragsvorlagen. Einzeldateien höchstens 20 MB.</p>
-<p class="hint">Sie können Dateien auch nacheinander hinzufügen und einzeln entfernen. Dauerhaft geschützt auf STRATO gespeichert wird bei neuen Freigaben nur die unterschriebene Angebots-PDF; separate Anlagen werden nicht mitarchiviert. Die aktuellen AGB und Widerrufsunterlagen kommen bei einer Kundenfreigabe automatisch dazu; im Probelauf werden die Musterfassungen angezeigt.</p>
+<p class="hint">Sie können Dateien auch nacheinander hinzufügen und einzeln entfernen. Dauerhaft geschützt auf STRATO gespeichert wird bei neuen Freigaben nur die unterschriebene Angebots-PDF; separate Anlagen werden nicht mitarchiviert. Die gemeinsamen AGB kommen immer automatisch dazu, die Verbraucher-Widerrufsunterlagen bei Privatkunden; im Probelauf werden die Musterfassungen angezeigt.</p>
 <p id="extra-file-summary" class="small" role="status" aria-live="polite">Noch keine zusätzlichen Unterlagen ausgewählt.</p><ul id="extra-file-list" class="attachment-selection"></ul>
 </section>
 <div id="placement" hidden>
@@ -100,7 +102,7 @@
 <div class="pick-tools"><button id="pick-signature" class="secondary">Unterschriftsfläche markieren</button><button id="pick-date" class="secondary">Datumsfläche markieren</button></div>
 <p class="hint">Zum Ändern: Button wählen und auf der Seite ein Rechteck aufziehen. Der Name wird unter die Unterschrift gesetzt.</p>
 <div id="placement-view" class="pdf-view placement-view"><canvas id="owner-canvas"></canvas><div id="signature-box" class="placement-box"><span>Unterschrift + Name</span></div><div id="date-box" class="placement-box date"><span>Datum</span></div><div id="draw-box" class="placement-box" hidden></div></div>
-<label class="check"><input id="placement-confirm" type="checkbox"><span>Ich habe Seite und Platzierung geprüft. Die Flächen verdecken keinen Angebotstext.</span></label>
+<label class="check"><input id="placement-confirm" type="checkbox"><span>Ich habe die Kundenart sowie Seite und Platzierung geprüft. Die Flächen verdecken keinen Angebotstext.</span></label>
 <button id="local-test" class="secondary wide">Diese PDF selbst probeweise unterschreiben</button>
 <button id="publish-offer" class="primary wide">3. Kundenlink erstellen</button>
 <div id="offer-link-result" hidden><label for="offer-link">Diesen Link mit dem Angebot über WhatsApp senden</label><input id="offer-link" readonly><button id="copy-link" class="primary wide">Link kopieren</button><p id="issued-status" class="hint">Nur für diese Kommission. Nach Abschluss, Sperrung oder Ablauf nicht mehr nutzbar. Eine neue Freigabe derselben Kommission sperrt den vorherigen Link.</p><button id="revoke-link" class="secondary wide">Diesen Link wieder sperren</button></div>
