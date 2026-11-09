@@ -1,4 +1,5 @@
-import {validateAuthorityReceipt} from './authority.mjs?v=20261109-eigentum-1';
+import {validateAuthorityReceipt} from './authority.mjs?v=20261109-montage-1';
+import {appendMontagePage} from './montage.mjs?v=20261109-montage-1';
 export const LEGAL_CONSENT=Object.freeze({version:1,text:'Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.'});
 export function attachmentInfo(file){
  const ext=file.name?.split('.').pop().toLowerCase(),types={pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
@@ -22,6 +23,7 @@ export function validateLayout(layout,pages){
  return layout;
 }
 export function rejectExistingSignatures(doc,PDFLib){
+ if(doc.catalog.get(PDFLib.PDFName.of('SichtwerkMontage')))throw Error('Diese PDF enthält bereits eine abgeschlossene Vertragskopie. Bitte das ursprüngliche ununterzeichnete Angebot verwenden.');
  if(doc.catalog.get(PDFLib.PDFName.of('SichtwerkAuthority')))throw Error('Diese PDF enthält bereits eine abgeschlossene Erklärung. Bitte das ursprüngliche ununterzeichnete Angebot verwenden.');
  if(!doc.catalog.get(PDFLib.PDFName.of('AcroForm')))return;
  for(const f of doc.getForm().getFields()){
@@ -56,6 +58,7 @@ export async function stampPDF(bytes,layout,images,PDFLib,options={}){
   if(options.testLabel)protocol.drawText('PROBELAUF - KEINE ANGEBOTSANNAHME',{x:36,y:24,size:10,color:PDFLib.rgb(.7,0,0)});
   doc.catalog.set(PDFLib.PDFName.of('SichtwerkAuthority'),PDFLib.PDFHexString.fromText(JSON.stringify(options.authority)));
  }
+ await appendMontagePage(doc,options.checkout,PDFLib,options);
  return doc.save({useObjectStreams:false,updateFieldAppearances:false});
 }
 export function germanDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('Bitte ein gültiges Datum wählen.');const [y,m,d]=value.split('-');const date=new Date(Number(y),Number(m)-1,Number(d));if(date.getFullYear()!==+y||date.getMonth()!==+m-1||date.getDate()!==+d)throw Error('Bitte ein gültiges Datum wählen.');return `${d}.${m}.${y}`;}

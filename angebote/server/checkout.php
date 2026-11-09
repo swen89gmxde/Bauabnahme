@@ -2,6 +2,11 @@
 declare(strict_types=1);
 
 // New releases only. Historic offers retain their accepted document snapshot.
+function montagePolicy(): array {
+    $path=dirname(__DIR__).'/montage-current.json';$policy=is_file($path)?json_decode((string)file_get_contents($path),true):null;
+    if(!is_array($policy)||!is_int($policy['version']??null)||$policy['version']<1||($policy['weeks']??null)!==4||($policy['trigger']??'')!=='supplier_arrival')abortPortal('Die Montagebedingungen sind noch nicht vollständig eingerichtet.',503);
+    $policy['text']=checkoutText($policy['text']??null,700,'hinterlegte Montagebedingungen');return $policy;
+}
 function checkoutText(mixed $value,int $max,string $label): string {
     if(!is_string($value)||preg_match('//u',$value)!==1||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/u',$value)||preg_match_all('/./us',$value)>$max)abortPortal('Bitte '.$label.' vollständig und innerhalb der angegebenen Länge eintragen.');
     $value=trim($value);if($value==='')abortPortal('Bitte '.$label.' eintragen.');return $value;
@@ -13,7 +18,9 @@ function validateCheckout(mixed $value): array {
     if(!is_array($value)||($value['version']??null)!==1||($value['contract_type']??'')!=='work_consumer'||($value['checked_against_offer']??null)!==true)abortPortal('Bitte die Abschlussübersicht für diesen Werk-/Montagevertrag mit dem Angebot abgleichen.',400,'checkout_required');
     $total=$value['total_cents']??null;if(!is_int($total)||$total<1||$total>1000000000)abortPortal('Bitte den Gesamtpreis einschließlich Umsatzsteuer als gültigen Betrag eintragen.');
     $method=array_key_exists('copy_delivery',$value)?$value['copy_delivery']:'email';if(!is_string($method)||!in_array($method,['email','whatsapp','paper'],true))abortPortal('Bitte einen gültigen Versandweg für die Vertragskopie wählen.');
+    $montage=montagePolicy();if(($value['delivery_policy_version']??null)!==$montage['version']||($value['delivery_terms']??null)!==$montage['text'])abortPortal('Die Montagebedingungen wurden aktualisiert. Bitte die Seite neu laden und das Angebot erneut vorbereiten.',409,'montage_version_changed');
     $result=['version'=>1,'contract_type'=>'work_consumer','description'=>checkoutText($value['description']??null,1200,'Leistung und wesentliche Ausführung'),'total_cents'=>$total,'additional_costs'=>checkoutText($value['additional_costs']??null,500,'Angaben zu weiteren Kosten'),'payment_terms'=>checkoutText($value['payment_terms']??null,1800,'Zahlungsbedingungen'),'delivery_terms'=>checkoutText($value['delivery_terms']??null,700,'Liefer-/Ausführungszeit und deren Beginn'),'customer_email'=>$method==='email'?checkoutEmail($value['customer_email']??null):'','checked_against_offer'=>true];
+    $result['delivery_terms']=$montage['text'];$result['delivery_policy_version']=$montage['version'];
     if(array_key_exists('copy_delivery',$value))$result['copy_delivery']=$method;return $result;
 }
 function customerCopyMethod(array $r): string {return $r['checkout']['copy_delivery']??'email';}
@@ -66,7 +73,7 @@ function retryCustomerCopy(string $id,bool $acknowledge=false): array {
 }
 
 function archiveTestCheckout(): array {
-    $n=completionNotificationSettings();return validateCheckout(['version'=>1,'contract_type'=>'work_consumer','description'=>'Unverbindlicher Mustervertrag: Prüfung von Abschlussübersicht, Pflichtbestätigungen, Vertragskopie und Archivierung. Kein Kundenauftrag.','total_cents'=>123456,'additional_costs'=>'Musterbetrag; keine tatsächlichen Kosten.','payment_terms'=>'Im Archivtest entsteht keine Zahlungspflicht. Die AGB-Bestellwartezeit wird nur als Anzeige geprüft.','delivery_terms'=>'Keine Lieferung und keine Ausführung: ausschließlich technischer Musterablauf.','customer_email'=>$n['to'],'checked_against_offer'=>true]);
+    $n=completionNotificationSettings();$montage=montagePolicy();return validateCheckout(['version'=>1,'contract_type'=>'work_consumer','description'=>'Unverbindlicher Mustervertrag: Prüfung von Abschlussübersicht, Pflichtbestätigungen, Vertragskopie und Archivierung. Kein Kundenauftrag.','total_cents'=>123456,'additional_costs'=>'Musterbetrag; keine tatsächlichen Kosten.','payment_terms'=>'Im Archivtest entsteht keine Zahlungspflicht. Die AGB-Bestellwartezeit wird nur als Anzeige geprüft.','delivery_terms'=>$montage['text'],'delivery_policy_version'=>$montage['version'],'customer_email'=>$n['to'],'checked_against_offer'=>true]);
 }
 function manualCustomerCopy(string $id,array $input): array {
     if(($input['delivered']??null)!==true)abortPortal('Bitte erst den tatsächlichen Versand der vollständigen Vertragskopie bestätigen.');

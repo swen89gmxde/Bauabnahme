@@ -1,3 +1,4 @@
+import {metadataJSON} from './checkout-fixture.mjs';
 import {syntheticAuthority} from './checkout-fixture.mjs';
 // Executed inside backend.mjs with its synthetic clients and Google HTTP mock.
 export async function archiveCases(t){
@@ -8,7 +9,7 @@ export async function archiveCases(t){
  const saveRecord=r=>fs.writeFileSync(path.join(privateDir,'data/records',r.id,'record.json'),JSON.stringify(r));
  const pending=await create(meta('PENDING','ARCHIVE-1'),{'attachments[0]':file(source,'Anlage.pdf')});const p=await unlock(alice,pending);
  const metadata={authority:syntheticAuthority(p),order_consent:true,checkout_hash:p.checkout_hash,name:'Testperson Archiv',date:'2026-10-30',legal_consent:true,consent_version:1,request_id:randomBytes(16).toString('hex'),source_sha256:p.sha256,proof:p.proof,documents:Object.fromEntries(p.attachments.map(f=>[f.id,f.sha256]))};
- const complete=(m=metadata,pdf=signed)=>({method:'POST',token:pending.token,body:{pdf:file(pdf),metadata:JSON.stringify(m)}});
+ const complete=(m=metadata,pdf=signed)=>({method:'POST',token:pending.token,body:{pdf:file(pdf),metadata:metadataJSON(m)}});
  await expect(alice,'archive-progress',409,post({proof:p.proof},pending.token));
  setMock({fail_upload:true});let r=json(await expect(alice,'complete',202,complete()));assert(r.archive_pending&&r.saved_locally&&!r.ok);
  const evidence=readRecord(pending.id).completion.legal_consent;assert.equal(evidence.version,1);assert.equal(evidence.documents.length,2);checks(2);
@@ -19,7 +20,7 @@ export async function archiveCases(t){
  await expect(alice,'complete',410,complete(metadata,Buffer.concat([signed,Buffer.from('\n% changed')])));
  await expect(alice,'complete',410,complete({...metadata,name:'Andere Person'}));
  await expect(alice,'complete',400,complete({...metadata,documents:'wrong'}));
- await expect(admin,'create',409,{method:'POST',body:{pdf:file(source),metadata:JSON.stringify(meta('PENDING','ARCHIVE-1'))}});
+ await expect(admin,'create',409,{method:'POST',body:{pdf:file(source),metadata:metadataJSON(meta('PENDING','ARCHIVE-1'))}});
  await expect(bob,'archive-progress',403,post({proof:p.proof},pending.token));
  await expect(bob,'archive-retry',401,post({id:pending.id}));
  await expect(alice,'archive-progress',403,post({proof:'wrong'},pending.token));
@@ -33,19 +34,19 @@ export async function archiveCases(t){
  await expect(alice,'archive-progress',200,post({proof:p.proof},pending.token));await expect(alice,'complete',200,complete());
  const count=JSON.parse(fs.readFileSync(mockPath)).uploads;await expect(admin,'archive-retry',200,post({id:pending.id}));assert.equal(JSON.parse(fs.readFileSync(mockPath)).uploads,count);checks();
  const timeout=await create(meta('TIMEOUT','ARCHIVE-2'));const w=await unlock(alice,timeout);const tm={...metadata,authority:syntheticAuthority(w),request_id:randomBytes(16).toString('hex'),proof:w.proof,source_sha256:w.sha256,documents:Object.fromEntries(w.attachments.map(f=>[f.id,f.sha256]))};
- setMock({timeout_after_upload:true});await expect(alice,'complete',202,{method:'POST',token:timeout.token,body:{pdf:file(signed),metadata:JSON.stringify(tm)}});
+ setMock({timeout_after_upload:true});await expect(alice,'complete',202,{method:'POST',token:timeout.token,body:{pdf:file(signed),metadata:metadataJSON(tm)}});
  const uploadedAfterTimeout=JSON.parse(fs.readFileSync(mockPath)).uploads;const state=readRecord(timeout.id);assert.equal(state.state,'archive_pending');assert.ok(state.archive.files.signed.id);checks(2);
  await expect(admin,'owner-file&id='+timeout.id+'&kind=signed',200);
  await expect(admin,'archive-retry',200,post({id:timeout.id}));const final=readRecord(timeout.id);assert.equal(final.state,'completed');assert.equal(JSON.parse(fs.readFileSync(mockPath)).uploads-uploadedAfterTimeout,Object.keys(final.archive.files).length-1);checks(2);
  // A multi-batch archive resumes from its persisted cursor without the customer's browser.
  const configPathBatch=path.join(privateDir,'config.php'),configBatch=fs.readFileSync(configPathBatch,'utf8');fs.writeFileSync(configPathBatch,configBatch.replace("'batch_size'=>20","'batch_size'=>1"));
  const batch=await create(meta('BATCH','ARCHIVE-3'));const bm=await unlock(alice,batch);const batchMeta={...metadata,authority:syntheticAuthority(bm),request_id:randomBytes(16).toString('hex'),proof:bm.proof,source_sha256:bm.sha256,documents:Object.fromEntries(bm.attachments.map(f=>[f.id,f.sha256]))};
- await expect(alice,'complete',202,{method:'POST',token:batch.token,body:{pdf:file(signed),metadata:JSON.stringify(batchMeta)}});
+ await expect(alice,'complete',202,{method:'POST',token:batch.token,body:{pdf:file(signed),metadata:metadataJSON(batchMeta)}});
  let batchState=readRecord(batch.id);assert.equal(batchState.state,'archive_pending');assert.equal(Object.values(batchState.archive.files).filter(x=>x.verified_at).length,1);checks(2);
  const list=json(await expect(admin,'list',200));assert.equal(list.records.find(x=>x.id===batch.id).archive_state,'pending');checks();
  for(let i=0;i<10&&readRecord(batch.id).state!=='completed';i++){const output=await runWorker();assert.equal(output.errors,'');assert.ok(JSON.parse(output.text).completed>=0);checks();}
  assert.equal(readRecord(batch.id).state,'completed');checks();await expect(alice,'access',410,{token:batch.token});fs.writeFileSync(configPathBatch,configBatch);
  // Missing configuration blocks new customer releases, rather than silently skipping Drive.
- const configPath=path.join(privateDir,'config.php'),config=fs.readFileSync(configPath,'utf8');fs.writeFileSync(configPath,config.replace("'refresh_token'=>'test'","'refresh_token'=>''"));await expect(admin,'create',503,{method:'POST',body:{pdf:file(source),metadata:JSON.stringify(meta('NO-DRIVE','FAIL'))}});fs.writeFileSync(configPath,config);
+ const configPath=path.join(privateDir,'config.php'),config=fs.readFileSync(configPath,'utf8');fs.writeFileSync(configPath,config.replace("'refresh_token'=>'test'","'refresh_token'=>''"));await expect(admin,'create',503,{method:'POST',body:{pdf:file(source),metadata:metadataJSON(meta('NO-DRIVE','FAIL'))}});fs.writeFileSync(configPath,config);
 }
 import assert from 'node:assert/strict';

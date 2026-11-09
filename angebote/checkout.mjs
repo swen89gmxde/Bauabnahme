@@ -1,3 +1,4 @@
+import {montageCheckout} from './montage.mjs?v=20261109-montage-1';
 export const ORDER_BUTTON='Zahlungspflichtig bestellen';
 export function amountCents(value){
  const v=String(value).trim().replace(/\s/g,'');if(!/^\d{1,8}([.,]\d{1,2})?$/.test(v))throw Error('Bitte den Gesamtpreis ohne Tausenderpunkte, zum Beispiel 1234,56, eintragen.');const [a,b='']=v.split(/[.,]/),n=Number(a)*100+Number(b.padEnd(2,'0'));if(!Number.isSafeInteger(n)||n<1||n>1000000000)throw Error('Bitte einen gültigen Gesamtpreis einschließlich Umsatzsteuer eintragen.');return n;
@@ -9,11 +10,11 @@ export function syncCopyDelivery(doc){
  const note=doc.getElementById('checkout-copy-hint');note.textContent=email?'Die vollständige Vertragskopie wird nach Annahme automatisch an diese Adresse gesendet. Gesamtpaket einschließlich Vertragsvorlagen: höchstens 10 MB.':'Eine Kunden-E-Mail ist für diesen Weg nicht erforderlich. Nach Annahme die vollständigen Unterlagen in der Verwaltung herunterladen, '+(method==='paper'?'ausdrucken und aushändigen':'als speicherbare Dateien im vereinbarten WhatsApp-Chat übermitteln')+' und erst danach die tatsächliche Übergabe bestätigen. Die benötigten Dateien bleiben bis zur Bestätigung geschützt erhalten. Gesamtpaket: höchstens 60 MB.';
  doc.getElementById('checkout-checked').checked=false;
 }
-export function checkoutFromForm(doc){
+export function checkoutFromForm(doc,montagePolicy){
  const method=doc.getElementById('checkout-copy-delivery')?.value||'email';if(!Object.hasOwn(COPY_DELIVERIES,method))throw Error('Bitte einen gültigen Versandweg wählen.');
- for(const id of ['checkout-type','checkout-description','checkout-total','checkout-costs','checkout-payment','checkout-delivery',...(method==='email'?['checkout-email']:[]),'checkout-checked'])if(!doc.getElementById(id).reportValidity())throw Error('Bitte die Abschlussübersicht vollständig prüfen.');
+ for(const id of ['checkout-type','checkout-description','checkout-total','checkout-costs','checkout-payment',...(method==='email'?['checkout-email']:[]),'checkout-checked'])if(!doc.getElementById(id).reportValidity())throw Error('Bitte die Abschlussübersicht vollständig prüfen.');
  const get=id=>doc.getElementById(id).value.trim();if(get('checkout-type')!=='work_consumer')throw Error('Die hinterlegten Vertragsunterlagen sind für Werk-/Montageverträge mit Verbrauchern bestimmt. Für reine Warenlieferungen und Verbraucherbauverträge ist zuerst ein passendes Paket einzurichten.');
- return {version:1,contract_type:'work_consumer',description:get('checkout-description'),total_cents:amountCents(get('checkout-total')),additional_costs:get('checkout-costs'),payment_terms:get('checkout-payment'),delivery_terms:get('checkout-delivery'),customer_email:method==='email'?get('checkout-email'):'',copy_delivery:method,checked_against_offer:true};
+ return {version:1,contract_type:'work_consumer',description:get('checkout-description'),total_cents:amountCents(get('checkout-total')),additional_costs:get('checkout-costs'),payment_terms:get('checkout-payment'),...montageCheckout(montagePolicy),customer_email:method==='email'?get('checkout-email'):'',copy_delivery:method,checked_against_offer:true};
 }
 export function renderCheckout(root,offer){
  root.replaceChildren();const c=offer.checkout;root.hidden=!c;if(!c)return;

@@ -1,17 +1,18 @@
-import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-eigentum-1';
-import {extractOffer,resetOfferFields,applyOfferImport} from './offer-import.mjs?v=20261109-eigentum-1';
-import {ORDER_BUTTON,checkoutFromForm,renderCheckout,syncCopyDelivery} from './checkout.mjs?v=20261109-eigentum-1';
+import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-montage-1';
+import {extractOffer,resetOfferFields,applyOfferImport} from './offer-import.mjs?v=20261109-montage-1';
+import {ORDER_BUTTON,checkoutFromForm,renderCheckout,syncCopyDelivery} from './checkout.mjs?v=20261109-montage-1';
+import {validateMontagePolicy} from './montage.mjs?v=20261109-montage-1';
 import {protectSignatureTouch} from './signature-touch.mjs?v=20261106-touch-1';
 import {RETURN_EMAIL,returnMail,canShareFile,returnSignedPDF} from './return.mjs?v=20261106-ruecksendung-1';
 import * as pdfjs from './vendor/pdf.min.mjs';
-import {LEGAL_CONSENT,attachmentInfo,validateAttachments,validateLayout,rejectExistingSignatures,stampPDF,germanDate,signedName,detectLayout,readEmbeddedLayout} from './core.mjs?v=20261109-eigentum-1';
+import {LEGAL_CONSENT,attachmentInfo,validateAttachments,validateLayout,rejectExistingSignatures,stampPDF,germanDate,signedName,detectLayout,readEmbeddedLayout} from './core.mjs?v=20261109-montage-1';
 pdfjs.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.min.mjs',import.meta.url).href;
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),fragment=new URLSearchParams(location.hash.slice(1));
 let bytes,offer,pdf,pageNumber=1,pad,signedFile,signedURL,originalURL,csrf='',serverAvailable=false,ownerPDF,ownerBytes,ownerLayout,ownerPage=1,pickMode='',ownerTitle='',currentToken='',preparedToken='',renderSerial=0,ownerRenderSerial=0;
 const visited=new Set();
 let signatureSubmitted=false,archiveTimer=null,archivePolls=0;
 let completionLocked=false,completionRequest="",signingData=null;const attachmentURLs=[];
-let ownerFile=null,ownerAttachments=[],customerAttachmentFiles=new Map(),ownerImportSerial=0,ownerCanPublish=false;
+let ownerFile=null,ownerAttachments=[],customerAttachmentFiles=new Map(),ownerImportSerial=0,ownerCanPublish=false,ownerMontagePolicy=null;
 const signatureTouch=protectSignatureTouch($('signature'),{onIdle:()=>requestAnimationFrame(resizePad),onCancel:()=>{if(pad){pad.off();pad.on();invalidateSigned();}}});
 function message(text=''){ $('status').hidden=!text;$('status').textContent=text; }
 function fail(error){$('loading').hidden=true;$('customer').hidden=true;$('owner').hidden=true;$('access-gate').hidden=true;$('error').hidden=false;$('error-text').textContent=error.message||String(error);}
@@ -94,6 +95,7 @@ function drawPlacement(){for(const key of ['signature','date']){const el=$(key+'
 function chooseMode(mode){pickMode=mode;for(const k of ['signature','date'])$('pick-'+k).setAttribute('aria-pressed',String(k===mode));$('placement-view').classList.add('picking');}
 function checkedLayout(){if(!$('placement-confirm').checked)throw Error('Bitte zuerst die Platzierung auf der PDF prüfen und das Häkchen setzen.');if(!ownerLayout?.signature||!ownerLayout?.date)throw Error('Bitte beide Flächen für Datum und Unterschrift markieren.');return ownerLayout;}
 async function initOwner(){
+ const policyResponse=await fetch('montage-current.json',{cache:'no-store'});if(!policyResponse.ok)throw Error('Die Montagebedingungen konnten nicht geladen werden. Bitte die Seite neu laden.');ownerMontagePolicy=validateMontagePolicy(await policyResponse.json());
  $('loading').hidden=true;$('owner').hidden=false;if(params.get('passwort')==='geaendert')message('Passwort geändert. Bitte mit deinem neuen Passwort anmelden.');
  try{const data=await api('status');serverAvailable=data.configured;csrf=data.csrf||'';if(data.authenticated){$('login-area').hidden=true;$('prepare-area').hidden=false;await loadLegalStatus();}}
  catch{serverAvailable=false;}
@@ -125,12 +127,12 @@ $('local-test').onclick=async()=>{
   const layout=checkedLayout(),doc=await PDFLib.PDFDocument.load(ownerBytes,{updateMetadata:false});validateLayout(layout,doc.getPages());const files=[...ownerAttachments];validateAttachments(files,ownerFile.size);
   const legalResponse=await fetch('demo.json',{cache:'no-store'});if(!legalResponse.ok)throw Error('Die Muster-Vertragsunterlagen konnten nicht geladen werden.');const {attachments}=await legalResponse.json();const localFiles=new Map();
   for(const [index,file] of files.entries()){const id='local-extra-'+index;localFiles.set(id,file);attachments.push({...attachmentInfo(file),id,role:'anlage',version:'lokaler Probelauf',sha256:await hash(await file.arrayBuffer()),local:true});}
-  const metadata={authority:authorityDefinition($('customer-name').value.trim()||'Unverbindlicher Musterkunde'),title:$('prepared-title').value||ownerTitle,filename:ownerFile.name,layout,demo:true,test:true,attachments,customer_name:$('customer-name').value.trim(),commission:$('commission-id').value.trim()};
+  const metadata={checkout:checkoutFromForm(document,ownerMontagePolicy),authority:authorityDefinition($('customer-name').value.trim()||'Unverbindlicher Musterkunde'),title:$('prepared-title').value||ownerTitle,filename:ownerFile.name,layout,demo:true,test:true,attachments,customer_name:$('customer-name').value.trim(),commission:$('commission-id').value.trim()};
   $('demo-banner').innerHTML='<b>Lokaler Probelauf</b><br>Das Angebot und die ausgewählten Anlagen werden nur in diesem Browser verarbeitet. Sie wurden nicht hochgeladen.';
   await loadCustomer(ownerBytes.slice(),metadata,localFiles);
  }catch(e){message(e.message);}finally{button.disabled=false;}
 };
-$('publish-offer').onclick=async()=>{const b=$('publish-offer');try{for(const id of ['customer-id','customer-name','commission-id'])if(!$(id).reportValidity())return;const checkout=checkoutFromForm(document),layout=checkedLayout(),doc=await PDFLib.PDFDocument.load(ownerBytes,{updateMetadata:false});validateLayout(layout,doc.getPages());b.disabled=true;b.textContent='Angebot wird vorbereitet …';const form=new FormData();validateAttachments(ownerAttachments,ownerFile.size);form.append('pdf',ownerFile);form.append('metadata',JSON.stringify({title:$('prepared-title').value||ownerTitle,layout,pageCount:ownerPDF.numPages,customer_id:$('customer-id').value.trim(),customer_name:$('customer-name').value.trim(),commission:$('commission-id').value.trim(),checkout}));for(const file of ownerAttachments)form.append('attachments[]',file);const result=await api('create',{method:'POST',body:form});preparedToken=result.token;const url=new URL('./',location.href);url.search='';url.hash='auftrag='+result.token;$('offer-link').value=url.href;$('offer-link-result').hidden=false;message('Neuer Kundenlink erstellt. Er öffnet nur diesen Kunden und diese Kommission. Vorherige Links derselben Kommission sind gesperrt.');}catch(e){message(e.message);}finally{b.disabled=!ownerCanPublish||!ownerFile;b.textContent='3. Kundenlink erstellen';}};
+$('publish-offer').onclick=async()=>{const b=$('publish-offer');try{for(const id of ['customer-id','customer-name','commission-id'])if(!$(id).reportValidity())return;const checkout=checkoutFromForm(document,ownerMontagePolicy),layout=checkedLayout(),doc=await PDFLib.PDFDocument.load(ownerBytes,{updateMetadata:false});validateLayout(layout,doc.getPages());b.disabled=true;b.textContent='Angebot wird vorbereitet …';const form=new FormData();validateAttachments(ownerAttachments,ownerFile.size);form.append('pdf',ownerFile);form.append('metadata',JSON.stringify({title:$('prepared-title').value||ownerTitle,layout,pageCount:ownerPDF.numPages,customer_id:$('customer-id').value.trim(),customer_name:$('customer-name').value.trim(),commission:$('commission-id').value.trim(),checkout}));for(const file of ownerAttachments)form.append('attachments[]',file);const result=await api('create',{method:'POST',body:form});preparedToken=result.token;const url=new URL('./',location.href);url.search='';url.hash='auftrag='+result.token;$('offer-link').value=url.href;$('offer-link-result').hidden=false;message('Neuer Kundenlink erstellt. Er öffnet nur diesen Kunden und diese Kommission. Vorherige Links derselben Kommission sind gesperrt.');}catch(e){message(e.message);}finally{b.disabled=!ownerCanPublish||!ownerFile;b.textContent='3. Kundenlink erstellen';}};
 $('copy-link').onclick=async()=>{try{await navigator.clipboard.writeText($('offer-link').value);message('Link kopiert. Jetzt im WhatsApp-Chat einfügen.');}catch{$('offer-link').select();message('Bitte den markierten Link kopieren.');}};
 $('revoke-link').onclick=async()=>{try{await api('revoke',{method:'POST',body:{token:preparedToken}});$('offer-link-result').hidden=true;message('Der Kundenlink ist jetzt gesperrt.');}catch(e){message(e.message);}};
 function saveBlob(data,name,mime){const file=new File([data],name,{type:mime}),url=URL.createObjectURL(file);attachmentURLs.push(url);const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';a.click();}
@@ -225,7 +227,7 @@ $('load-records').onclick=async()=>{
  }catch(e){message(e.message);}
 };
 $('load-withdrawals').onclick=async()=>{try{const {withdrawals}=await api('withdrawals'),root=$('withdrawal-list');root.replaceChildren();if(!withdrawals.length)root.textContent='Noch keine Widerrufserklärungen eingegangen.';for(const r of withdrawals){const card=document.createElement('article');card.className='record-card';for(const text of [r.name+' · '+r.received_at,'Vertrag / Vertragsteil: '+r.contract,'Eingangsbestätigung an: '+r.email,'Bitte Zuordnung, Widerrufsrecht und Frist prüfen. Ein Vorgang wird nicht automatisch storniert.']){const p=document.createElement('p');p.textContent=text;card.append(p);}const statuses=Object.values(r.mail);if(statuses.some(n=>n.state!=='submitted')){const b=document.createElement('button');b.className='secondary';const uncertain=statuses.some(n=>['sending','uncertain'].includes(n.state));b.textContent=uncertain?'Nach Postfachprüfung Bestätigungen erneut senden':'Ausstehende Bestätigungen erneut senden';b.onclick=async()=>{b.disabled=true;try{await api('withdrawal-retry',{method:'POST',body:{id:r.id,acknowledge_possible_duplicate:uncertain}});$('load-withdrawals').click();}catch(e){message(e.message);}finally{b.disabled=false;}};card.append(b);}root.append(card);}}catch(e){message(e.message);}};
-for(const id of ['checkout-type','checkout-description','checkout-total','checkout-costs','checkout-payment','checkout-delivery','checkout-email'])$(id).addEventListener('input',()=>{$('checkout-checked').checked=false;});
+for(const id of ['checkout-type','checkout-description','checkout-total','checkout-costs','checkout-payment','checkout-email'])$(id).addEventListener('input',()=>{$('checkout-checked').checked=false;});
 for(const id of ['full-name','sign-date'])$(id).addEventListener('input',invalidateSigned);
 init();
 
