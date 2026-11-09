@@ -11,7 +11,7 @@ async function call(c,action,{method='GET',body,token,headers={}}={}){const h={.
 async function expect(c,action,status,options){const r=await call(c,action,options);assert.equal(r.httpStatusCode,status,action+': '+r.text.slice(0,160));checks++;return r;}
 const json=r=>JSON.parse(r.text),post=(body,token)=>({method:'POST',body:JSON.stringify(body),token}),pdf=(bytes,name='client-chosen.pdf')=>new File([bytes],name,{type:'application/pdf'}),source=fs.readFileSync(web+'/musterangebot.pdf'),extra=fs.readFileSync(web+'/datenschutz.pdf');
 const form=(bytes=source,attachment=extra)=>({method:'POST',body:{pdf:pdf(bytes),'attachments[0]':pdf(attachment),metadata:JSON.stringify({customer_id:'FOREIGN_CUSTOMER',customer_name:'Must never be copied',commission:'FOREIGN',archive_test:false})}});
-async function unlock(c,release){const a=json(await expect(c,'access',200,{token:release.token}));c.csrf=a.csrf;await expect(c,'unlock',200,post({code:release.code},release.token));return json(await expect(c,'offer',200,{token:release.token}));}
+async function unlock(c,release){const a=json(await expect(c,'access',200,{token:release.token}));c.csrf=a.csrf;if(release.code)await expect(c,'unlock',200,post({code:release.code},release.token));return json(await expect(c,'offer',200,{token:release.token}));}
 const record=id=>JSON.parse(fs.readFileSync(privateDir+'/data/records/'+id+'/record.json'));
 const saveRecord=r=>fs.writeFileSync(privateDir+'/data/records/'+r.id+'/record.json',JSON.stringify(r));
 const mailPath=privateDir+'/mail-mock.json',mail=()=>fs.existsSync(mailPath)?JSON.parse(fs.readFileSync(mailPath)):{messages:[]},mode=m=>fs.writeFileSync(mailPath,JSON.stringify({...mail(),mode:m}));
