@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Vertragsunterlagen und Download-Verweise pruefen
         run: node angebote-tests/check-legal.mjs
+      - name: Lexware-PDF-Import und Kundentrennung pruefen
+        run: node angebote-tests/offer-import.mjs
       - name: Kundenoberflaeche syntaktisch pruefen
         run: node --check angebote/app.mjs
       - name: Ersteinrichtung syntaktisch pruefen

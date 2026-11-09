@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261108-vertrag-1">
+<link rel="stylesheet" href="style.css?v=20261109-import-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261109-strato-1"></script>
+<script type="module" src="app.mjs?v=20261109-import-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -70,20 +70,23 @@
 <div id="login-area"><label for="password">Zugang für Sichtwerk</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary wide">Anmelden</button></div>
 <div id="prepare-area" hidden>
 <a id="change-password" class="secondary wide" href="server/password.php" hidden>Passwort ändern</a>
+<label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">
+<p id="offer-import-status" class="notice" role="status">Zuerst die Angebots-PDF auswählen. Erkennbare Angaben werden direkt daraus übernommen. Anschließend nur prüfen und fehlende Angaben ergänzen.</p>
+<div id="offer-fields" hidden>
 <div class="owner-details"><h2>Kunde und Kommission</h2><label for="customer-id">Kundennummer / eindeutige Kundenkennung</label><input id="customer-id" maxlength="100" required placeholder="z. B. K-10023"><label for="customer-name">Kundenname</label><input id="customer-name" maxlength="160" required placeholder="Vorname und Nachname / Firma"><label for="commission-id">Kommission / Angebotsnummer</label><input id="commission-id" maxlength="100" required placeholder="z. B. AG-2026-10-0162"><p class="hint">Der Kunde öffnet sein Angebot direkt über den persönlichen Link. Bitte nur dem vorgesehenen Kunden senden.</p></div>
 
 <section id="checkout-preparation" class="owner-details"><h2>Abschlussübersicht für den Kunden</h2>
-<p>Diese Angaben stehen unmittelbar vor der verbindlichen Annahme und in der Vertragskopie. Bitte exakt mit dem Lexware-Angebot abgleichen. Die hinterlegte Belehrung gilt für Werk-/Montageverträge.</p>
+<p>Die erkannten Angaben sind bereits aus der Angebots-PDF eingesetzt. Bitte nur prüfen und fehlende oder unklare Angaben ergänzen. Diese Übersicht erscheint vor der Annahme und in der Vertragskopie. Die hinterlegte Belehrung gilt für Werk-/Montageverträge.</p>
 <label for="checkout-type">Art des Auftrags</label><select id="checkout-type" required><option value="work_consumer">Werk-/Montagevertrag mit einem Privatkunden</option><option value="other">Reiner Warenkauf, Verbraucherbauvertrag oder anderer Vertrag</option></select>
 <label for="checkout-description">Leistung und wesentliche Ausführung</label><textarea id="checkout-description" maxlength="1200" rows="5" required placeholder="Zum Beispiel Anzahl und Ausführung der Fenster, wesentliche Eigenschaften sowie vereinbarte Montageleistungen"></textarea>
 <label for="checkout-total">Gesamtpreis einschließlich Umsatzsteuer (EUR)</label><input id="checkout-total" inputmode="decimal" maxlength="12" required placeholder="Zum Beispiel 1234,56 – ohne Tausenderpunkte">
-<label for="checkout-costs">Weitere Kosten</label><textarea id="checkout-costs" maxlength="500" rows="3" required>Alle im Angebot ausgewiesenen Kosten sind im Gesamtpreis enthalten. Keine weiteren verpflichtenden Kosten.</textarea>
-<label for="checkout-payment">Zahlungsbedingungen dieses Angebots</label><textarea id="checkout-payment" maxlength="1800" rows="7" required>Zahlung per Überweisung. Soweit im Angebot vereinbart: Vorauszahlung von 80 % des gesondert ausgewiesenen Bruttowerts individuell herzustellender Bauelemente und zugehöriger Materialien nach Rabatten; Arbeits-, Montage-, Demontage-, Entsorgungs-, Anfahrts- und Regieleistungen sind ausgenommen. Zahlbar binnen 14 Kalendertagen nach Vertragsschluss und Zugang der Vorauszahlungsrechnung. Vollständige Anrechnung auf die Gesamtvergütung; Restzahlung binnen 14 Kalendertagen nach Abnahme und Rechnungszugang, soweit gesetzlich fällig. Individuelle Zahlungsvereinbarungen und ausdrücklich vereinbarte Versicherungs-Direktabrechnung ohne Vorauszahlung gehen vor.</textarea>
+<label for="checkout-costs">Weitere Kosten</label><textarea id="checkout-costs" maxlength="500" rows="3" required></textarea>
+<label for="checkout-payment">Zahlungsbedingungen dieses Angebots</label><textarea id="checkout-payment" maxlength="1800" rows="7" required></textarea>
 <label for="checkout-delivery">Liefer-/Ausführungszeit und Voraussetzungen für ihren Beginn</label><textarea id="checkout-delivery" maxlength="700" rows="4" required placeholder="Konkreten Zeitraum aus dem Angebot und dessen Voraussetzungen übernehmen. Bestellwartezeit, technische Klärung und vereinbarte Vorauszahlung berücksichtigen."></textarea>
 <label for="checkout-email">E-Mail des Kunden für die Vertragskopie</label><input id="checkout-email" type="email" maxlength="254" autocomplete="off" required>
 <p class="hint">Die Vertragskopie enthält die unterschriebene PDF und die zugehörigen Anlagen. Für diesen E-Mail-Versand dürfen Angebot und alle Anlagen einschließlich Vertragsvorlagen zusammen höchstens 10 MB groß sein.</p>
 <label class="check"><input id="checkout-checked" type="checkbox" required><span>Ich habe Vertragsart, Leistung, Gesamtpreis, sämtliche Kosten, Zahlungs- und Lieferbedingungen sowie Kundenadresse mit dem konkreten Angebot geprüft. Die Angaben widersprechen weder dem Angebot noch den beigefügten AGB.</span></label></section>
-<label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">
+</div>
 <section id="attachments-preparation" class="owner-details" aria-labelledby="attachments-heading">
 <h2 id="attachments-heading">2. Weitere Unterlagen anhängen <span class="small muted">(optional)</span></h2>
 <p>Hier können Sie Zeichnungen, Sondervereinbarungen und andere Unterlagen für dieses Angebot hinzufügen. Bei Bedarf sind auch Bilder möglich.</p>
