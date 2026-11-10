@@ -1,5 +1,5 @@
 import {mountRecordActions,workflowURL} from './records.mjs?v=20261109-versicherung-1';
-import {renderInsuranceSummary} from './insurance.mjs?v=20261109-versicherung-1';
+import {renderInsuranceSummary} from './insurance.mjs?v=20261110-eigenanteil-1';
 import {checkoutFromPDF} from './offer-checkout.mjs?v=20261109-versicherung-1';
 import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-versicherung-1';
 import {extractOffer,resetOfferFields,applyOfferImport} from './offer-import.mjs?v=20261109-versicherung-1';
@@ -34,6 +34,7 @@ async function renderOffer(){const id=++renderSerial;$('prev-page').disabled=pag
 async function loadCustomer(data,metadata,localFiles=new Map()){
  const test=await PDFLib.PDFDocument.load(data,{updateMetadata:false});rejectExistingSignatures(test,PDFLib);validateLayout(metadata.layout,test.getPages());
  if(metadata.checkout?.version===2&&metadata.checkout.source_sha256!==await hash(data))throw Error('Die Angebotsangaben gehören nicht zu dieser PDF. Bitte einen neuen Link anfordern.');bytes=data;offer=metadata;$('signed-canvas').hidden=false;renderCheckout($('checkout-summary'),offer);renderInsuranceSummary($('checkout-summary'),offer.insurance);customerAttachmentFiles=localFiles;offer.sha256 ||= await hash(data);offer.attachments ||= [];completionLocked=false;signatureSubmitted=false;archivePolls=0;if(archiveTimer)clearTimeout(archiveTimer);completionRequest="";signingData=null;pdf=await openPDF(bytes);pageNumber=1;visited.clear();
+ const signatureCosts=$('signature-insurance-summary');if(signatureCosts){signatureCosts.replaceChildren();signatureCosts.hidden=!offer.insurance?.data;renderInsuranceSummary(signatureCosts,offer.insurance);}
  if(originalURL)URL.revokeObjectURL(originalURL);originalURL=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));$('original-pdf').href=originalURL;
  $('offer-title').textContent=metadata.title;$('sign-offer').textContent=metadata.title;$('demo-banner').hidden=!(metadata.demo||metadata.archive_test);
  if(metadata.archive_test)$('demo-banner').innerHTML=metadata.archive_mode==='signed_pdf_only'?'<b>Archivtest – kein Kundenauftrag</b><br>Beim ausdrücklichen Abschluss wird die unterschriebene Muster-PDF geprüft im geschützten Archiv von Sichtwerk gespeichert. Bitte nur mit „TEST“ unterschreiben. Es entsteht kein Auftrag.':'<b>Archivtest – kein Kundenauftrag</b><br>Diese frühere Freigabe verwendet weiterhin die vollständige Paketablage auf STRATO und in Drive. Bitte nur mit „TEST“ unterschreiben. Es entsteht kein Auftrag.';

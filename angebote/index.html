@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261109-versicherung-1">
+<link rel="stylesheet" href="style.css?v=20261110-eigenanteil-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261110-vorlagen-1"></script>
+<script type="module" src="app.mjs?v=20261110-eigenanteil-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -34,6 +34,7 @@
 <label for="full-name">Ihr vollständiger Name</label><input id="full-name" name="name" autocomplete="name" maxlength="100" required placeholder="Vorname und Nachname">
 <label for="sign-date">Datum</label><input id="sign-date" name="date" type="date" required>
 <section id="authority-fields" class="authority-fields" hidden></section>
+<div id="signature-insurance-summary" hidden></div>
 <label for="signature">Ihre Unterschrift</label><p class="hint">Mit dem Finger in das weiße Feld schreiben. Währenddessen bleibt die Seite stehen. Zum Scrollen außerhalb des Feldes wischen. Am Computer mit der Maus unterschreiben.</p>
 <div class="signature-wrap"><canvas id="signature" aria-label="Hier mit dem Finger unterschreiben"></canvas><span class="signature-line" aria-hidden="true"></span></div>
 <button type="button" id="clear-signature" class="secondary">Unterschrift neu schreiben</button>

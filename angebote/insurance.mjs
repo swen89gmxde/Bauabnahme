@@ -56,6 +56,9 @@ export async function appendInsurancePage(doc,insurance,PDFLib,{testLabel=false}
 }
 export function renderInsuranceSummary(root,insurance){
  const r=insurance?.data;if(!r)return;const section=root.ownerDocument.createElement('section');section.className='notice insurance-summary';
- const h=root.ownerDocument.createElement('h2');h.textContent='Zahlungszusage der Versicherung';section.append(h);
- for(const text of ['Versicherer: '+r.company,'Schadennummer: '+r.claim_number,'Übernommener Bruttobetrag: '+insuranceMoney(r.covered_cents),'Ihr Anteil einschließlich etwaiger Selbstbeteiligung: '+insuranceMoney(r.customer_share_cents)]){const p=root.ownerDocument.createElement('p');p.textContent=text;section.append(p);}root.append(section);
+ const h=root.ownerDocument.createElement('h2');h.textContent='Ihre Kostenaufteilung';section.append(h);
+ for(const text of ['Versicherer: '+r.company,'Schadennummer: '+r.claim_number]){const p=root.ownerDocument.createElement('p');p.className='small';p.textContent=text;section.append(p);}
+ const costs=root.ownerDocument.createElement('dl');costs.className='insurance-costs';
+ for(const [label,cents,own] of [['Angebotsgesamtpreis inklusive Umsatzsteuer',r.total_cents,false],['Zugesagter Versicherungsanteil',r.covered_cents,false],['Ihr selbst zu zahlender Anteil',r.customer_share_cents,true]]){const row=root.ownerDocument.createElement('div'),term=root.ownerDocument.createElement('dt'),amount=root.ownerDocument.createElement('dd');if(own)row.className='insurance-own-share';term.textContent=label;amount.textContent=insuranceMoney(cents);row.append(term,amount);costs.append(row);}section.append(costs);
+ const note=root.ownerDocument.createElement('p');note.className='hint insurance-cost-note';note.textContent='Ihr Anteil enthält eine etwaige Selbstbeteiligung. Die Gesamtsumme im Angebot bleibt unverändert. Es gelten die vereinbarten Zahlungsbedingungen.';section.append(note);root.append(section);
 }
