@@ -1,3 +1,7 @@
+# Aktuelle Vertragsvorlagen seit 10.11.2026
+
+In der Angebotsvorbereitung keinen Bereich „Aktuelle Vertragsvorlagen“, keine Vorlagenauswahl, Versionsangabe oder Uploadfelder anzeigen. Pro Dokumentart genau einen aktuellen Master für AGB und Verbraucher-Widerrufsbelehrung einschließlich Musterformular pflegen; diesen bei einer Änderung ersetzen und im selben Auftrag in Quelldateien, Manifest, Downloads, GitHub und STRATO übernehmen. Neue Freigaben binden automatisch diesen aktuellen Stand. Bestehende Freigabepakete und unterschriebene Unterlagen unverändert erhalten. Interne Versionsnachweise, Prüfsummen und historische Vertragskopien sind keine vom Inhaber auszuwählenden Alternativvorlagen. Keine automatische externe Drive-Synchronisierung behaupten.
+
 # Versicherungsablauf und Papierkorb seit 09.11.2026
 
 Versicherungsablauf und Löschfunktion - Stand 09.11.2026
