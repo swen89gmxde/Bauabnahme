@@ -23,14 +23,14 @@
   "attachments": [
     {
       "role": "agb",
-      "name": "AGB_Sichtwerk_Neubauer_2026-11-09.pdf",
-      "version": "09.11.2026",
+      "name": "AGB_Sichtwerk_Neubauer_2026-11-11.pdf",
+      "version": "11.11.2026",
       "mime": "application/pdf",
-      "size": 151143,
-      "sha256": "afe488f3da5b9835adf8c5cc27e5b8b1a53f072667b3ee975a80e9fb596fda8a",
-      "file": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-10-28.pdf",
+      "size": 153090,
+      "sha256": "d43d3b6dfb9d2d2ec0c92eb0bc4ee9d60afd041f8b3570c8edfc2ce52cf0d3f2",
+      "file": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-11-11.pdf",
       "id": "demo-agb",
-      "demoPath": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-11-09.pdf"
+      "demoPath": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-11-11.pdf"
     },
     {
       "role": "widerruf",
@@ -39,7 +39,7 @@
       "mime": "application/pdf",
       "size": 47594,
       "sha256": "1fde9e052df2dfc53c104f5959c7e89dcab6c9252aedc2ddb9789ddc10a05a1f",
-      "file": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-10-26_WhatsApp.pdf",
+      "file": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-11-08_Portal.pdf",
       "id": "demo-widerruf",
       "demoPath": "vertragsunterlagen/Widerrufsbelehrung_Sichtwerk_Neubauer_2026-11-08_Portal.pdf"
     }

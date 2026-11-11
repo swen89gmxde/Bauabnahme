@@ -1,14 +1,14 @@
 {
-  "release": "2026-11-09",
+  "release": "2026-11-11",
   "documents": [
     {
       "role": "agb",
-      "name": "AGB_Sichtwerk_Neubauer_2026-11-09.pdf",
-      "version": "09.11.2026",
+      "name": "AGB_Sichtwerk_Neubauer_2026-11-11.pdf",
+      "version": "11.11.2026",
       "mime": "application/pdf",
-      "size": 151143,
-      "sha256": "afe488f3da5b9835adf8c5cc27e5b8b1a53f072667b3ee975a80e9fb596fda8a",
-      "file": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-11-09.pdf"
+      "size": 153090,
+      "sha256": "d43d3b6dfb9d2d2ec0c92eb0bc4ee9d60afd041f8b3570c8edfc2ce52cf0d3f2",
+      "file": "vertragsunterlagen/AGB_Sichtwerk_Neubauer_2026-11-11.pdf"
     },
     {
       "role": "widerruf",
