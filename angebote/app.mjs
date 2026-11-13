@@ -1,4 +1,4 @@
-import {mountRecordActions,workflowURL} from './records.mjs?v=20261109-versicherung-1';
+import {mountRecordActions,workflowURL,customerTokenFromFragment} from './records.mjs?v=20261113-kundenlink-1';
 import {renderInsuranceSummary} from './insurance.mjs?v=20261110-eigenanteil-1';
 import {checkoutFromPDF} from './offer-checkout.mjs?v=20261109-versicherung-1';
 import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-versicherung-1';
@@ -10,7 +10,7 @@ import {RETURN_EMAIL,returnMail,canShareFile,returnSignedPDF} from './return.mjs
 import * as pdfjs from './vendor/pdf.min.mjs';
 import {LEGAL_CONSENT,BUSINESS_CONSENT,attachmentInfo,validateAttachments,validateLayout,rejectExistingSignatures,stampPDF,germanDate,signedName,detectLayout,readEmbeddedLayout} from './core.mjs?v=20261109-versicherung-1';
 pdfjs.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.min.mjs',import.meta.url).href;
-const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),fragment=new URLSearchParams(location.hash.slice(1));
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
 let bytes,offer,pdf,pageNumber=1,pad,signedFile,signedURL,originalURL,csrf='',serverAvailable=false,ownerPDF,ownerBytes,ownerLayout,ownerPage=1,pickMode='',ownerTitle='',currentToken='',preparedToken='',renderSerial=0,ownerRenderSerial=0;
 const visited=new Set();let preparedId='',recordsTrash=false;
 let signatureSubmitted=false,archiveTimer=null,archivePolls=0;
@@ -108,7 +108,27 @@ async function initOwner(){
  $('server-note').hidden=serverAvailable;if(!serverAvailable){$('login-area').hidden=true;$('prepare-area').hidden=false;$('publish-offer').disabled=true;$('publish-offer').textContent='Kundenlink nach Einrichtung der Ablage';$('records-admin').hidden=true;$('notification-admin').hidden=true;$('withdrawals-admin').hidden=true;$('archive-status').textContent='Öffentliches Muster: Es werden keine echten Kundendaten auf einen Server oder nach Drive übertragen.';}
 }
 async function loadTokenOffer(){const meta=await api('offer',{token:currentToken});csrf=meta.csrf;const data=await api('document',{token:currentToken,binary:true});if(await hash(data)!==meta.sha256)throw Error('Die PDF passt nicht zum Angebotslink. Bitte einen neuen Link anfordern.');await loadCustomer(data,meta);if(meta.archive_pending){signatureSubmitted=true;showStage('complete');$('signed-canvas').hidden=true;showArchivePending({retry_after:2});}}
-async function init(){try{if(!window.PDFLib||!window.SignaturePad)throw Error('Die Unterschriftsfunktion konnte nicht geladen werden. Bitte die Seite neu öffnen.');const now=new Date();$('sign-date').value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;if(params.has('vorbereiten'))return initOwner();currentToken=fragment.get('auftrag')||'';if(currentToken){if(!/^[a-f0-9]{64}$/.test(currentToken))throw Error('Dieser Angebotslink ist ungültig.');const access=await api('access',{token:currentToken});csrf=access.csrf;if(access.requires_code&&!access.unlocked){$('loading').hidden=true;$('access-gate').hidden=false;}else await loadTokenOffer();}else{const [m,r]=await Promise.all([fetch('demo.json',{cache:'no-store'}),fetch('musterangebot.pdf')]);if(!m.ok||!r.ok)throw Error('Das Musterangebot konnte nicht geladen werden.');await loadCustomer(new Uint8Array(await r.arrayBuffer()),await m.json());}}catch(error){fail(error);}}
+async function init(){
+ try {
+  if(!window.PDFLib||!window.SignaturePad)throw Error('Die Unterschriftsfunktion konnte nicht geladen werden. Bitte die Seite neu öffnen.');
+  const now=new Date();
+  $('sign-date').value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  if(params.has('vorbereiten'))return initOwner();
+  currentToken=customerTokenFromFragment(location.hash);
+  if(currentToken){
+   const access=await api('access',{token:currentToken});
+   csrf=access.csrf;
+   if(access.requires_code&&!access.unlocked){
+    $('loading').hidden=true;
+    $('access-gate').hidden=false;
+   }else await loadTokenOffer();
+   return;
+  }
+  const [metadataResponse,pdfResponse]=await Promise.all([fetch('demo.json',{cache:'no-store'}),fetch('musterangebot.pdf')]);
+  if(!metadataResponse.ok||!pdfResponse.ok)throw Error('Das Musterangebot konnte nicht geladen werden.');
+  await loadCustomer(new Uint8Array(await pdfResponse.arrayBuffer()),await metadataResponse.json());
+ }catch(error){fail(error);}
+}
 $('retry').onclick=()=>location.reload();$('prev-page').onclick=()=>{pageNumber--;renderOffer().catch(e=>message(e.message));};$('next-page').onclick=()=>{pageNumber++;renderOffer().catch(e=>message(e.message));};$('to-sign').onclick=()=>showStage('sign');$('back-review').onclick=()=>showStage('review');$('correct').onclick=()=>showStage('sign');$('clear-signature').onclick=()=>{pad?.clear();invalidateSigned();message();};$('sign-form').onsubmit=createSigned;$('share-pdf').onclick=()=>sharePDF();$('email-pdf').onclick=()=>sharePDF('email');$('show-email-options').onclick=showEmailOptions;
 for(const id of ['full-name','sign-date','confirm','legal-confirm'])$(id).addEventListener('input',invalidateSigned);
 window.addEventListener('resize',()=>resizePad());window.addEventListener('pagehide',()=>{ /* No persistent signature or customer data in browser storage. */ });
@@ -123,7 +143,7 @@ function syncInsurancePreparation(){
  select.required=on;$('insurance-options').hidden=!on;$('publish-offer').textContent=on?'3. Versicherungslink erstellen':'3. Kundenlink erstellen';
 }
 $('insurance-case').onchange=()=>{$('offer-link-result').hidden=true;syncInsurancePreparation();};
-function showWorkflowLink(result){const link=workflowURL(result,location);preparedId=result.id;preparedToken=result.role==='customer'?result.token:'';$('offer-link').value=link;$('offer-link-label').textContent=result.role==='insurance'?'Diesen Link an die Versicherung senden':'Diesen Link an den Kunden senden';$('offer-link-result').hidden=false;message(result.role==='insurance'?'Versicherungslink erstellt. Nach bestätigter Zusage unter Meine Vorgänge den Kundenlink erstellen.':'Kundenlink erstellt. Er enthält die unveränderte Versichererzusage und die Abtretung. Ein vorheriger Kundenlink dieses Vorgangs ist gesperrt.');$('offer-link-result').scrollIntoView({behavior:'smooth'});}
+function showWorkflowLink(result,customerName){const link=workflowURL(result,location,customerName);preparedId=result.id;preparedToken=result.role==='customer'?result.token:'';$('offer-link').value=link;$('offer-link-label').textContent=result.role==='insurance'?'Diesen Link an die Versicherung senden':'Diesen Link an den Kunden senden';$('offer-link-result').hidden=false;message(result.role==='insurance'?'Versicherungslink erstellt. Nach bestätigter Zusage unter Meine Vorgänge den Kundenlink erstellen.':'Kundenlink erstellt. Er enthält die unveränderte Versichererzusage und die Abtretung. Ein vorheriger Kundenlink dieses Vorgangs ist gesperrt.');$('offer-link-result').scrollIntoView({behavior:'smooth'});}
 function renderAttachmentSelection(){
  const list=$('extra-file-list');list.replaceChildren();const total=ownerAttachments.reduce((sum,f)=>sum+f.size,0),size=total<1024*1024?Math.ceil(total/1024)+' KB':(total/1024/1024).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB';
  syncInsurancePreparation();$('extra-file-summary').textContent=ownerAttachments.length?`${ownerAttachments.length} von 12 Anlagen ausgewählt · ${size}`:'Noch keine zusätzlichen Unterlagen ausgewählt.';
@@ -146,7 +166,46 @@ $('local-test').onclick=async()=>{
   await loadCustomer(ownerBytes.slice(),metadata,localFiles);
  }catch(e){message(e.message);}finally{button.disabled=false;}
 };
-$('publish-offer').onclick=async()=>{const b=$('publish-offer');try{for(const id of ['customer-id','customer-name','commission-id'])if(!$(id).reportValidity())return;if($('insurance-case').checked&&!$('assignment-attachment').reportValidity())return;const checkout=ownerCheckout(),layout=checkedLayout(),doc=await PDFLib.PDFDocument.load(ownerBytes,{updateMetadata:false});validateLayout(layout,doc.getPages());b.disabled=true;b.textContent='Angebot wird vorbereitet …';const form=new FormData();validateAttachments(ownerAttachments,ownerFile.size);form.append('pdf',ownerFile);form.append('metadata',JSON.stringify({title:$('prepared-title').value||ownerTitle,layout,pageCount:ownerPDF.numPages,customer_id:$('customer-id').value.trim(),customer_name:$('customer-name').value.trim(),commission:$('commission-id').value.trim(),checkout,...($('insurance-case').checked?{insurance:{enabled:true,assignment_index:Number($('assignment-attachment').value)}}:{})}));for(const file of ownerAttachments)form.append('attachments[]',file);const result=await api('create',{method:'POST',body:form});preparedId=result.id;if(result.insurance_token){showWorkflowLink({id:result.id,token:result.insurance_token,role:'insurance'});return;}preparedToken=result.token;$('offer-link-label').textContent='Diesen Link an den Kunden senden';const url=new URL('./',location.href);url.search='';url.hash='auftrag='+result.token;$('offer-link').value=url.href;$('offer-link-result').hidden=false;message('Neuer Kundenlink erstellt. Er öffnet nur diesen Kunden und diese Kommission. Vorherige Links derselben Kommission sind gesperrt.');}catch(e){message(e.message);}finally{b.disabled=!ownerCanPublish||!ownerFile;syncInsurancePreparation();}};
+$('publish-offer').onclick=async()=>{
+ const button=$('publish-offer');
+ try {
+  for(const id of ['customer-id','customer-name','commission-id'])if(!$(id).reportValidity())return;
+  const insurance=$('insurance-case').checked;
+  if(insurance&&!$('assignment-attachment').reportValidity())return;
+  const checkout=ownerCheckout(),layout=checkedLayout();
+  const doc=await PDFLib.PDFDocument.load(ownerBytes,{updateMetadata:false});
+  validateLayout(layout,doc.getPages());
+  button.disabled=true;
+  button.textContent='Angebot wird vorbereitet …';
+  const form=new FormData();
+  const customerName=$('customer-name').value.trim();
+  validateAttachments(ownerAttachments,ownerFile.size);
+  form.append('pdf',ownerFile);
+  form.append('metadata',JSON.stringify({
+   title:$('prepared-title').value||ownerTitle,
+   layout,
+   pageCount:ownerPDF.numPages,
+   customer_id:$('customer-id').value.trim(),
+   customer_name:customerName,
+   commission:$('commission-id').value.trim(),
+   checkout,
+   ...(insurance?{insurance:{enabled:true,assignment_index:Number($('assignment-attachment').value)}}:{})
+  }));
+  for(const file of ownerAttachments)form.append('attachments[]',file);
+  const result=await api('create',{method:'POST',body:form});
+  preparedId=result.id;
+  if(result.insurance_token){
+   showWorkflowLink({id:result.id,token:result.insurance_token,role:'insurance'});
+   return;
+  }
+  preparedToken=result.token;
+  $('offer-link-label').textContent='Diesen Link an den Kunden senden';
+  $('offer-link').value=workflowURL({role:'customer',token:result.token},location,customerName);
+  $('offer-link-result').hidden=false;
+  message('Neuer Kundenlink erstellt. Er öffnet nur diesen Kunden und diese Kommission. Vorherige Links derselben Kommission sind gesperrt.');
+ }catch(error){message(error.message);}
+ finally{button.disabled=!ownerCanPublish||!ownerFile;syncInsurancePreparation();}
+};
 $('copy-link').onclick=async()=>{try{await navigator.clipboard.writeText($('offer-link').value);message('Link kopiert. Jetzt im WhatsApp-Chat einfügen.');}catch{$('offer-link').select();message('Bitte den markierten Link kopieren.');}};
 $('revoke-link').onclick=async()=>{try{await api('revoke',{method:'POST',body:preparedId?{id:preparedId}:{token:preparedToken}});$('offer-link-result').hidden=true;message('Der Kundenlink ist jetzt gesperrt.');}catch(e){message(e.message);}};
 function saveBlob(data,name,mime){const file=new File([data],name,{type:mime}),url=URL.createObjectURL(file);attachmentURLs.push(url);const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';a.click();}
