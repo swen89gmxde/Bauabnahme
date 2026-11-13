@@ -21,6 +21,8 @@ export function workflowURL(result, location, customerName) {
  if (!HEX_TOKEN.test(result.token)) throw Error('Der Kundenlink konnte nicht erstellt werden.');
  const bytes = result.token.match(/../g).map(byte => parseInt(byte, 16));
  const key = btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=$/, '');
+ // Older copies of the portal may be cached at the plain /angebote/ address.
+ url.search = '?angebot';
  url.hash = customerLinkName(customerName) + '/' + key;
  return url.href;
 }
