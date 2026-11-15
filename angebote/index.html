@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261115-weitere-schritte-1">
+<link rel="stylesheet" href="style.css?v=20261115-auftragsstatus-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261115-weitere-schritte-1"></script>
+<script type="module" src="app.mjs?v=20261115-auftragsstatus-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -53,16 +53,18 @@
 <p id="next-steps-demo" hidden>Beispiel für einen echten Auftrag.</p>
 <ol>
 <li id="next-steps-payment">
-<strong>Vorauszahlungsrechnung</strong>
-<p>Wenn eine Vorauszahlung vereinbart ist, senden wir Ihnen den Link zur Rechnung im Lexware-Kundencenter per Nachricht.</p>
+<strong id="next-steps-payment-title">Vorauszahlungsrechnung</strong>
+<p id="next-steps-payment-legacy">Wenn eine Vorauszahlung vereinbart ist, senden wir Ihnen den Link zur Rechnung im Lexware-Kundencenter per Nachricht.</p>
+<p id="next-steps-status-customer" hidden>Sie erhalten Ihren persönlichen Statuslink per Nachricht. Dort finden Sie Ihre bereitgestellten Rechnungen, die voraussichtliche Lieferwoche und den vereinbarten Montagetermin. Bei einer neuen Rechnung oder Terminänderung informieren wir Sie per Nachricht. Bitte speichern Sie Ihre Rechnungen für Ihre Unterlagen, bevor der Statuslink nach Auftragsabschluss geschlossen wird.</p>
 </li>
 <li id="next-steps-insurance" hidden>
 <strong>Abrechnung mit der Versicherung</strong>
 <p>Die Abrechnung erfolgt wie im Angebot vereinbart. Für diesen Auftrag ist keine Vorauszahlung vorgesehen.</p>
+<p id="next-steps-status-insurance" hidden>Sie erhalten Ihren persönlichen Statuslink für Ihre Liefer- und Montagermine per Nachricht. Sobald Termine feststehen oder sich ändern, informieren wir Sie. Die Rechnung zur Direktabrechnung erhält der Versicherer über einen eigenen Link.</p>
 </li>
 <li>
 <strong>Bestellung beim Hersteller</strong>
-<p>Wir bestellen die benötigten Bauelemente nach technischer Klärung und Ablauf der vereinbarten Wartezeit. Eine für die Bestellung geltende Widerrufsfrist warten wir ebenfalls ab.<span id="next-steps-payment-required"> Eine vereinbarte Vorauszahlung muss vorher eingegangen sein.</span></p>
+<p>Wir bestellen die benötigten Bauelemente nach technischer Klärung und Ablauf der vereinbarten Wartezeit. <span id="next-steps-withdrawal">Eine für die Bestellung geltende Widerrufsfrist warten wir ebenfalls ab.</span><span id="next-steps-payment-required"> Eine vereinbarte Vorauszahlung muss vorher eingegangen sein.</span></p>
 </li>
 <li>
 <strong>Lieferwoche und Einbautermin</strong>
@@ -137,10 +139,67 @@
 <p class="notice">Ausstehende Sicherungen regelmäßig unter „Meine Vorgänge anzeigen“ kontrollieren. Bei „Archivierung ausstehend“ denselben Vorgang erneut sichern; keinen neuen Link erstellen und nicht erneut unterschreiben lassen.</p>
 <section id="withdrawals-admin" class="owner-details"><h2>Eingegangene Widerrufserklärungen</h2><button id="load-withdrawals" class="secondary wide">Widerrufserklärungen anzeigen</button><div id="withdrawal-list"></div></section>
 <section id="records-admin" class="owner-details"><h2>Meine Vorgänge</h2><label class="check"><input id="records-trash" type="checkbox"><span>Papierkorb anzeigen</span></label><button id="load-records" class="secondary wide">Meine Vorgänge anzeigen</button><div id="record-list"></div></section>
+<template id="order-status-editor">
+<details class="owner-details order-status-editor">
+  <summary>Auftragsstatus</summary>
+  <p data-order="feedback" class="hint" role="status"></p>
+  <div data-order="panel" hidden>
+    <div data-order="active">
+      <div class="order-status-actions">
+        <button type="button" data-order="copy-message" class="primary">Nachricht mit Link kopieren</button>
+        <button type="button" data-order="copy-link" class="secondary">Statuslink kopieren</button>
+      </div>
+      <form data-order="schedule">
+        <h4>Zahlung und Termine</h4>
+        <label data-order="advance" class="check"><input type="checkbox" name="advance_received"> Vorauszahlung eingegangen</label>
+        <div class="order-status-grid">
+          <label>Beim Hersteller bestellt am<input type="date" name="ordered_on"></label>
+          <label>Voraussichtliche Lieferwoche<input type="week" name="delivery_week" placeholder="2026-W49"></label>
+          <label>Liefertermin<input type="date" name="delivery_date"></label>
+          <label>Montagetermin<input type="date" name="installation_date"></label>
+          <label>Montageuhrzeit<input type="time" name="installation_time"></label>
+        </div>
+        <button type="submit" class="secondary">Auftragsstatus speichern</button>
+      </form>
+      <form data-order="upload">
+        <h4>Rechnung bereitstellen</h4>
+        <div class="order-status-grid">
+          <label>Rechnungsart<select name="kind" required>
+            <option value="invoice">Rechnung</option>
+            <option value="advance">Vorauszahlungsrechnung</option>
+            <option value="interim">Zwischenrechnung</option>
+            <option value="final">Schlussrechnung</option>
+          </select></label>
+          <label data-order="audience" hidden>Empfänger<select name="audience" required>
+            <option value="">Bitte auswählen</option>
+            <option value="customer">Kunde</option>
+            <option value="insurer">Versicherung</option>
+          </select></label>
+        </div>
+        <label>Rechnungsdatei<input type="file" name="invoice" accept=".pdf,.xml" required></label>
+        <button type="submit" class="secondary">Rechnung bereitstellen</button>
+      </form>
+      <h4 data-order="invoice-heading" hidden>Bereitgestellte Rechnungen</h4>
+      <ul data-order="files"></ul>
+      <section data-order="insurance-actions" class="owner-details" hidden>
+        <h4>Rechnung an Versicherung</h4>
+        <div class="order-status-actions">
+          <button type="button" data-order="copy-insurer-message" class="primary">Nachricht an Versicherung kopieren</button>
+          <button type="button" data-order="copy-insurer-link" class="secondary">Rechnungslink kopieren</button>
+        </div>
+      </section>
+      <textarea data-order="fallback" aria-label="Vorbereiteter Text zum Kopieren" rows="6" readonly hidden></textarea>
+    </div>
+    <p data-order="closed" hidden>Auftrag abgeschlossen. Die persönlichen Links sind gesperrt.</p>
+    <p data-order="inactive" hidden>Die persönlichen Links dieses Vorgangs sind gesperrt.</p>
+    <button type="button" data-order="close" class="secondary danger">Auftrag abschließen</button>
+  </div>
+</details>
+</template>
 <section id="archive-test-admin" class="owner-details" hidden><h2>STRATO-Archivierung testen</h2><p>Dieser Test verwendet ausschließlich Musterunterlagen. Er prüft die geschützte Ablage der unterschriebenen Muster-PDF auf STRATO und die anschließende Bereinigung temporärer Dateien. Es entsteht kein Kundenauftrag.</p><label class="check"><input id="archive-test-checkout" type="checkbox" checked><span>Auch die neue Abschlussübersicht und Vertragskopie testen. Die Testmail geht ausschließlich an Sichtwerk; es entsteht kein Auftrag.</span></label><button id="create-archive-test" class="primary wide" disabled>Archivtest vorbereiten</button><p id="archive-test-status" class="hint" role="status">Die geschützte STRATO-Ablage wird nach Anmeldung geprüft.</p><div id="archive-test-result" hidden><a id="archive-test-open" class="secondary wide" target="_blank" rel="noopener noreferrer">Testangebot öffnen</a><p class="hint">Das Testangebot öffnet sich direkt. Alle vier Musterseiten ansehen und mit „TEST“ unterschreiben. Danach „Archivtest abschließen“ wählen. Die echte Kundenfreigabe bleibt gesperrt.</p></div></section>
 </div>
 </section>
 </main>
-<footer><b>Sichtwerk – Neubauer</b><br>Bei Fragen einfach Swen Neubauer im bestehenden WhatsApp-Chat schreiben.<br><a href="ablauf.html" target="_blank" rel="noopener">So geht es weiter</a> · <a href="https://www.sichtwerk-neubauer.de/impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz des Angebotsportals</a> · <a href="info.html">Über das Angebotsarchiv</a> · <a class="withdrawal-link" href="https://www.sichtwerk-neubauer.de/angebote/widerruf.php">Vertrag widerrufen</a><br><a id="owner-link" href="?vorbereiten=1">Angebot vorbereiten</a></footer>
+<footer><b>Sichtwerk – Neubauer</b><br>Bei Fragen schreiben Sie Swen Neubauer über Ihren gewohnten Kontaktweg.<br><a href="ablauf.html" target="_blank" rel="noopener">So geht es weiter</a> · <a href="https://www.sichtwerk-neubauer.de/impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz des Angebotsportals</a> · <a href="info.html">Über das Angebotsarchiv</a> · <a class="withdrawal-link" href="https://www.sichtwerk-neubauer.de/angebote/widerruf.php">Vertrag widerrufen</a><br><a id="owner-link" href="?vorbereiten=1">Angebot vorbereiten</a></footer>
 <noscript><p class="card">Zum Unterschreiben bitte JavaScript im Browser aktivieren.</p></noscript>
 </body></html>

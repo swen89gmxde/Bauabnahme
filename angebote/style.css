@@ -42,3 +42,51 @@ textarea,select{font:inherit;width:100%;padding:14px;border:2px solid #93a4aa;bo
 .next-steps li p {
   margin: 4px 0 0;
 }
+
+.order-status-editor summary {
+  padding: 12px 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+.order-status-editor form,
+.order-status-editor .order-status-actions {
+  margin: 14px 0;
+}
+.order-status-editor h4 {
+  margin: 14px 0 8px;
+}
+.order-status-editor input,
+.order-status-editor select {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.order-status-editor input[type=date],
+.order-status-editor input[type=week],
+.order-status-editor input[type=time] {
+  display: block;
+  width: 100%;
+}
+.order-status-editor ul {
+  overflow-wrap: anywhere;
+}
+.order-status-grid,
+.order-status-actions {
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 580px) {
+  .order-status-grid,
+  .order-status-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.order-schedule-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin: 0 0 24px;
+}
+.order-schedule-list dd {
+  margin: 0;
+  font-weight: 700;
+}

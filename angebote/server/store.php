@@ -6,6 +6,7 @@ require_once __DIR__.'/drive-archive.php';
 require_once __DIR__.'/strato-archive.php';
 require_once __DIR__.'/checkout.php';
 require_once __DIR__.'/withdrawal-store.php';
+require_once __DIR__.'/order-status.php';
 final class PortalError extends RuntimeException { public function __construct(string $message, public int $status=400, public string $reason='request_error') { parent::__construct($message); } }
 function abortPortal(string $message,int $status=400,string $reason='request_error'): never { throw new PortalError($message,$status,$reason); }
 function portalPassword(mixed $password,mixed $repeat): string {

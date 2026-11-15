@@ -1,4 +1,5 @@
 import {mountRecordActions,workflowURL,customerTokenFromFragment} from './records.mjs?v=20261113-kundenlink-2';
+import {mountOrderStatusEditor} from './order-status.mjs?v=20261115-auftragsstatus-1';
 import {renderInsuranceSummary} from './insurance.mjs?v=20261110-eigenanteil-1';
 import {checkoutFromPDF} from './offer-checkout.mjs?v=20261109-versicherung-1';
 import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-versicherung-1';
@@ -245,6 +246,14 @@ function showArchived(){
  if(nextSteps){
   const insurance=Boolean(offer.insurance?.data);
   $('next-steps-payment').hidden=insurance;
+  const statusEnabled=Boolean(offer.demo||(offer.archive_provider==='strato'&&!offer.archive_test));
+  if($('next-steps-status-customer')){
+   $('next-steps-payment-title').textContent=statusEnabled?'Auftragsstatus und Rechnungen':'Vorauszahlungsrechnung';
+   $('next-steps-payment-legacy').hidden=statusEnabled;
+   $('next-steps-status-customer').hidden=!statusEnabled;
+   $('next-steps-status-insurance').hidden=!statusEnabled;
+   $('next-steps-withdrawal').hidden=offer.checkout?.contract_type==='work_business';
+  }
   $('next-steps-payment-required').hidden=insurance;
   $('next-steps-insurance').hidden=!insurance;
   $('next-steps-demo').hidden=!(offer.demo||offer.archive_test||offer.test);
@@ -307,6 +316,7 @@ $('load-records').onclick=async()=>{
    }
    if(r.state==='archive_pending')button('Archivierung erneut versuchen',async()=>{const result=await api('archive-retry',{method:'POST',body:{id:r.id}});message(result.ok?'Archiv bestätigt. Kundenlink gesperrt.':'Unterschrift ist vorübergehend geschützt gespeichert. Archivierung steht noch aus.');$('load-records').click();},true);
    if(r.state==='active')button('Diesen Link sperren',async()=>{await api('revoke',{method:'POST',body:{id:r.id}});$('load-records').click();});
+   mountOrderStatusEditor(card,r,api);
    root.append(card);
   }
  }catch(e){message(e.message);}

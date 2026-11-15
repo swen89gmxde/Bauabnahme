@@ -54,5 +54,7 @@ function runStratoArchive(array $r): array {
         $r['archive']['last_error']=in_array($e->getMessage(),['archive_source_checksum','strato_archive_path','strato_archive_checksum'],true)?$e->getMessage():'strato_archive_write';
         $r['archive']['next_attempt']=time()+min(900,15*2**min(6,$r['archive']['attempts']-1));
     }
-    saveJson(recordPath($r['id']).'/record.json',$r);return notifyCompletedOffer(purgeTemporaryDocuments($r));
+    saveJson(recordPath($r['id']).'/record.json',$r);
+    orderStatusAfterArchive($r);
+    return notifyCompletedOffer(purgeTemporaryDocuments($r));
 }
