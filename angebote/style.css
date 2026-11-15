@@ -91,3 +91,49 @@ textarea,select{font:inherit;width:100%;padding:14px;border:2px solid #93a4aa;bo
   margin: 0;
   font-weight: 700;
 }
+
+.invoice-feedback:empty {
+  display: none;
+}
+.invoice-due-edit summary {
+  font-size: 0.95rem;
+  padding: 6px 0;
+}
+.order-status-editor .invoice-due-edit form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.invoice-due-edit input {
+  display: block;
+  width: 100%;
+}
+.download-list .invoice-with-due {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+.invoice-due-date {
+  display: grid;
+  gap: 2px;
+  min-width: 46px;
+  border-radius: 7px;
+  padding: 6px 4px;
+  text-align: center;
+  background: #edf1f3;
+  font-size: 12px;
+  font-weight: 400;
+}
+.invoice-due-date strong {
+  font-size: 18px;
+}
+.invoice-download-body {
+  display: block;
+  min-width: 0;
+}
+.invoice-due-text {
+  margin-top: 4px;
+}

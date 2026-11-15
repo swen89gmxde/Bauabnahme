@@ -35,6 +35,13 @@ function saveOrderStatus(string $id, array $status): void {
     saveJson($dir.'/status.json', $status);
 }
 
+function saveOrderStatusChange(string $id, array $status): array {
+    $status['revision']++;
+    $status['updated_at'] = gmdate(DATE_ATOM);
+    saveOrderStatus($id, $status);
+    return $status;
+}
+
 function emptyOrderSchedule(): array {
     return [
         'advance_received' => false,
@@ -87,7 +94,7 @@ function orderStatusFiles(array $status, ?string $audience = null): array {
     $files = [];
     foreach ($status['files'] ?? [] as $file) {
         if ($audience !== null && $file['audience'] !== $audience) continue;
-        $files[] = array_intersect_key($file, array_flip(['id','name','kind','audience','uploaded_at']));
+        $files[] = array_intersect_key($file, array_flip(['id','name','kind','audience','uploaded_at','due_date']));
     }
     return array_reverse($files);
 }
@@ -196,10 +203,17 @@ function addOrderStatusInvoice(array $record, array $status, array $input, array
     if (!in_array($kind, ['advance','interim','invoice','final'], true) || ($insurance && $kind === 'advance')) {
         abortPortal('Bitte eine zum Auftrag passende Rechnungsart auswählen.');
     }
+    $dueDate = parseOrderDate($input['due_date'] ?? '');
     $file = checkOrderInvoice($upload);
     $total = $file['size'];
-    foreach ($status['files'] as $existing) {
+    foreach ($status['files'] as $index => $existing) {
         if ($existing['audience'] === $audience && $existing['kind'] === $kind && hash_equals($existing['sha256'], $file['sha256'])) {
+            $previous = $existing['due_date'] ?? '';
+            if ($dueDate !== '' && $previous !== $dueDate) {
+                if ($previous !== '') abortPortal('Diese Rechnung ist schon bereitgestellt. Bitte die Fälligkeit bei der vorhandenen Datei ändern.', 409);
+                $status['files'][$index]['due_date'] = $dueDate;
+                return saveOrderStatusChange($record['id'], $status);
+            }
             return $status;
         }
         $total += $existing['size'];
@@ -216,18 +230,35 @@ function addOrderStatusInvoice(array $record, array $status, array $input, array
             abortPortal('Die gespeicherte Rechnung konnte nicht geprüft werden.', 503);
         }
         unset($file['tmp']);
-        $status['files'][] = $file + ['id'=>$fileId,'audience'=>$audience,'kind'=>$kind,'uploaded_at'=>gmdate(DATE_ATOM)];
+        $status['files'][] = $file + ['id'=>$fileId,'audience'=>$audience,'kind'=>$kind,'uploaded_at'=>gmdate(DATE_ATOM),'due_date'=>$dueDate];
         if ($audience === 'insurer' && empty($status['insurer_secret'])) {
             $status['insurer_secret'] = bin2hex(random_bytes(32));
         }
-        $status['revision']++;
-        $status['updated_at'] = gmdate(DATE_ATOM);
-        saveOrderStatus($record['id'], $status);
-        return $status;
+        return saveOrderStatusChange($record['id'], $status);
     } catch (Throwable $error) {
         if (is_file($path)) unlink($path);
         throw $error;
     }
+}
+
+function updateOrderInvoiceDueDate(array $record, array $status, array $input): array {
+    $fileId = $input['file_id'] ?? '';
+    if (!is_string($fileId) || !preg_match('/^[a-f0-9]{32}$/D', $fileId)) {
+        abortPortal('Diese Rechnung ist nicht verfügbar.', 404);
+    }
+    if (!array_key_exists('due_date', $input)) abortPortal('Bitte ein Fälligkeitsdatum angeben oder das Feld leeren.');
+    $dueDate = parseOrderDate($input['due_date']);
+    foreach ($status['files'] as $index => $file) {
+        if ($file['id'] !== $fileId) continue;
+        $previous = $file['due_date'] ?? '';
+        if ($previous === $dueDate) return $status;
+        if (($input['previous_due_date'] ?? null) !== $previous) {
+            abortPortal('Die Fälligkeit wurde bereits geändert. Bitte den Auftragsstatus erneut öffnen.', 409);
+        }
+        $status['files'][$index]['due_date'] = $dueDate;
+        return saveOrderStatusChange($record['id'], $status);
+    }
+    abortPortal('Diese Rechnung ist hier nicht verfügbar.', 404);
 }
 
 function closeOrderStatus(string $id, array $status, array $input): array {
@@ -273,6 +304,9 @@ function handleOwnerOrderStatus(string $action, array $input, array $upload = []
     if ($action === 'order-status-invoice') {
         return ownerOrderStatusView($record, addOrderStatusInvoice($record, $status, $input, $upload));
     }
+    if ($action === 'order-status-invoice-due') {
+        return ownerOrderStatusView($record, updateOrderInvoiceDueDate($record, $status, $input));
+    }
     if (($input['revision'] ?? null) !== $status['revision']) {
         abortPortal('Der Stand wurde bereits geändert. Bitte den Auftragsstatus erneut öffnen.', 409);
     }
@@ -280,9 +314,7 @@ function handleOwnerOrderStatus(string $action, array $input, array $upload = []
     $schedule = parseOrderSchedule($input['schedule'], orderStatusHasInsurer($record));
     if ($status['schedule'] !== $schedule) {
         $status['schedule'] = $schedule;
-        $status['revision']++;
-        $status['updated_at'] = gmdate(DATE_ATOM);
-        saveOrderStatus($id, $status);
+        $status = saveOrderStatusChange($id, $status);
     }
     return ownerOrderStatusView($record, $status);
 }

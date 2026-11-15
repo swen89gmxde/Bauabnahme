@@ -1,5 +1,5 @@
 import {mountRecordActions,workflowURL,customerTokenFromFragment} from './records.mjs?v=20261113-kundenlink-2';
-import {mountOrderStatusEditor} from './order-status.mjs?v=20261115-termine-1';
+import {mountOrderStatusEditor} from './order-status.mjs?v=20261115-faelligkeit-1';
 import {renderInsuranceSummary} from './insurance.mjs?v=20261110-eigenanteil-1';
 import {checkoutFromPDF} from './offer-checkout.mjs?v=20261109-versicherung-1';
 import {authorityDefinition,mountAuthority,authorityFromForm,authorityPayload,renderAuthoritySummary,authorityPage} from './authority.mjs?v=20261109-versicherung-1';

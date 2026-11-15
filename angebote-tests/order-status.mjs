@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash, randomBytes } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { orderStatusMessage, orderStatusURL } from '../angebote/order-status.mjs';
+import { berlinCalendarDate, invoiceDueText, orderStatusMessage, orderStatusURL } from '../angebote/order-status.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const modules = process.env.PHP_WASM_MODULE_ROOT || path.join(root, 'node_modules');
@@ -89,10 +89,17 @@ const json = response => JSON.parse(response.text);
 const read = (id, code = 200) => expect(owner, 'order-status-owner', code, { body: { id } }).then(json);
 const statusView = (token, code = 200) => expect(guest, 'order-status-view', code, { token }).then(json);
 const download = (token, file, code = 200) => expect(guest, 'order-status-download&file=' + file, code, { token });
-const pdfUpload = (id, audience, kind, bytes = pdf, filename = 'musterrechnung.pdf') =>
-  ({ body: { id, kind, audience, invoice: new File([bytes], filename, { type: 'application/pdf' }) } });
+const pdfUpload = (id, audience, kind, bytes = pdf, filename = 'musterrechnung.pdf', dueDate = '') =>
+  ({ body: { id, kind, audience, invoice: new File([bytes], filename, { type: 'application/pdf' }), ...(dueDate ? { due_date: dueDate } : {}) } });
+const due = (id, file, date, previous) => ({ id, file_id: file, due_date: date, previous_due_date: previous });
 
 try {
+  assert.equal(berlinCalendarDate(new Date('2026-11-15T23:30:00Z')), '2026-11-16');
+  assert.equal(invoiceDueText('2026-11-29', '2026-11-15'), 'Fällig in 14 Tagen');
+  assert.equal(invoiceDueText('2026-11-29', '2026-11-28'), 'Fällig in 1 Tag');
+  assert.equal(invoiceDueText('2026-11-29', '2026-11-29'), 'Heute fällig');
+  assert.equal(invoiceDueText('2026-11-29', '2026-11-30'), 'Fälligkeitsdatum war vor 1 Tag');
+  assert.equal(invoiceDueText('2026-03-30', berlinCalendarDate(new Date('2026-03-28T23:30:00Z'))), 'Fällig in 1 Tag');
   const lint = await php.run({ code: "<?php token_get_all(file_get_contents('" + web + "/server/order-status.php'), TOKEN_PARSE); echo 'OK';" });
   assert.equal(lint.text, 'OK', lint.errors);
   owner.csrf = json(await expect(owner, 'status', 200)).csrf;
@@ -147,22 +154,33 @@ try {
   await expect(owner, 'order-status-invoice', 400, pdfUpload(normal.id, 'insurer', 'final'));
   await expect(owner, 'order-status-invoice', 400, pdfUpload(normal.id, 'customer', 'final', Buffer.from('<html/>'), 'keine-rechnung.pdf'));
 
-  first = json(await expect(owner, 'order-status-invoice', 201, pdfUpload(normal.id, 'customer', 'advance')));
+  await expect(owner, 'order-status-invoice', 400, pdfUpload(normal.id, 'customer', 'advance', pdf, 'musterrechnung.pdf', '2026-11-31'));
+  first = json(await expect(owner, 'order-status-invoice', 201, pdfUpload(normal.id, 'customer', 'advance', pdf, 'musterrechnung.pdf', '2026-11-29')));
   const advance = first.files[0].id;
   assert.equal(first.tokens.customer, customer);
   assert.match(orderStatusMessage(first, 'customer', origin + '/angebote/'), /Vorauszahlungsrechnung.*Download/);
   assert.match(orderStatusMessage(first, 'customer', origin + '/angebote/'), /14\.12\.2026 um 08:30 Uhr/);
   assert.equal((await statusView(customer)).files[0].kind, 'advance');
+  assert.equal((await statusView(customer)).files[0].due_date, '2026-11-29');
   assert.equal(sha((await download(customer, advance)).bytes), sha(pdf));
   await download(insuranceCustomer, advance, 404);
   const duplicate = json(await expect(owner, 'order-status-invoice', 201, pdfUpload(normal.id, 'customer', 'advance')));
   assert.equal(duplicate.files.length, 1);
+  assert.equal(duplicate.files[0].due_date, '2026-11-29');
 
   const xml = '<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"><ID>TEST-1</ID></Invoice>';
   const xmlResponse = json(await expect(owner, 'order-status-invoice', 201, {
     body: { id: normal.id, audience: 'customer', kind: 'final', invoice: new File([xml], 'muster.xml', { type: 'application/xml' }) },
   }));
   const xmlFile = xmlResponse.files.find(file => file.name === 'muster.xml');
+  assert.equal(xmlFile.due_date, '');
+  await expect(guest, 'order-status-invoice-due', 401, { body: due(normal.id, xmlFile.id, '2026-12-15', '') });
+  await expect(owner, 'order-status-invoice-due', 404, { body: due(insurance.id, xmlFile.id, '2026-12-15', '') });
+  await expect(owner, 'order-status-invoice-due', 200, { body: due(normal.id, xmlFile.id, '2026-12-15', '') });
+  await expect(owner, 'order-status-invoice-due', 409, { body: due(normal.id, xmlFile.id, '2026-12-16', '') });
+  assert.equal((await statusView(customer)).files.find(file => file.id === xmlFile.id).due_date, '2026-12-15');
+  await expect(owner, 'order-status-invoice-due', 200, { body: due(normal.id, xmlFile.id, '', '2026-12-15') });
+  assert.equal((await statusView(customer)).files.find(file => file.id === xmlFile.id).due_date, '');
   assert.equal((await download(customer, xmlFile.id)).text, xml);
   await expect(owner, 'order-status-invoice', 400, {
     body: { id: normal.id, audience: 'customer', kind: 'final', invoice: new File(['<!DOCTYPE Invoice><Invoice/>'], 'falsch.xml') },
@@ -171,7 +189,7 @@ try {
   await expect(owner, 'order-status-invoice', 400, pdfUpload(insurance.id, 'insurer', 'advance'));
   second = json(await expect(owner, 'order-status-save', 200, { body: { id: insurance.id, revision: second.revision, schedule } }));
   assert.equal((await statusView(insuranceCustomer)).schedule.advance_received, false);
-  second = json(await expect(owner, 'order-status-invoice', 201, pdfUpload(insurance.id, 'insurer', 'final')));
+  second = json(await expect(owner, 'order-status-invoice', 201, pdfUpload(insurance.id, 'insurer', 'final', pdf, 'musterrechnung.pdf', '2026-12-20')));
   const insurer = second.tokens.insurer;
   const insuranceFile = second.files.find(file => file.audience === 'insurer').id;
   assert.notEqual(insurer, insuranceCustomer);
@@ -181,6 +199,8 @@ try {
   assert.ok(!orderStatusMessage(second, 'insurer', origin + '/angebote/').includes(insuranceCustomer));
   assert.deepEqual(Object.keys(await statusView(insurer)).sort(), ['audience','claim_number','files']);
   assert.equal((await statusView(insurer)).files[0].id, insuranceFile);
+  assert.equal((await statusView(insurer)).files[0].due_date, '2026-12-20');
+  assert.equal((await statusView(insuranceCustomer)).files.some(file => file.due_date === '2026-12-20'), false);
   assert.equal((await statusView(insuranceCustomer)).files[0].id, customerFile);
   await download(insurer, customerFile, 404);
   await download(insuranceCustomer, insuranceFile, 404);
@@ -211,7 +231,7 @@ try {
   await statusView(replacedToken, 410);
   assert.equal((await read(replaced.id)).active, false);
 
-  console.log(JSON.stringify({ checks, result: 'passed', coverage: 'automatic links, stable updates, role-specific invoices, PDF/XML, closure, archive preservation' }));
+  console.log(JSON.stringify({ checks, result: 'passed', coverage: 'automatic links, stable updates, role-specific invoices, PDF/XML, due dates and calendar countdown, closure, archive preservation' }));
 } finally {
   await php.exit();
   fs.rmSync(fixture, { recursive: true, force: true });

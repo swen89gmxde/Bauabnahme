@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261115-termine-1">
+<link rel="stylesheet" href="style.css?v=20261115-faelligkeit-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261115-termine-1"></script>
+<script type="module" src="app.mjs?v=20261115-faelligkeit-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -177,10 +177,13 @@
             <option value="insurer">Versicherung</option>
           </select></label>
         </div>
+        <label>Fällig am (optional)<input type="text" name="due_date" inputmode="numeric" placeholder="TT.MM.JJJJ" autocomplete="off"></label>
         <label>Rechnungsdatei<input type="file" name="invoice" accept=".pdf,.xml" required></label>
         <button type="submit" class="secondary">Rechnung bereitstellen</button>
+        <p data-order="invoice-feedback" class="hint invoice-feedback" role="status"></p>
       </form>
       <h4 data-order="invoice-heading" hidden>Bereitgestellte Rechnungen</h4>
+      <p data-order="file-feedback" class="hint invoice-feedback" role="status"></p>
       <ul data-order="files"></ul>
       <section data-order="insurance-actions" class="owner-details" hidden>
         <h4>Rechnung an Versicherung</h4>

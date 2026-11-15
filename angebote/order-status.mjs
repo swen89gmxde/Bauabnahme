@@ -11,9 +11,28 @@ const DATE_FIELDS = {
   installation_date: 'Montagetermin',
 };
 const STATUS_REFRESH_INTERVAL = 15000;
+const CALENDAR_DAY_MS = 24 * 60 * 60 * 1000;
+const BERLIN_DATE = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
+});
+const INVOICE_MONTH = new Intl.DateTimeFormat('de-DE', { timeZone: 'UTC', month: 'short' });
 
 function formatDate(value) {
   return value.split('-').reverse().join('.');
+}
+
+export function berlinCalendarDate(now = new Date()) {
+  const parts = Object.fromEntries(BERLIN_DATE.formatToParts(now).map(({type,value}) => [type,value]));
+  return parts.year + '-' + parts.month + '-' + parts.day;
+}
+
+export function invoiceDueText(dueDate, today = berlinCalendarDate()) {
+  const days = (Date.parse(dueDate + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / CALENDAR_DAY_MS;
+  if (days === 0) return 'Heute fällig';
+  if (days === 1) return 'Fällig in 1 Tag';
+  if (days > 1) return 'Fällig in ' + days + ' Tagen';
+  if (days === -1) return 'Fälligkeitsdatum war vor 1 Tag';
+  return 'Fälligkeitsdatum war vor ' + Math.abs(days) + ' Tagen';
 }
 
 function enteredDate(input, label) {
@@ -116,6 +135,8 @@ export function mountOrderStatusEditor(card, record, api) {
   const fields = $('schedule');
   const upload = $('upload');
   const saveFeedback = $('save-feedback') || $('feedback');
+  const invoiceFeedback = $('invoice-feedback') || $('feedback');
+  const fileFeedback = $('file-feedback') || $('feedback');
   let view;
   let scheduleRevision;
   let scheduleEdited = false;
@@ -149,7 +170,34 @@ export function mountOrderStatusEditor(card, record, api) {
     $('files').replaceChildren();
     for (const file of view.files) {
       const audience = file.audience === 'insurer' ? 'Versicherung' : 'Kunde';
-      appendText($('files'), 'li', INVOICE_LABELS[file.kind] + ' · ' + file.name + ' · ' + audience);
+      const label = INVOICE_LABELS[file.kind] + ' · ' + file.name + ' · ' + audience;
+      const item = appendText($('files'), 'li', label + (file.due_date ? ' · Fällig am ' + formatDate(file.due_date) : ''));
+      if (!view.active) continue;
+      const details = appendText(item, 'details', '', 'invoice-due-edit');
+      appendText(details, 'summary', file.due_date ? 'Fälligkeit bearbeiten' : 'Fälligkeit eintragen');
+      const form = appendText(details, 'form', '');
+      const dueLabel = appendText(form, 'label', 'Fällig am');
+      const input = appendText(dueLabel, 'input', '');
+      input.type = 'text';
+      input.inputMode = 'numeric';
+      input.autocomplete = 'off';
+      input.placeholder = 'TT.MM.JJJJ';
+      input.value = file.due_date ? formatDate(file.due_date) : '';
+      const save = appendText(form, 'button', 'Fälligkeit speichern', 'secondary');
+      save.type = 'submit';
+      form.onsubmit = event => {
+        event.preventDefault();
+        let dueDate;
+        try {
+          dueDate = enteredDate(input.value, 'Fällig am');
+        } catch (error) {
+          fileFeedback.textContent = error.message;
+          return;
+        }
+        run('order-status-invoice-due', {
+          id: record.id, file_id: file.id, due_date: dueDate, previous_due_date: file.due_date || '',
+        }, 'Fälligkeit gespeichert.', fileFeedback);
+      };
     }
     $('invoice-heading').hidden = !view.files.length;
     $('close').hidden = view.closed && !view.cleanup_pending;
@@ -165,7 +213,8 @@ export function mountOrderStatusEditor(card, record, api) {
     controls.forEach(control => { control.disabled = true; });
     try {
       const result = await api(action, { method: 'POST', body });
-      render(result, action === 'order-status-invoice' && scheduleEdited);
+      const invoiceChanged = action === 'order-status-invoice' || action === 'order-status-invoice-due';
+      render(result, invoiceChanged && scheduleEdited);
       $('panel').hidden = false;
       if (action === 'order-status-owner') saveFeedback.textContent = '';
       feedback.textContent = result.cleanup_pending
@@ -235,10 +284,19 @@ export function mountOrderStatusEditor(card, record, api) {
     event.preventDefault();
     if (busy) return;
     const data = new FormData(upload);
+    try {
+      data.set('due_date', enteredDate(String(data.get('due_date') || ''), 'Fällig am'));
+    } catch (error) {
+      invoiceFeedback.textContent = error.message;
+      return;
+    }
     data.set('id', record.id);
     const current = view.revision;
-    await run('order-status-invoice', data, 'Rechnung bereitgestellt.');
-    if (view.revision !== current) upload.elements.invoice.value = '';
+    await run('order-status-invoice', data, 'Rechnung bereitgestellt.', invoiceFeedback);
+    if (view.revision !== current) {
+      upload.elements.invoice.value = '';
+      if (upload.elements.due_date) upload.elements.due_date.value = '';
+    }
   };
   $('close').onclick = () => {
     if (busy) return;
@@ -285,7 +343,7 @@ function showOrderStatusPage() {
   let closed = false;
   let refreshTimer;
 
-  function render(state) {
+  function render(state, today) {
     content.replaceChildren();
     if (state.audience === 'insurer') {
       heading.textContent = 'Rechnung zur Direktabrechnung';
@@ -314,8 +372,22 @@ function showOrderStatusPage() {
       downloadFeedback.setAttribute('role', 'status');
       downloadFeedback.hidden = true;
       for (const file of state.files) {
-        const button = appendText(files, 'button', INVOICE_LABELS[file.kind] + ' herunterladen', 'secondary');
-        appendText(button, 'small', file.name);
+        const button = appendText(files, 'button', '', file.due_date ? 'secondary invoice-with-due' : 'secondary');
+        if (file.due_date) {
+          const [year,,day] = file.due_date.split('-');
+          const badge = appendText(button, 'time', '', 'invoice-due-date');
+          badge.dateTime = file.due_date;
+          badge.setAttribute('aria-label', 'Fälligkeitsdatum ' + formatDate(file.due_date));
+          appendText(badge, 'span', INVOICE_MONTH.format(new Date(file.due_date + 'T00:00:00Z')));
+          appendText(badge, 'strong', day);
+          appendText(badge, 'span', year);
+        }
+        const body = appendText(button, 'span', INVOICE_LABELS[file.kind] + ' herunterladen', 'invoice-download-body');
+        appendText(body, 'small', file.name);
+        if (file.due_date) {
+          const paidAdvance = file.kind === 'advance' && state.schedule?.advance_received;
+          appendText(body, 'small', paidAdvance ? 'Vorauszahlung eingegangen' : invoiceDueText(file.due_date, today), 'invoice-due-text');
+        }
         button.type = 'button';
         button.onclick = async () => {
           button.disabled = true;
@@ -350,9 +422,10 @@ function showOrderStatusPage() {
     inFlight = true;
     try {
       const state = await (await fetchOrderStatus('order-status-view', token)).json();
-      const currentView = JSON.stringify(state);
+      const today = berlinCalendarDate();
+      const currentView = JSON.stringify(state) + today;
       if (currentView !== lastView) {
-        render(state);
+        render(state, today);
         lastView = currentView;
       }
       feedback.hidden = true;
