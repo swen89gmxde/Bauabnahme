@@ -5,9 +5,48 @@ const INVOICE_LABELS = {
   invoice: 'Rechnung',
   final: 'Schlussrechnung',
 };
+const DATE_FIELDS = {
+  ordered_on: 'Bestelldatum',
+  delivery_date: 'Liefertermin',
+  installation_date: 'Montagetermin',
+};
+const STATUS_REFRESH_INTERVAL = 15000;
 
 function formatDate(value) {
   return value.split('-').reverse().join('.');
+}
+
+function enteredDate(input, label) {
+  const value = input.trim();
+  if (!value) return '';
+  const german = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(value) || /^(\d{2})(\d{2})(\d{4})$/.exec(value);
+  const iso = german ? german[3] + '-' + german[2].padStart(2, '0') + '-' + german[1].padStart(2, '0') : value;
+  const date = new Date(iso + 'T00:00:00Z');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || iso.startsWith('0000-') || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) {
+    throw Error('Bitte für „' + label + '“ ein gültiges Datum im Format TT.MM.JJJJ eingeben.');
+  }
+  return iso;
+}
+
+function enteredWeek(input) {
+  const value = input.trim();
+  if (!value) return '';
+  const german = /^(?:KW\s*)?(\d{1,2})\s*\/\s*([1-9]\d{3})$/i.exec(value);
+  const iso = german ? german[2] + '-W' + german[1].padStart(2, '0') : value;
+  if (!/^[1-9]\d{3}-W(0[1-9]|[1-4]\d|5[0-3])$/.test(iso)) {
+    throw Error('Bitte die Lieferwoche mit Jahr eingeben, zum Beispiel 50/2026.');
+  }
+  return iso;
+}
+
+function enteredTime(input, installationDate) {
+  const value = input.trim();
+  if (!value) return '';
+  const parts = /^(\d{1,2}):?(\d{2})$/.exec(value);
+  const time = parts ? parts[1].padStart(2, '0') + ':' + parts[2] : '';
+  if (!installationDate) throw Error('Bitte zur Montageuhrzeit auch den Montagetermin eintragen.');
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) throw Error('Bitte die Montageuhrzeit im Format HH:MM eingeben.');
+  return time;
 }
 
 function scheduleEntries(schedule) {
@@ -76,10 +115,14 @@ export function mountOrderStatusEditor(card, record, api) {
   const $ = key => editor.querySelector('[data-order="' + key + '"]');
   const fields = $('schedule');
   const upload = $('upload');
+  const saveFeedback = $('save-feedback') || $('feedback');
   let view;
+  let scheduleRevision;
+  let scheduleEdited = false;
   let busy = false;
 
-  function render(data) {
+  function render(data, keepDraft) {
+    const scheduleUnchanged = JSON.stringify(view?.schedule) === JSON.stringify(data.schedule);
     view = data;
     $('active').hidden = !view.active;
     $('closed').hidden = !view.closed;
@@ -90,11 +133,19 @@ export function mountOrderStatusEditor(card, record, api) {
     upload.elements.kind.querySelector('[value="advance"]').hidden = view.insurance;
     if (!view.insurance) upload.elements.audience.value = 'customer';
 
-    for (const [key, value] of Object.entries(view.schedule)) {
-      const field = fields.elements.namedItem(key);
-      if (key === 'advance_received') field.checked = value;
-      else field.value = value;
+    if (!keepDraft) {
+      for (const [key, value] of Object.entries(view.schedule)) {
+        const field = fields.elements.namedItem(key);
+        if (key === 'advance_received') field.checked = value;
+        else if (value && key in DATE_FIELDS && field.type !== 'date') field.value = formatDate(value);
+        else if (value && key === 'delivery_week' && field.type !== 'week') {
+          const [year, week] = value.split('-W');
+          field.value = week + '/' + year;
+        } else field.value = value;
+      }
+      scheduleEdited = false;
     }
+    if (!keepDraft || scheduleUnchanged) scheduleRevision = view.revision;
     $('files').replaceChildren();
     for (const file of view.files) {
       const audience = file.audience === 'insurer' ? 'Versicherung' : 'Kunde';
@@ -106,29 +157,35 @@ export function mountOrderStatusEditor(card, record, api) {
     $('fallback').hidden = true;
   }
 
-  async function run(action, body, message = '') {
+  async function run(action, body, message = '', feedback = $('feedback')) {
     if (busy) return;
     busy = true;
-    $('feedback').textContent = 'Wird geladen …';
-    const submit = editor.querySelectorAll('button[type="submit"], [data-order="close"]');
-    submit.forEach(button => { button.disabled = true; });
+    feedback.textContent = 'Wird geladen …';
+    const controls = editor.querySelectorAll('button[type="submit"], [data-order="close"], input, select');
+    controls.forEach(control => { control.disabled = true; });
     try {
       const result = await api(action, { method: 'POST', body });
-      render(result);
+      render(result, action === 'order-status-invoice' && scheduleEdited);
       $('panel').hidden = false;
-      $('feedback').textContent = result.cleanup_pending
+      if (action === 'order-status-owner') saveFeedback.textContent = '';
+      feedback.textContent = result.cleanup_pending
         ? 'Die Links sind gesperrt. Die Rechnungskopien konnten noch nicht vollständig entfernt werden.'
         : message;
     } catch (error) {
-      $('feedback').textContent = error.message;
+      feedback.textContent = error.message;
     } finally {
-      submit.forEach(button => { button.disabled = false; });
+      controls.forEach(control => { control.disabled = false; });
       busy = false;
     }
   }
 
   async function copyText(audience, withMessage) {
     if (!view?.tokens[audience] || busy) return;
+    if (audience === 'customer' && withMessage && scheduleEdited) {
+      saveFeedback.textContent = 'Bitte zuerst die Terminänderungen speichern.';
+      fields.querySelector('button[type="submit"]').focus();
+      return;
+    }
     const href = card.ownerDocument.location.href;
     const text = withMessage
       ? orderStatusMessage(view, audience, href)
@@ -155,11 +212,24 @@ export function mountOrderStatusEditor(card, record, api) {
   $('copy-insurer-message').onclick = () => copyText('insurer', true);
   $('copy-insurer-link').onclick = () => copyText('insurer', false);
 
+  fields.addEventListener('input', () => {
+    scheduleEdited = true;
+    saveFeedback.textContent = 'Änderungen noch nicht gespeichert.';
+  });
   fields.onsubmit = event => {
     event.preventDefault();
+    if (busy || !view) return;
     const data = Object.fromEntries(new FormData(fields));
     data.advance_received = fields.elements.advance_received.checked;
-    run('order-status-save', { id: record.id, revision: view.revision, schedule: data }, 'Auftragsstatus gespeichert.');
+    try {
+      for (const [key, label] of Object.entries(DATE_FIELDS)) data[key] = enteredDate(data[key], label);
+      data.delivery_week = enteredWeek(data.delivery_week);
+      data.installation_time = enteredTime(data.installation_time, data.installation_date);
+    } catch (error) {
+      saveFeedback.textContent = error.message;
+      return;
+    }
+    run('order-status-save', { id: record.id, revision: scheduleRevision, schedule: data }, 'Auftragsstatus gespeichert. Die Änderungen sind über den Statuslink abrufbar.', saveFeedback);
   };
   upload.onsubmit = async event => {
     event.preventDefault();
@@ -191,27 +261,41 @@ async function fetchOrderStatus(action, token, fileId) {
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw Error(data.error || 'Der Auftragsstatus ist momentan nicht verfügbar.');
+    const error = Error(data.error || 'Der Auftragsstatus ist momentan nicht verfügbar.');
+    error.status = response.status;
+    throw error;
   }
   return response;
 }
 
-async function showOrderStatusPage() {
+function showOrderStatusPage() {
   const heading = document.getElementById('order-status-title');
   const content = document.getElementById('order-status-content');
   const feedback = document.getElementById('order-status-feedback');
   const token = location.hash.slice(1);
-  try {
-    if (!LINK_TOKEN.test(token)) throw Error('Bitte öffnen Sie den persönlichen Link, den Sie von Sichtwerk erhalten haben.');
-    const state = await (await fetchOrderStatus('order-status-view', token)).json();
-    feedback.hidden = true;
+  window.addEventListener('hashchange', () => location.reload());
+
+  if (!LINK_TOKEN.test(token)) {
+    feedback.textContent = 'Bitte öffnen Sie den persönlichen Link, den Sie von Sichtwerk erhalten haben.';
+    return;
+  }
+
+  let lastView;
+  let inFlight = false;
+  let closed = false;
+  let refreshTimer;
+
+  function render(state) {
+    content.replaceChildren();
     if (state.audience === 'insurer') {
       heading.textContent = 'Rechnung zur Direktabrechnung';
       if (state.claim_number) appendText(content, 'p', 'Schadennummer ' + state.claim_number);
     } else {
+      heading.textContent = 'Auftragsstatus';
       const entries = scheduleEntries(state.schedule);
-      if (!entries.length) appendText(content, 'p', 'Ihr Auftrag ist angenommen. Wir informieren Sie, sobald es Neuigkeiten gibt.');
-      if (entries.length) {
+      if (!entries.length) {
+        appendText(content, 'p', 'Ihr Auftrag ist angenommen. Wir informieren Sie, sobald es Neuigkeiten gibt.');
+      } else {
         const list = document.createElement('dl');
         list.className = 'order-schedule-list';
         for (const [label, value] of entries) {
@@ -225,13 +309,17 @@ async function showOrderStatusPage() {
       appendText(content, 'h2', 'Rechnungen');
       const files = document.createElement('div');
       files.className = 'download-list';
+      content.append(files);
+      const downloadFeedback = appendText(content, 'p', '', 'hint');
+      downloadFeedback.setAttribute('role', 'status');
+      downloadFeedback.hidden = true;
       for (const file of state.files) {
         const button = appendText(files, 'button', INVOICE_LABELS[file.kind] + ' herunterladen', 'secondary');
         appendText(button, 'small', file.name);
         button.type = 'button';
         button.onclick = async () => {
           button.disabled = true;
-          feedback.hidden = true;
+          downloadFeedback.hidden = true;
           try {
             const response = await fetchOrderStatus('order-status-download', token, file.id);
             const href = URL.createObjectURL(await response.blob());
@@ -243,20 +331,57 @@ async function showOrderStatusPage() {
             link.remove();
             setTimeout(() => URL.revokeObjectURL(href), 60000);
           } catch (error) {
-            feedback.hidden = false;
-            feedback.textContent = error.message;
+            downloadFeedback.hidden = false;
+            downloadFeedback.textContent = error.message;
+            if (error.status === 410) refresh();
           } finally {
             button.disabled = false;
           }
         };
       }
-      content.append(files);
       appendText(content, 'p', 'Bitte speichern Sie die Rechnungen für Ihre Unterlagen.', 'hint');
     }
     content.hidden = false;
-  } catch (error) {
-    feedback.textContent = error.message;
   }
+
+  async function refresh() {
+    if (closed || inFlight || document.hidden) return;
+    clearTimeout(refreshTimer);
+    inFlight = true;
+    try {
+      const state = await (await fetchOrderStatus('order-status-view', token)).json();
+      const currentView = JSON.stringify(state);
+      if (currentView !== lastView) {
+        render(state);
+        lastView = currentView;
+      }
+      feedback.hidden = true;
+    } catch (error) {
+      if (error.status === 410) {
+        closed = true;
+        heading.textContent = 'Auftragsstatus';
+        content.hidden = true;
+        content.replaceChildren();
+      }
+      feedback.textContent = !closed && lastView
+        ? 'Der Auftragsstatus konnte gerade nicht aktualisiert werden.'
+        : error.message;
+      feedback.hidden = false;
+    } finally {
+      inFlight = false;
+      if (!closed && !document.hidden) refreshTimer = setTimeout(refresh, STATUS_REFRESH_INTERVAL);
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearTimeout(refreshTimer);
+    else refresh();
+  });
+  window.addEventListener('focus', refresh);
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) refresh();
+  });
+  refresh();
 }
 
 if (typeof document !== 'undefined' && document.getElementById('order-status-page')) showOrderStatusPage();
