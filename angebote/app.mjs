@@ -35,6 +35,7 @@ async function loadCustomer(data,metadata,localFiles=new Map()){
  const test=await PDFLib.PDFDocument.load(data,{updateMetadata:false});rejectExistingSignatures(test,PDFLib);validateLayout(metadata.layout,test.getPages());
  if(metadata.checkout?.version===2&&metadata.checkout.source_sha256!==await hash(data))throw Error('Die Angebotsangaben gehören nicht zu dieser PDF. Bitte einen neuen Link anfordern.');bytes=data;offer=metadata;$('signed-canvas').hidden=false;renderCheckout($('checkout-summary'),offer);renderInsuranceSummary($('checkout-summary'),offer.insurance);customerAttachmentFiles=localFiles;offer.sha256 ||= await hash(data);offer.attachments ||= [];completionLocked=false;signatureSubmitted=false;archivePolls=0;if(archiveTimer)clearTimeout(archiveTimer);completionRequest="";signingData=null;pdf=await openPDF(bytes);pageNumber=1;visited.clear();
  const signatureCosts=$('signature-insurance-summary');if(signatureCosts){signatureCosts.replaceChildren();signatureCosts.hidden=!offer.insurance?.data;renderInsuranceSummary(signatureCosts,offer.insurance);}
+ const nextSteps=$('order-next-steps');if(nextSteps)nextSteps.hidden=true;
  if(originalURL)URL.revokeObjectURL(originalURL);originalURL=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));$('original-pdf').href=originalURL;
  $('offer-title').textContent=metadata.title;$('sign-offer').textContent=metadata.title;$('demo-banner').hidden=!(metadata.demo||metadata.archive_test);
  if(metadata.archive_test)$('demo-banner').innerHTML=metadata.archive_mode==='signed_pdf_only'?'<b>Archivtest – kein Kundenauftrag</b><br>Beim ausdrücklichen Abschluss wird die unterschriebene Muster-PDF geprüft im geschützten Archiv von Sichtwerk gespeichert. Bitte nur mit „TEST“ unterschreiben. Es entsteht kein Auftrag.':'<b>Archivtest – kein Kundenauftrag</b><br>Diese frühere Freigabe verwendet weiterhin die vollständige Paketablage auf STRATO und in Drive. Bitte nur mit „TEST“ unterschreiben. Es entsteht kein Auftrag.';
@@ -240,6 +241,17 @@ function showArchived(){
  if(offer.checkout&&['whatsapp','paper'].includes(offer.checkout.copy_delivery))$('completion-text').textContent+=' Ihre vollständige Vertragskopie wird Ihnen von Sichtwerk '+(offer.checkout.copy_delivery==='paper'?'auf Papier':'als speicherbare Dateien per WhatsApp')+' übermittelt.';
  else if(offer.checkout)$('completion-text').textContent+=' Ihre Vertragskopie per E-Mail: '+(offer.customer_copy_state==='submitted'?'an den Maildienst übergeben. Bitte Postfach einschließlich Spam prüfen.':'Versand noch ausstehend oder unklar. Bitte Sichtwerk bei ausbleibender E-Mail kontaktieren.');
  if(originalURL){URL.revokeObjectURL(originalURL);originalURL='';}for(const url of attachmentURLs)URL.revokeObjectURL(url);attachmentURLs.length=0;
+ const nextSteps=$('order-next-steps');
+ if(nextSteps){
+  const insurance=Boolean(offer.insurance?.data);
+  $('next-steps-payment').hidden=insurance;
+  $('next-steps-payment-required').hidden=insurance;
+  $('next-steps-insurance').hidden=!insurance;
+  $('next-steps-demo').hidden=!(offer.demo||offer.archive_test||offer.test);
+  nextSteps.hidden=false;
+  nextSteps.focus({preventScroll:true});
+  window.scrollTo({top:0,behavior:'instant'});
+ }
 }
 async function finalizeOffer(){
  if(completionLocked||(!signedFile&&!signatureSubmitted))return;

@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261110-eigenanteil-1">
+<link rel="stylesheet" href="style.css?v=20261115-weitere-schritte-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261113-kundenlink-2"></script>
+<script type="module" src="app.mjs?v=20261115-weitere-schritte-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -41,12 +41,35 @@
 <label class="check"><input id="confirm" type="checkbox" required><span id="confirm-text">Ich habe das Angebot und die dazu bereitgestellten Unterlagen gelesen und nehme das Angebot unverändert an.</span></label>
 <section id="legal-consent-section" aria-label="AGB und Widerrufsbelehrung"><p id="legal-intro" class="hint">Bitte beachten Sie vor dem Abschluss die AGB und die Widerrufsbelehrung einschließlich Muster-Widerrufsformular. Hier können Sie beide Unterlagen einsehen und speichern.</p><div id="sign-document-list" class="download-list"></div>
 <label class="check"><input id="legal-confirm" name="legal_consent" type="checkbox" required><span><span id="legal-confirm-text">Ich stimme der Geltung der AGB zu und nehme den Hinweis auf die Widerrufsbelehrung einschließlich Muster-Widerrufsformular zur Kenntnis.</span> <b>(Pflichtfeld)</b></span></label></section>
+<p class="hint"><a href="https://www.sichtwerk-neubauer.de/datenschutz.html#direktanlieferung" target="_blank" rel="noopener">Datenschutz bei Direktanlieferung ↗</a></p>
 <button type="submit" id="create-pdf" class="primary wide">Unterschrift ins Angebot einsetzen →</button>
 <button type="button" id="back-review" class="quiet wide">← Angebot noch einmal ansehen</button>
 </form>
 </section>
 <section id="complete" class="card" hidden>
 <div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">Schritt 3 von 3</p><h1 id="completion-title">Unterschrift prüfen</h1><p id="completion-text">Name, Datum und Unterschrift stehen jetzt in der PDF. Bitte prüfen Sie die Vorschau.</p>
+<section id="order-next-steps" class="notice next-steps" aria-labelledby="next-steps-heading" tabindex="-1" hidden>
+<h2 id="next-steps-heading">So geht es weiter</h2>
+<p id="next-steps-demo" hidden>Beispiel für einen echten Auftrag.</p>
+<ol>
+<li id="next-steps-payment">
+<strong>Vorauszahlungsrechnung</strong>
+<p>Wenn eine Vorauszahlung vereinbart ist, senden wir Ihnen per WhatsApp den Link zur Rechnung im Lexware-Kundencenter.</p>
+</li>
+<li id="next-steps-insurance" hidden>
+<strong>Abrechnung mit der Versicherung</strong>
+<p>Die Abrechnung erfolgt wie im Angebot vereinbart. Für diesen Auftrag ist keine Vorauszahlung vorgesehen.</p>
+</li>
+<li>
+<strong>Bestellung beim Hersteller</strong>
+<p>Wir bestellen die benötigten Bauelemente nach technischer Klärung und Ablauf der vereinbarten Wartezeit. Eine für die Bestellung geltende Widerrufsfrist warten wir ebenfalls ab.<span id="next-steps-payment-required"> Eine vereinbarte Vorauszahlung muss vorher eingegangen sein.</span></p>
+</li>
+<li>
+<strong>Lieferwoche und Einbautermin</strong>
+<p>Nach Erhalt der Auftragsbestätigung des Herstellers teilen wir Ihnen die voraussichtliche Lieferwoche mit. Bei vereinbarter Direktanlieferung stimmt der Hersteller den genauen Liefertermin mit Ihnen ab. Dazu geben wir ihm Ihre Telefonnummer weiter, soweit sie für die Terminabstimmung oder Anlieferung benötigt wird. Ist eine Montage vereinbart, besprechen wir den Einbautermin mit Ihnen, sobald die Lieferwoche bekannt ist oder die Ware da ist.</p>
+</li>
+</ol>
+</section>
 <div class="pdf-view"><canvas id="signed-canvas" aria-label="Vorschau der unterschriebenen Seite"></canvas></div>
 <a id="preview-pdf" class="secondary wide" target="_blank" rel="noopener" hidden>Vollständige PDF mit Erklärung prüfen ↗</a>
 <section id="checkout-summary" class="checkout-summary" hidden></section>
