@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261115-faelligkeit-1">
+<link rel="stylesheet" href="style.css?v=20261118-kalender-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261115-faelligkeit-1"></script>
+<script type="module" src="app.mjs?v=20261118-kalender-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -153,11 +153,11 @@
         <h4>Zahlung und Termine</h4>
         <label data-order="advance" class="check"><input type="checkbox" name="advance_received"> Vorauszahlung eingegangen</label>
         <div class="order-status-grid">
-          <label>Beim Hersteller bestellt am<input type="text" inputmode="numeric" name="ordered_on" placeholder="TT.MM.JJJJ" autocomplete="off"></label>
+          <label>Beim Hersteller bestellt am<input type="date" name="ordered_on"></label>
           <label>Voraussichtliche Lieferwoche (KW/Jahr)<input type="text" name="delivery_week" placeholder="KW/JJJJ" autocomplete="off"></label>
-          <label>Liefertermin<input type="text" inputmode="numeric" name="delivery_date" placeholder="TT.MM.JJJJ" autocomplete="off"></label>
-          <label>Montagetermin<input type="text" inputmode="numeric" name="installation_date" placeholder="TT.MM.JJJJ" autocomplete="off"></label>
-          <label>Montageuhrzeit<input type="text" inputmode="numeric" name="installation_time" placeholder="HH:MM" autocomplete="off"></label>
+          <label>Liefertermin<input type="date" name="delivery_date"></label>
+          <label>Montagetermin<input type="date" name="installation_date"></label>
+          <label>Montageuhrzeit<input type="time" name="installation_time"></label>
         </div>
         <button type="submit" class="secondary">Auftragsstatus speichern</button>
         <p data-order="save-feedback" class="hint order-status-save-feedback" role="status"></p>
@@ -177,7 +177,7 @@
             <option value="insurer">Versicherung</option>
           </select></label>
         </div>
-        <label>Fällig am (optional)<input type="text" name="due_date" inputmode="numeric" placeholder="TT.MM.JJJJ" autocomplete="off"></label>
+        <label>Fällig am (optional)<input type="date" name="due_date" autocomplete="off"></label>
         <label>Rechnungsdatei<input type="file" name="invoice" accept=".pdf,.xml" required></label>
         <button type="submit" class="secondary">Rechnung bereitstellen</button>
         <p data-order="invoice-feedback" class="hint invoice-feedback" role="status"></p>

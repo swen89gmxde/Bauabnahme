@@ -42,7 +42,7 @@ function enteredDate(input, label) {
   const iso = german ? german[3] + '-' + german[2].padStart(2, '0') + '-' + german[1].padStart(2, '0') : value;
   const date = new Date(iso + 'T00:00:00Z');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || iso.startsWith('0000-') || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) {
-    throw Error('Bitte für „' + label + '“ ein gültiges Datum im Format TT.MM.JJJJ eingeben.');
+    throw Error('Bitte für „' + label + '“ ein gültiges Datum auswählen oder im Format TT.MM.JJJJ eingeben.');
   }
   return iso;
 }
@@ -50,10 +50,10 @@ function enteredDate(input, label) {
 function enteredWeek(input) {
   const value = input.trim();
   if (!value) return '';
-  const german = /^(?:KW\s*)?(\d{1,2})\s*\/\s*([1-9]\d{3})$/i.exec(value);
+  const german = /^(?:KW\s*)?(\d{1,2})(?:\s*\/\s*)?([1-9]\d{3})$/i.exec(value);
   const iso = german ? german[2] + '-W' + german[1].padStart(2, '0') : value;
   if (!/^[1-9]\d{3}-W(0[1-9]|[1-4]\d|5[0-3])$/.test(iso)) {
-    throw Error('Bitte die Lieferwoche mit Jahr eingeben, zum Beispiel 50/2026.');
+    throw Error('Bitte die Lieferwoche mit Jahr eingeben, zum Beispiel 50/2026 oder 502026.');
   }
   return iso;
 }
@@ -178,11 +178,10 @@ export function mountOrderStatusEditor(card, record, api) {
       const form = appendText(details, 'form', '');
       const dueLabel = appendText(form, 'label', 'Fällig am');
       const input = appendText(dueLabel, 'input', '');
-      input.type = 'text';
-      input.inputMode = 'numeric';
+      input.type = 'date';
       input.autocomplete = 'off';
-      input.placeholder = 'TT.MM.JJJJ';
-      input.value = file.due_date ? formatDate(file.due_date) : '';
+      const savedDueDate = file.due_date || '';
+      input.value = savedDueDate && input.type !== 'date' ? formatDate(savedDueDate) : savedDueDate;
       const save = appendText(form, 'button', 'Fälligkeit speichern', 'secondary');
       save.type = 'submit';
       form.onsubmit = event => {
@@ -195,7 +194,7 @@ export function mountOrderStatusEditor(card, record, api) {
           return;
         }
         run('order-status-invoice-due', {
-          id: record.id, file_id: file.id, due_date: dueDate, previous_due_date: file.due_date || '',
+          id: record.id, file_id: file.id, due_date: dueDate, previous_due_date: savedDueDate,
         }, 'Fälligkeit gespeichert.', fileFeedback);
       };
     }
@@ -255,6 +254,15 @@ export function mountOrderStatusEditor(card, record, api) {
 
   editor.addEventListener('toggle', () => {
     if (editor.open) run('order-status-owner', { id: record.id });
+  });
+  editor.addEventListener('click', event => {
+    const input = event.target;
+    if (!input.matches('input[type="date"], input[type="time"]')) return;
+    try {
+      input.showPicker?.();
+    } catch {
+      // Let the browser open its picker normally when showPicker is unavailable.
+    }
   });
   $('copy-message').onclick = () => copyText('customer', true);
   $('copy-link').onclick = () => copyText('customer', false);

@@ -60,6 +60,10 @@ textarea,select{font:inherit;width:100%;padding:14px;border:2px solid #93a4aa;bo
   box-sizing: border-box;
   min-width: 0;
 }
+.order-status-editor input:is([type=date], [type=time]) {
+  font-size: 1rem;
+  cursor: pointer;
+}
 .order-status-editor form[data-order="schedule"] input:not([type=checkbox]) {
   display: block;
   width: 100%;
