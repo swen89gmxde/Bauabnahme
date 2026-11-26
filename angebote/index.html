@@ -6,7 +6,7 @@
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
 <link rel="stylesheet" href="style.css?v=20261118-kalender-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261118-kalender-1"></script>
+<script type="module" src="app.mjs?v=20261126-bearbeiten-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -99,7 +99,9 @@
 <div id="login-area"><label for="password">Zugang für Sichtwerk</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary wide">Anmelden</button></div>
 <div id="prepare-area" hidden>
 <a id="change-password" class="secondary wide" href="server/password.php" hidden>Passwort ändern</a>
+<section id="edit-offer-note" class="notice" hidden><h2>Vorgang bearbeiten</h2><p id="edit-offer-description"></p><button id="cancel-offer-edit" type="button" class="secondary">Bearbeitung abbrechen</button></section>
 <label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">
+<div id="current-offer-file" class="notice" hidden><b id="current-offer-name"></b><p>Zum Austauschen oben eine neue Angebots-PDF auswählen.</p><button id="remove-offer-file" type="button" class="secondary">Angebot aus Vorbereitung entfernen</button></div>
 <p id="offer-import-status" class="notice" role="status">Zuerst die Angebots-PDF auswählen. Erkennbare Angaben werden direkt daraus übernommen. Anschließend nur prüfen und fehlende Angaben ergänzen.</p>
 <div id="offer-fields" hidden>
 <div class="owner-details"><h2>Kunde und Kommission</h2><label for="customer-id">Kundennummer / eindeutige Kundenkennung</label><input id="customer-id" maxlength="100" required placeholder="z. B. K-10023"><label for="customer-name">Kundenname</label><input id="customer-name" maxlength="160" required placeholder="Vorname und Nachname / Firma"><label for="commission-id">Kommission / Angebotsnummer</label><input id="commission-id" maxlength="100" required placeholder="z. B. AG-2026-10-0162"><p class="hint">Der Kunde öffnet sein Angebot direkt über den persönlichen Link. Bitte nur dem vorgesehenen Kunden senden.</p></div>

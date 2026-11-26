@@ -1,3 +1,13 @@
+# Vorgänge bearbeiten – Stand 26.11.2026
+
+Unter **Meine Vorgänge anzeigen → Vorgang bearbeiten** lassen sich die zuletzt freigegebenen, noch nicht vom Kunden unterschriebenen Vorgänge laden. Das Originalangebot und kundenspezifische Anlagen werden nach Inhaber-Anmeldung mit Prüfsummen aus der geschützten Ablage geladen. Angebot austauschen: neue Lexware-PDF auswählen. Anlagen einzeln **Ersetzen**, **Entfernen** oder weitere Dateien hinzufügen. Ein entferntes Originalangebot benötigt vor dem Speichern eine neue Angebots-PDF. Kunde und Kommission bleiben zugeordnet; die Unterschriftsplatzierung muss erneut geprüft werden.
+
+**Änderungen als neue Freigabe speichern** erstellt ein neues, unabhängiges Paket mit aktuellen Vertragsvorlagen und neuem zufälligem Link. Erst nach erfolgreichem Speichern wird der bisherige Link gesperrt. Entfernte Dateien gehören nicht mehr zur neuen Freigabe. Historische Pakete bleiben geschützt erhalten; diese Funktion ist keine endgültige Löschung ihrer Dateien. **Bearbeitung abbrechen** verwirft nur die Vorbereitung. Kunden- und Kommissionskennung werden während dieser Bearbeitung festgehalten.
+
+Der Server verhindert das Überschreiben einer zwischenzeitlich ersetzten, unterschriebenen oder zur Archivierung eingereichten Fassung. Nur die jüngste offene oder administrativ gesperrte Freigabe ist bearbeitbar. Bei Versicherungsfällen beginnt eine geänderte Freigabe wieder mit einer neuen Versichererzusage; eine frühere signierte Zusage wird nicht übernommen oder geändert. Signierte und archivierte Vertragsunterlagen sind von der Bearbeitung ausgeschlossen. Der Papierkorb mit gesonderter endgültiger Löschung bleibt unabhängig davon bestehen.
+
+Prüfung: `node angebote-tests/backend.mjs` enthält die Integrationstests aus `edit-records.mjs`; außerdem PDF-, Versicherungs-, Anlagen- und Vertragsunterlagenprüfungen. Die Browserprüfung verwendet ausschließlich eine lokale Testumgebung mit Musterdateien. AGB, Widerrufsunterlagen, Lexware-Texte, Montage- und Zahlungsbedingungen ändern sich durch diese Verwaltungsfunktion nicht.
+
 # Versicherungsablauf und Papierkorb seit 09.11.2026
 
 Versicherungsablauf und Löschfunktion - Stand 09.11.2026

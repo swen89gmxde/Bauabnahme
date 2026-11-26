@@ -40,13 +40,14 @@ export function customerTokenFromFragment(hash) {
 }
 
 // Owner-only controls. Creating controls never mutates a record.
-export function mountRecordActions(card,record,{api,reload,message,showLink,document}){
+export function mountRecordActions(card,record,{api,reload,message,showLink,edit,document}){
  const button=(label,action,danger=false)=>{const b=document.createElement('button');b.type='button';b.className='secondary'+(danger?' danger':'');b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await action();}catch(e){message(e.message);}finally{b.disabled=false;}};card.append(b);};
  if(record.state==='trashed'){
   const p=document.createElement('p');p.className='hint';p.textContent='Im Papierkorb. Die Dateien bleiben geschützt erhalten; öffentliche Zugänge sind gesperrt.';card.append(p);
   button('Vorgang wiederherstellen',async()=>{await api('record-restore',{method:'POST',body:{id:record.id,confirmed:true}});message('Vorgang wiederhergestellt. Alte Zugangslinks bleiben gesperrt.');reload();});
   button('Endgültig aus STRATO löschen',()=>confirmRemoval(record,'purge',{api,reload,message,document}),true);return;
  }
+ if(['active','insurance_pending','revoked'].includes(record.state)&&!record.completed_at&&edit)button('Vorgang bearbeiten',()=>edit(record));
  if(record.insurance){
   const p=document.createElement('p');p.className='notice';const i=record.insurance;p.textContent=i.state==='accepted'?'Versichererzusage bestätigt. Kunde nimmt das Angebot anschließend selbst an.':'Zuerst Versichererzusage einholen. Der Kunde hat noch keinen Auftrag erteilt.';card.append(p);
   if(record.state==='insurance_pending')button('Neuen Versicherungslink erstellen',async()=>showLink(await api('insurance-link',{method:'POST',body:{id:record.id}})));

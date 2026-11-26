@@ -39,6 +39,25 @@ function releasePortal(mixed $h): void { if(is_resource($h)){flock($h,LOCK_UN);f
 function tokenId(string $token): string { if(!preg_match('/^[a-f0-9]{64}$/D',$token))abortPortal('Dieser Angebotslink ist ungültig.',404,'invalid_link');return hash('sha256',$token); }
 function recordPath(string $id): string { global $dataDir; if(!preg_match('/^[a-f0-9]{64}$/D',$id))abortPortal('Der Vorgang wurde nicht gefunden.',404);return $dataDir.'/records/'.$id; }
 function recordById(string $id): array { $r=readJson(recordPath($id).'/record.json');if(!$r)abortPortal('Dieser Angebotslink ist nicht mehr gültig.',404,'invalid_link');return $r; }
+function requireEditableOffer(array $r): void {
+ global $dataDir;
+ if(!in_array($r['state']??'', ['active','insurance_pending','revoked'],true)||!empty($r['completion'])||!empty($r['archive_test']))abortPortal('Dieser Vorgang kann nicht bearbeitet werden. Unterschriebene, ersetzte und archivierte Unterlagen bleiben unverändert.',409,'edit_closed');
+ $index=readJson($dataDir.'/scopes/'.$r['scope'].'.json');
+ if(($index['active_id']??'')!==$r['id'])abortPortal('Es gibt bereits eine neuere Freigabe. Bitte die Vorgangsliste aktualisieren.',409,'edit_stale');
+}
+function offerEditFingerprint(array $r): string {return hash('sha256',json_encode($r,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));}
+function editableOfferFile(array $r,string $asset): array {
+ requireEditableOffer($r);
+ if($asset==='original')$f=['name'=>$r['filename'],'mime'=>'application/pdf','sha256'=>$r['sha256'],'stored'=>'original.pdf'];
+ else { $f=null;foreach($r['attachments'] as $entry)if(in_array($entry['role'],['anlage','abtretung'],true)&&hash_equals($entry['id'],$asset)){$f=$entry+['stored'=>'asset-'.$entry['id']];break;}if(!$f)abortPortal('Diese Datei gehört nicht zu den bearbeitbaren Anlagen dieses Vorgangs.',404); }
+ $path=recordPath($r['id']).'/'.$f['stored'];
+ if(is_link($path)||!is_file($path)||isset($f['size'])&&filesize($path)!==$f['size']||!hash_equals($f['sha256'],hash_file('sha256',$path)))abortPortal('Die gespeicherte Datei konnte nicht geprüft werden. Bitte die Originaldatei erneut bereitstellen.',409,'edit_file_invalid');
+ return $f+['path'=>$path,'size'=>filesize($path)];
+}
+function editableOffer(array $r): array {
+ requireEditableOffer($r);$original=editableOfferFile($r,'original');
+ return array_intersect_key($r,array_flip(['id','title','filename','layout','sha256','pageCount','customer_id','customer_name','commission','revision','checkout']))+['fingerprint'=>offerEditFingerprint($r),'original_size'=>$original['size'],'insurance'=>!empty($r['insurance']),'attachments'=>publicFiles(array_values(array_filter($r['attachments'],fn($f)=>in_array($f['role'],['anlage','abtretung'],true))))];
+}
 function lockRecordByToken(string $token,int $mode=LOCK_EX): array { $id=recordIdForCustomerToken($token);$r=recordById($id);lockPortal('scope:'.$r['scope'],$mode);lockPortal('record:'.$id,$mode);$r=recordById($id);if(!empty($r['insurance'])&&!hash_equals((string)($r['insurance']['customer_token_hash']??''),tokenId($token)))abortPortal('Dieser Kundenlink ist gesperrt.',410,'closed_link');return [$id,$r]; }
 function activeRecord(array $r): void { global $dataDir;if(!empty($r['access_revoked']))abortPortal('Dieser Zugang ist gesperrt.',410,'closed_link');requireInsuranceCustomer($r); if(!in_array($r['state']??'', ['active','archive_pending'],true))abortPortal('Dieser Angebotslink ist bereits abgeschlossen oder gesperrt. Bitte wenden Sie sich an Swen Neubauer.',410,'closed_link');if($r['state']!=='archive_pending'&&($r['expires']??0)<time())abortPortal('Dieser Angebotslink ist abgelaufen. Bitte Swen Neubauer um einen neuen Link bitten.',410,'expired_link');$index=readJson($dataDir.'/scopes/'.$r['scope'].'.json');if(($index['active_id']??'')!==$r['id'])abortPortal('Für dieses Angebot gibt es einen neuen Link. Dieser alte Link ist gesperrt.',410,'replaced_link'); }
 function grantCustomer(string $id): void { if(empty($_SESSION['customer'][$id])||($_SESSION['customer'][$id]['until']??0)<time())$_SESSION['customer'][$id]=['until'=>time()+7200,'proof'=>bin2hex(random_bytes(24))]; }
@@ -75,11 +94,17 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  $lh=lockPortal('legal',LOCK_SH);$legal=legalMasters();if($archiveTest)requireArchiveTestLegal($legal);foreach($legalRoles as $role)if(empty($legal['documents'][$role]))abortPortal('Bitte zuerst aktuelle AGB und Widerrufsunterlagen in den Vertragsvorlagen hinterlegen.',409,'missing_legal');
  if($checkout){$mailTotal=$total;foreach($legalRoles as $role)$mailTotal+=$legal['documents'][$role]['size'];$max=($checkout['copy_delivery']??'email')==='email'?10:60;if($mailTotal>$max*1024*1024)abortPortal('Angebot und sämtliche Anlagen dürfen für diesen Versandweg zusammen höchstens '.$max.' MB groß sein.');}
  requireNewArchive();
- $token=bin2hex(random_bytes(32));$id=tokenId($token);$scope=hash('sha256',$customer."\0".$commission);directory($dataDir.'/records');directory($dataDir.'/scopes');directory($dataDir.'/staging');$stage=$dataDir.'/staging/'.$id;directory($stage);$attachments=[];
+ $token=bin2hex(random_bytes(32));$id=tokenId($token);$scope=hash('sha256',$customer."\0".$commission);directory($dataDir.'/records');directory($dataDir.'/scopes');directory($dataDir.'/staging');$stage=$dataDir.'/staging/'.$id;directory($stage);register_shutdown_function(static function()use($stage){if(is_dir($stage)&&!is_link($stage)){foreach(glob($stage.'/*')?:[] as $tmp)if(is_file($tmp)&&!is_link($tmp))@unlink($tmp);@rmdir($stage);}});$attachments=[];
  if(!copy($f['tmp'],$stage.'/original.pdf'))abortPortal('Das Angebot konnte nicht gespeichert werden.',503);
  foreach($legalRoles as $role){$l=$legal['documents'][$role];$aid=bin2hex(random_bytes(16));if(!copy($dataDir.'/legal/'.$l['stored'],$stage.'/asset-'.$aid))abortPortal('Eine Vertragsvorlage konnte nicht übernommen werden.',503);$attachments[]=array_intersect_key($l,array_flip(['name','mime','size','sha256','role','version']))+['id'=>$aid];}
  foreach($files as $fileIndex=>$x){$aid=bin2hex(random_bytes(16));if(!copy($x['tmp'],$stage.'/asset-'.$aid))abortPortal('Ein Anhang konnte nicht gespeichert werden.',503);$attachments[]=array_intersect_key($x,array_flip(['name','mime','size','sha256']))+['id'=>$aid,'role'=>$insurance&&$fileIndex===$insurance['assignment_index']?'abtretung':'anlage','version'=>'kundenspezifisch'];}
- releasePortal($lh);$scopeLock=lockPortal('scope:'.$scope);$index=readJson($dataDir.'/scopes/'.$scope.'.json');$oldId=$index['active_id']??null;if($oldId&&(recordById($oldId)['state']??'')==='archive_pending')abortPortal('Diese Kommission wartet noch auf die Archivierung. Bitte zuerst die Archivierung abschließen.',409,'archive_pending');$revision=($index['revision']??0)+1;
+ releasePortal($lh);$scopeLock=lockPortal('scope:'.$scope);$index=readJson($dataDir.'/scopes/'.$scope.'.json');$oldId=$index['active_id']??null;if($oldId&&(recordById($oldId)['state']??'')==='archive_pending')abortPortal('Diese Kommission wartet noch auf die Archivierung. Bitte zuerst die Archivierung abschließen.',409,'archive_pending');if(isset($meta['edit_source'])){
+  $source=$meta['edit_source'];if(!is_array($source)||!is_string($source['id']??null)||!is_string($source['fingerprint']??null))abortPortal('Die Bearbeitungsquelle ist ungültig.',400);
+  if($oldId!==$source['id'])abortPortal('Der Vorgang wurde inzwischen ersetzt. Bitte die Liste aktualisieren.',409,'edit_stale');
+  $previous=recordById($source['id']);requireEditableOffer($previous);
+  if(!hash_equals($scope,$previous['scope'])||!hash_equals(offerEditFingerprint($previous),$source['fingerprint']))abortPortal('Der Vorgang wurde inzwischen geändert. Bitte erneut zum Bearbeiten öffnen.',409,'edit_stale');
+ }
+ $revision=($index['revision']??0)+1;
  // New releases use the 256-bit personal link only. Keep legacy PIN records unchanged.
  $requireCode=false;$code=null;
  $r=['schema'=>2,'archive_mode'=>newArchiveMode(),'archive_provider'=>newArchiveProvider(),'id'=>$id,'scope'=>$scope,'customer_id'=>$customer,'customer_name'=>$customerName,'commission'=>$commission,'revision'=>$revision,'title'=>$title,'filename'=>$f['name'],'layout'=>$safe,'sha256'=>$f['sha256'],'pageCount'=>$count,'state'=>'active','created_at'=>gmdate(DATE_ATOM),'created'=>time(),'expires'=>time()+max(1,min(30,(int)($config['lifetime_days']??14)))*86400,'require_code'=>$requireCode,'code_hash'=>$requireCode?password_hash($code,PASSWORD_DEFAULT):null,'legal_generation'=>$legal['generation'],'attachments'=>$attachments];
@@ -87,6 +112,7 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  $r['consent']=legalConsentDefinition($archiveTest,$business);
  if($checkout){$r['checkout']=$checkout;if(isset($checkout['copy_delivery'])&&($copyConsent=copyConsentDefinition($checkout['copy_delivery'])))$r['copy_consent']=$copyConsent;}
  if($archiveTest)$r['archive_test']=true;
+ if(isset($meta['edit_source']))$r['supersedes']=$meta['edit_source']['id'];
  if($insurance){$insuranceToken=bin2hex(random_bytes(32));$r['state']='insurance_pending';$r['archive_mode']='full_package';$r['insurance']=['version'=>1,'state'=>'pending','definition'=>insuranceDefinition(),'token_hash'=>tokenId($insuranceToken),'customer_token_hash'=>null,'base_attachments'=>publicFiles($attachments)];}
  saveJson($stage.'/record.json',$r);if(!rename($stage,recordPath($id)))abortPortal('Das Angebot konnte nicht freigegeben werden.',503);saveJson($dataDir.'/scopes/'.$scope.'.json',['active_id'=>$id,'revision'=>$revision]);if($oldId&&$oldId!==$id){lockPortal('record:'.$oldId);$old=recordById($oldId);if(in_array($old['state'],['active','insurance_pending'],true)){$old['state']='replaced';$old['closed_at']=gmdate(DATE_ATOM);saveJson(recordPath($oldId).'/record.json',$old);}}
  if($insurance){saveJson(workflowLinkIndex('insurance',tokenId($insuranceToken)),['id'=>$id]);return ['token'=>null,'insurance_token'=>$insuranceToken,'id'=>$id,'code'=>null,'expires'=>$r['expires'],'revision'=>$revision,'attachments'=>publicFiles($attachments)];}
