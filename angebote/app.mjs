@@ -1,4 +1,5 @@
-import {mountRecordActions,workflowURL,customerTokenFromFragment} from './records.mjs?v=20261126-bearbeiten-1';
+import {saveOfferWithRecovery} from './upload-recovery.mjs?v=20261126-links-2';
+import {mountRecordActions,workflowURL,customerTokenFromFragment} from './records.mjs?v=20261126-links-2';
 import {mountOrderStatusEditor} from './order-status.mjs?v=20261118-kalender-1';
 import {renderInsuranceSummary} from './insurance.mjs?v=20261110-eigenanteil-1';
 import {checkoutFromPDF} from './offer-checkout.mjs?v=20261109-versicherung-1';
@@ -16,7 +17,7 @@ let bytes,offer,pdf,pageNumber=1,pad,signedFile,signedURL,originalURL,csrf='',se
 const visited=new Set();let preparedId='',recordsTrash=false;
 let signatureSubmitted=false,archiveTimer=null,archivePolls=0;
 let completionLocked=false,completionRequest="",signingData=null;const attachmentURLs=[];
-let editingOffer=null,editLoading=false;
+let editingOffer=null,editLoading=false,publishAttempt=null;
 let ownerFile=null,ownerAttachments=[],customerAttachmentFiles=new Map(),ownerImportSerial=0,ownerCanPublish=false,ownerMontagePolicy=null,ownerSourcePages=null,ownerSourceSHA='';
 const signatureTouch=protectSignatureTouch($('signature'),{onIdle:()=>requestAnimationFrame(resizePad),onCancel:()=>{if(pad){pad.off();pad.on();invalidateSigned();}}});
 function message(text=''){ $('status').hidden=!text;$('status').textContent=text; }
@@ -26,10 +27,14 @@ async function openPDF(data){return pdfjs.getDocument({data:data.slice(),isEvalS
 async function hash(data){if(!crypto.subtle)throw Error('Bitte diese Seite über den sicheren HTTPS-Link öffnen.');return [...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(v=>v.toString(16).padStart(2,'0')).join('');}
 async function api(action,{method='GET',body,token,binary=false}={}){
  const headers={};if(csrf)headers['X-CSRF-Token']=csrf;if(token)headers['X-Offer-Token']=token;if(body&&!(body instanceof FormData))headers['Content-Type']='application/json';
- const r=await fetch(`server/api.php?action=${action}`,{method,headers,body:body instanceof FormData?body:body?JSON.stringify(body):undefined,cache:'no-store',credentials:'same-origin'}),ct=r.headers.get('content-type')||'';
+ let r;
+ try{r=await fetch(`server/api.php?action=${action}`,{method,headers,body:body instanceof FormData?body:body?JSON.stringify(body):undefined,cache:'no-store',credentials:'same-origin'});}
+ catch(cause){const e=Error('Die Verbindung zum Portal wurde unterbrochen. Bitte die Internetverbindung und den gespeicherten Stand unter „Meine Vorgänge“ prüfen.');e.code='network_error';e.cause=cause;throw e;}
+ const ct=r.headers.get('content-type')||'';
  if(r.ok&&binary&&!ct.includes('application/json'))return new Uint8Array(await r.arrayBuffer());
- if(!ct.includes('application/json'))throw Error('Die geschützte Angebotsablage ist hier noch nicht eingerichtet.');
- const data=await r.json();if(!r.ok){const e=Error(data.error||'Der Vorgang konnte nicht ausgeführt werden.');e.code=data.code;throw e;}return data;
+ if(!ct.includes('application/json')){const e=Error(r.status===413?'Die Dateien überschreiten die Uploadgrenze des Servers. Bitte das Dateipaket verkleinern.':'Der Server hat keine lesbare Bestätigung geliefert (HTTP '+r.status+'). Bitte den Vorgangsstatus prüfen.');e.code='invalid_response';throw e;}
+ let data;try{data=await r.json();}catch{const e=Error('Die Serverbestätigung ist unvollständig. Bitte den Vorgangsstatus prüfen.');e.code='invalid_response';throw e;}
+ if(!r.ok){const e=Error(data.error||'Der Vorgang konnte nicht ausgeführt werden.');e.code=data.code;throw e;}return data;
 }
 async function renderPage(doc,n,target,width){const p=await doc.getPage(n),base=p.getViewport({scale:1}),scale=Math.min(2.3,(width||target.parentElement.clientWidth||700)/base.width*Math.max(1,Math.min(devicePixelRatio||1,2)));const viewport=p.getViewport({scale}),temp=document.createElement('canvas');temp.width=Math.ceil(viewport.width);temp.height=Math.ceil(viewport.height);await p.render({canvasContext:temp.getContext('2d'),viewport,annotationMode:pdfjs.AnnotationMode.ENABLE}).promise;target.width=temp.width;target.height=temp.height;target.getContext('2d').drawImage(temp,0,0);return {p,base,scale,temp};}
 async function renderOffer(){const id=++renderSerial;$('prev-page').disabled=pageNumber===1;$('next-page').disabled=pageNumber===pdf.numPages;$('page-label').textContent=`Seite ${pageNumber} von ${pdf.numPages}`;const temp=document.createElement('canvas');temp.width=1;const data=await renderPage(pdf,pageNumber,temp,$('offer-canvas').parentElement.clientWidth);if(id!==renderSerial)return;const c=$('offer-canvas');c.width=data.temp.width;c.height=data.temp.height;c.getContext('2d').drawImage(data.temp,0,0);visited.add(pageNumber);}
@@ -86,7 +91,7 @@ function ownerCheckout(){return checkoutFromPDF(ownerSourcePages,ownerSourceSHA,
 $('customer-kind').onchange=()=>{$('placement-confirm').checked=false;$('offer-link-result').hidden=true;};
 async function scanOffer(doc){const pages=[];for(let n=1;n<=doc.numPages;n++){const p=await doc.getPage(n),v=p.getViewport({scale:1}),text=await p.getTextContent();pages.push({width:v.width,height:v.height,items:text.items.filter(t=>t.str?.trim()).map(t=>{const x=pdfjs.Util.transform(v.transform,t.transform);return {text:t.str,x:x[4],y:x[5]-Math.abs(x[3]),w:t.width,h:Math.abs(x[3]),font:t.fontName};})});}return {layout:detectLayout(pages),imported:extractOffer(pages),pages};}
 async function prepareFile(file){
- message();if(!file)return;const retained=editingOffer?{files:[...ownerAttachments],name:$('customer-name').value,customer:$('customer-id').value,commission:$('commission-id').value,delivery:$('checkout-copy-delivery').value,email:$('checkout-email').value,insurance:$('insurance-case').checked}:null;const seq=++ownerImportSerial;ownerFile=null;ownerSourcePages=null;ownerSourceSHA='';ownerAttachments=retained?.files||[];$('current-offer-file').hidden=true;resetOfferFields(document);$('extra-files').value='';$('prepared-title').value='';$('placement').hidden=true;$('offer-link-result').hidden=true;$('placement-confirm').checked=false;$('publish-offer').disabled=true;$('offer-fields').hidden=true;$('offer-import-status').textContent='Die Angebots-PDF wird ausgelesen …';renderAttachmentSelection();
+ message();if(!file)return;const retained=editingOffer?{files:[...ownerAttachments],name:$('customer-name').value,customer:$('customer-id').value,commission:$('commission-id').value,delivery:$('checkout-copy-delivery').value,email:$('checkout-email').value,insurance:$('insurance-case').checked}:null;publishAttempt=null;const seq=++ownerImportSerial;ownerFile=null;ownerSourcePages=null;ownerSourceSHA='';ownerAttachments=retained?.files||[];$('current-offer-file').hidden=true;resetOfferFields(document);$('extra-files').value='';$('prepared-title').value='';$('placement').hidden=true;$('offer-link-result').hidden=true;$('placement-confirm').checked=false;$('publish-offer').disabled=true;$('offer-fields').hidden=true;$('offer-import-status').textContent='Die Angebots-PDF wird ausgelesen …';renderAttachmentSelection();
  let parsed;
  try{
   if(file.size>20*1024*1024)throw Error('Bitte eine PDF mit höchstens 20 MB auswählen.');const data=new Uint8Array(await file.arrayBuffer());if(seq!==ownerImportSerial)return;
@@ -148,7 +153,7 @@ function syncInsurancePreparation(){
  select.required=on;$('insurance-options').hidden=!on;$('publish-offer').textContent=editingOffer?'Änderungen als neue Freigabe speichern':on?'3. Versicherungslink erstellen':'3. Kundenlink erstellen';
 }
 $('insurance-case').onchange=()=>{$('offer-link-result').hidden=true;syncInsurancePreparation();};
-function showWorkflowLink(result,customerName){const link=workflowURL(result,location,customerName);preparedId=result.id;preparedToken=result.role==='customer'?result.token:'';$('offer-link').value=link;$('offer-link-label').textContent=result.role==='insurance'?'Diesen Link an die Versicherung senden':'Diesen Link an den Kunden senden';$('offer-link-result').hidden=false;message(result.role==='insurance'?'Versicherungslink erstellt. Nach bestätigter Zusage unter Meine Vorgänge den Kundenlink erstellen.':'Kundenlink erstellt. Er enthält die unveränderte Versichererzusage und die Abtretung. Ein vorheriger Kundenlink dieses Vorgangs ist gesperrt.');$('offer-link-result').scrollIntoView({behavior:'smooth'});}
+function showWorkflowLink(result,customerName){const link=workflowURL(result,location,customerName);preparedId=result.id;preparedToken=result.role==='customer'?result.token:'';$('offer-link').value=link;$('offer-link-label').textContent=result.role==='insurance'?'Diesen Link an die Versicherung senden':'Diesen Link an den Kunden senden';$('offer-link-result').hidden=false;message(result.role==='insurance'?'Versicherungslink erstellt. Nach bestätigter Zusage unter Meine Vorgänge den Kundenlink erstellen.':'Kundenlink bereitgestellt. Er öffnet genau diese freigegebenen Unterlagen. Ein vorheriger Kundenlink dieses Vorgangs ist gesperrt.');$('offer-link-result').scrollIntoView({behavior:'smooth'});}
 function renderAttachmentSelection(){
  const list=$('extra-file-list');list.replaceChildren();const total=ownerAttachments.reduce((sum,f)=>sum+f.size,0),size=total<1024*1024?Math.ceil(total/1024)+' KB':(total/1024/1024).toLocaleString('de-DE',{maximumFractionDigits:1})+' MB';
  syncInsurancePreparation();$('extra-file-summary').textContent=ownerAttachments.length?`${ownerAttachments.length} von 12 Anlagen ausgewählt · ${size}`:'Noch keine zusätzlichen Unterlagen ausgewählt.';
@@ -212,7 +217,7 @@ $('publish-offer').onclick=async()=>{
   const customerName=$('customer-name').value.trim();
   validateAttachments(ownerAttachments,ownerFile.size);
   form.append('pdf',ownerFile);
-  form.append('metadata',JSON.stringify({
+  const metadata={
    title:$('prepared-title').value||ownerTitle,
    ...(editingOffer?{edit_source:{id:editingOffer.id,fingerprint:editingOffer.fingerprint}}:{}),
    layout,
@@ -222,9 +227,13 @@ $('publish-offer').onclick=async()=>{
    commission:$('commission-id').value.trim(),
    checkout,
    ...(insurance?{insurance:{enabled:true,assignment_index:Number($('assignment-attachment').value)}}:{})
-  }));
+  };
+  const fileHashes=await Promise.all(ownerAttachments.map(async file=>[file.name,await hash(await file.arrayBuffer())]));
+  const requestKey=await hash(new TextEncoder().encode(JSON.stringify([metadata,ownerSourceSHA,fileHashes])));
+  if(publishAttempt?.key!==requestKey)publishAttempt={key:requestKey,id:[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('')};
+  form.append('metadata',JSON.stringify({...metadata,create_request_id:publishAttempt.id}));
   for(const file of ownerAttachments)form.append('attachments[]',file);
-  const result=await api('create',{method:'POST',body:form});
+  const result=await saveOfferWithRecovery(api,form,publishAttempt.id);
   endOfferEditing();$('load-records').click();
   preparedId=result.id;
   if(result.insurance_token){

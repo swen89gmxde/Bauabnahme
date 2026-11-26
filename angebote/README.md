@@ -1,3 +1,13 @@
+# Kundenlinks und Speicherbestätigung – Stand 26.11.2026
+
+Die passwortgeschützte Vorgangsliste zeigt Kunden- und Versicherungslinks mit einem Kopierbutton dauerhaft an. Die geheimen Links werden in einer gesonderten privaten Datei außerhalb des Webverzeichnisses gespeichert; öffentliche Angebotsdaten, Vertragskopien und Paketexporte enthalten diese Datei nicht. Gesperrte, abgelaufene oder ersetzte Links sind gekennzeichnet und nicht über den Kopierbutton versendbar. Auch nach einem Neuladen bleibt der Link derselbe.
+
+Bei älteren normalen offenen Freigaben wurde zuvor nur eine nicht umkehrbare Prüfsumme des Links gespeichert. „Kundenlink einmalig bereitstellen“ erzeugt nach ausdrücklicher Bestätigung einen neuen Zugang zu exakt demselben Paket; der bisherige Zugang wird ungültig. PDF, Anlagen, Freigabeversion und Ablaufdatum bleiben unverändert. Für Versicherungsfälle gelten weiterhin die getrennten Rollen und Bestätigungsschritte. Kein Link wird durch bloßes Anzeigen ersetzt.
+
+Neue Speicherversuche erhalten eine zufällige Kennung, die serverseitig an die vollständigen Angaben und Datei-Prüfsummen gebunden wird. Bei einer verlorenen oder unlesbaren Antwort fragt das Portal nur den geschützten Speicherstatus ab; es wiederholt den Upload nicht automatisch. Ein erneuter manueller Speicherversuch derselben unveränderten Vorbereitung liefert dieselbe Freigabe, statt eine zweite anzulegen. Geänderte Dateien dürfen dieselbe Kennung nicht wiederverwenden. Die dazugehörigen privaten Speicherbestätigungen werden bei einer ausdrücklich bestätigten endgültigen Vorgangslöschung mit entfernt.
+
+Prüfungen: `node angebote-tests/backend.mjs` enthält `links-recovery-cases.mjs`; `node angebote-tests/upload-recovery.mjs` prüft Antwortverluste und den Ersatzweg ohne automatischen zweiten Schreibzugriff. AGB, Widerruf, Lexware-Texte und eingefrorene Vertragsunterlagen bleiben durch diese Verwaltungsfunktionen unverändert.
+
 # Vorgänge bearbeiten – Stand 26.11.2026
 
 Unter **Meine Vorgänge anzeigen → Vorgang bearbeiten** lassen sich die zuletzt freigegebenen, noch nicht vom Kunden unterschriebenen Vorgänge laden. Das Originalangebot und kundenspezifische Anlagen werden nach Inhaber-Anmeldung mit Prüfsummen aus der geschützten Ablage geladen. Angebot austauschen: neue Lexware-PDF auswählen. Anlagen einzeln **Ersetzen**, **Entfernen** oder weitere Dateien hinzufügen. Ein entferntes Originalangebot benötigt vor dem Speichern eine neue Angebots-PDF. Kunde und Kommission bleiben zugeordnet; die Unterschriftsplatzierung muss erneut geprüft werden.

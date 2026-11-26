@@ -27,6 +27,8 @@ jobs:
         run: node --check angebote/checkout.mjs
       - name: Anlagenauswahl und Paketgrenzen pruefen
         run: node angebote-tests/attachments.mjs
+      - name: Verlorene Speicherantwort ohne zweiten Upload pruefen
+        run: node angebote-tests/upload-recovery.mjs
       - name: PDF-Ruecksendung und E-Mail-Ersatzweg pruefen
         run: node angebote-tests/return.mjs
       - name: Smartphone-Unterschrift und Scrollfreigabe pruefen

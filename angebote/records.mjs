@@ -47,6 +47,17 @@ export function mountRecordActions(card,record,{api,reload,message,showLink,edit
   button('Vorgang wiederherstellen',async()=>{await api('record-restore',{method:'POST',body:{id:record.id,confirmed:true}});message('Vorgang wiederhergestellt. Alte Zugangslinks bleiben gesperrt.');reload();});
   button('Endgültig aus STRATO löschen',()=>confirmRemoval(record,'purge',{api,reload,message,document}),true);return;
  }
+ for(const link of record.links||[]){
+  const label=link.role==='insurance'?'Versicherungslink':'Kundenlink';
+  if(link.token){
+   const box=document.createElement('section');box.className='record-link';const caption=document.createElement('label'),input=document.createElement('input'),copy=document.createElement('button');
+   caption.textContent=label+(link.active?'':' – gesperrt oder abgelaufen');input.type='text';input.readOnly=true;input.value=workflowURL({role:link.role,token:link.token},globalThis.location,link.role==='customer'?record.customer_name:undefined);input.setAttribute('aria-label',label+' für '+record.commission);caption.append(input);copy.type='button';copy.className='secondary';copy.textContent=label+' kopieren';copy.disabled=!link.active;
+   copy.onclick=async()=>{try{await globalThis.navigator.clipboard.writeText(input.value);message(label+' kopiert.');}catch{input.focus();input.select();message('Bitte den markierten Link kopieren.');}};box.append(caption,copy);card.append(box);
+  }else if(link.role==='customer'&&link.active&&!record.insurance){
+   const note=document.createElement('p');note.className='hint';note.textContent='Bei diesem älteren Vorgang wurde der Link bisher nicht abrufbar gespeichert. Einmalig neu bereitstellen; danach bleibt er hier kopierbar.';card.append(note);
+   button('Kundenlink einmalig bereitstellen',async()=>{if(!globalThis.confirm('Einen neuen Link für dieselben unveränderten Unterlagen bereitstellen? Der bisherige Kundenlink wird gesperrt.'))return;const result=await api('owner-customer-link',{method:'POST',body:{id:record.id,confirmed:true}});showLink(result,record.customer_name);reload();});
+  }
+ }
  if(['active','insurance_pending','revoked'].includes(record.state)&&!record.completed_at&&edit)button('Vorgang bearbeiten',()=>edit(record));
  if(record.insurance){
   const p=document.createElement('p');p.className='notice';const i=record.insurance;p.textContent=i.state==='accepted'?'Versichererzusage bestätigt. Kunde nimmt das Angebot anschließend selbst an.':'Zuerst Versichererzusage einholen. Der Kunde hat noch keinen Auftrag erteilt.';card.append(p);

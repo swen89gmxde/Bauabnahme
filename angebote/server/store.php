@@ -58,7 +58,46 @@ function editableOffer(array $r): array {
  requireEditableOffer($r);$original=editableOfferFile($r,'original');
  return array_intersect_key($r,array_flip(['id','title','filename','layout','sha256','pageCount','customer_id','customer_name','commission','revision','checkout']))+['fingerprint'=>offerEditFingerprint($r),'original_size'=>$original['size'],'insurance'=>!empty($r['insurance']),'attachments'=>publicFiles(array_values(array_filter($r['attachments'],fn($f)=>in_array($f['role'],['anlage','abtretung'],true))))];
 }
-function lockRecordByToken(string $token,int $mode=LOCK_EX): array { $id=recordIdForCustomerToken($token);$r=recordById($id);lockPortal('scope:'.$r['scope'],$mode);lockPortal('record:'.$id,$mode);$r=recordById($id);if(!empty($r['insurance'])&&!hash_equals((string)($r['insurance']['customer_token_hash']??''),tokenId($token)))abortPortal('Dieser Kundenlink ist gesperrt.',410,'closed_link');return [$id,$r]; }
+// Link secrets live only in the protected owner file, never in public manifests or exports.
+function saveOwnerLink(string $dir,string $role,string $token): void {
+ if(!in_array($role,['customer','insurance'],true))abortPortal('Ungültige Zugangsrolle.');
+ $path=$dir.'/owner-links.json';if(is_link($path))abortPortal('Die geschützte Linkablage ist nicht verfügbar.',503);
+ $links=readJson($path);$links[$role][tokenId($token)]=$token;saveJson($path,$links);
+}
+function ownerLinkHash(array $r,string $role): string {
+ if($role==='insurance')return (string)($r['insurance']['token_hash']??'');
+ return !empty($r['insurance'])?(string)($r['insurance']['customer_token_hash']??''):(string)($r['customer_token_hash']??$r['id']);
+}
+function ownerRecordLinks(array $r): array {
+ global $dataDir;$path=recordPath($r['id']).'/owner-links.json';$saved=is_link($path)?[]:readJson($path);$out=[];$scope=readJson($dataDir.'/scopes/'.$r['scope'].'.json');
+ foreach(!empty($r['insurance'])?['insurance','customer']:['customer'] as $role){
+  $hash=ownerLinkHash($r,$role);$token=$saved[$role][$hash]??null;
+  $active=empty($r['access_revoked'])&&($scope['active_id']??'')===$r['id']&&($r['expires']??0)>=time()&&($role==='insurance'?$r['state']==='insurance_pending'&&($r['insurance']['state']??'')==='pending':$r['state']==='active'&&(empty($r['insurance'])||($r['insurance']['state']??'')==='accepted'&&$hash!==''));
+  $out[]=['role'=>$role,'token'=>is_string($token)&&hash_equals($hash,tokenId($token))?$token:null,'active'=>$active];
+ }
+ return $out;
+}
+function ownerRestoreCustomerLink(string $id,array $input): array {
+ global $dataDir;$r=recordById($id);lockPortal('scope:'.$r['scope']);lockPortal('record:'.$id);$r=recordById($id);requireEditableOffer($r);
+ if(!empty($r['insurance'])||$r['state']!=='active'||!empty($r['access_revoked'])||($r['expires']??0)<time())abortPortal('Dieser Kundenlink kann nicht bereitgestellt werden. Bitte den Vorgangsstatus prüfen.',409);
+ foreach(ownerRecordLinks($r) as $link)if($link['role']==='customer'&&$link['token'])return ['id'=>$id,'role'=>'customer','token'=>$link['token'],'expires'=>$r['expires']];
+ if(($input['confirmed']??null)!==true)abortPortal('Bitte bestätigen: Der bisherige Link wird ersetzt und gesperrt.',400);
+ $token=bin2hex(random_bytes(32));$hash=tokenId($token);saveOwnerLink(recordPath($id),'customer',$token);saveJson(workflowLinkIndex('customer',$hash),['id'=>$id]);$r['customer_token_hash']=$hash;saveJson(recordPath($id).'/record.json',$r);
+ return ['id'=>$id,'role'=>'customer','token'=>$token,'expires'=>$r['expires']];
+}
+function createRequestPath(string $request): string {
+ global $dataDir;if(preg_match('/^[a-f0-9]{32}$/D',$request)!==1)abortPortal('Die Speicherkennung ist ungültig.',400);
+ directory($dataDir.'/create-requests');return $dataDir.'/create-requests/'.$request.'.json';
+}
+function savedCreateResult(string $request,?string $fingerprint=null): array {
+ $entry=readJson(createRequestPath($request));if(!$entry)abortPortal('Für diesen Speicherversuch liegt noch keine Bestätigung vor. Bitte denselben Speicherversuch erneut ausführen.',404,'create_not_found');
+ if($fingerprint!==null&&!hash_equals((string)($entry['fingerprint']??''),$fingerprint))abortPortal('Diese Speicherkennung wurde bereits für andere Dateien verwendet.',409,'create_request_mismatch');
+ $r=recordById((string)($entry['result']['id']??''));
+ if(($entry['state']??'')!=='saved')abortPortal('Der Speicherstatus ist noch unklar. Bitte die Vorgangsliste prüfen.',409,'create_pending');
+ $links=ownerRecordLinks($r);foreach($links as $link)if($link['active']&&$link['token']&&hash_equals($link['token'],(string)($entry['result']['insurance_token']??$entry['result']['token']??'')))return $entry['result']+['recovered'=>true];
+ abortPortal('Dieser Speicherversuch wurde bereits abgeschlossen. Bitte den aktuellen Stand in Meine Vorgänge öffnen.',409,'create_closed');
+}
+function lockRecordByToken(string $token,int $mode=LOCK_EX): array { $id=recordIdForCustomerToken($token);$r=recordById($id);lockPortal('scope:'.$r['scope'],$mode);lockPortal('record:'.$id,$mode);$r=recordById($id);if(!hash_equals(ownerLinkHash($r,'customer'),tokenId($token)))abortPortal('Dieser Kundenlink ist gesperrt.',410,'closed_link');return [$id,$r]; }
 function activeRecord(array $r): void { global $dataDir;if(!empty($r['access_revoked']))abortPortal('Dieser Zugang ist gesperrt.',410,'closed_link');requireInsuranceCustomer($r); if(!in_array($r['state']??'', ['active','archive_pending'],true))abortPortal('Dieser Angebotslink ist bereits abgeschlossen oder gesperrt. Bitte wenden Sie sich an Swen Neubauer.',410,'closed_link');if($r['state']!=='archive_pending'&&($r['expires']??0)<time())abortPortal('Dieser Angebotslink ist abgelaufen. Bitte Swen Neubauer um einen neuen Link bitten.',410,'expired_link');$index=readJson($dataDir.'/scopes/'.$r['scope'].'.json');if(($index['active_id']??'')!==$r['id'])abortPortal('Für dieses Angebot gibt es einen neuen Link. Dieser alte Link ist gesperrt.',410,'replaced_link'); }
 function grantCustomer(string $id): void { if(empty($_SESSION['customer'][$id])||($_SESSION['customer'][$id]['until']??0)<time())$_SESSION['customer'][$id]=['until'=>time()+7200,'proof'=>bin2hex(random_bytes(24))]; }
 function customerAuthorized(string $id,array $r): bool { if(empty($r['require_code']))grantCustomer($id);return ($_SESSION['customer'][$id]['until']??0)>=time(); }
@@ -91,6 +130,8 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  $checkout=$archiveTest?(($meta['checkout_test']??false)===true?archiveTestCheckout():null):validateCheckout($meta['checkout']??null);
  $business=isBusinessCheckout($checkout);$legalRoles=$business?['agb']:['agb','widerruf'];
  $f=checkUpload($pdf,true);if(($checkout['version']??null)===2&&(!hash_equals($f['sha256'],$checkout['source_sha256'])||count($checkout['source_pages'])!==$count))abortPortal('Der ausgelesene Text gehört nicht zu dieser Angebots-PDF. Bitte die PDF erneut auswählen.',400,'checkout_source_mismatch');if(count($extra)>12)abortPortal('Bitte höchstens zwölf zusätzliche Dateien bereitstellen.');$files=array_map(fn($x)=>checkUpload($x),$extra);$insurance=insuranceConfig($meta,$files,$archiveTest);$total=$f['size'];foreach($files as $x)$total+=$x['size'];if($total>60*1024*1024)abortPortal('Ein Unterlagenpaket darf höchstens 60 MB groß sein.');
+ $request=$meta['create_request_id']??null;$requestFingerprint=null;
+ if($request!==null){if(!is_string($request))abortPortal('Die Speicherkennung ist ungültig.');$requestPath=createRequestPath($request);lockPortal('create:'.$request);$bound=$meta;unset($bound['create_request_id']);$requestFingerprint=hash('sha256',json_encode([$bound,array_intersect_key($f,array_flip(['name','size','sha256'])),array_map(fn($x)=>array_intersect_key($x,array_flip(['name','size','sha256'])),$files)],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));if(is_file($requestPath))return savedCreateResult($request,$requestFingerprint);}
  $lh=lockPortal('legal',LOCK_SH);$legal=legalMasters();if($archiveTest)requireArchiveTestLegal($legal);foreach($legalRoles as $role)if(empty($legal['documents'][$role]))abortPortal('Bitte zuerst aktuelle AGB und Widerrufsunterlagen in den Vertragsvorlagen hinterlegen.',409,'missing_legal');
  if($checkout){$mailTotal=$total;foreach($legalRoles as $role)$mailTotal+=$legal['documents'][$role]['size'];$max=($checkout['copy_delivery']??'email')==='email'?10:60;if($mailTotal>$max*1024*1024)abortPortal('Angebot und sämtliche Anlagen dürfen für diesen Versandweg zusammen höchstens '.$max.' MB groß sein.');}
  requireNewArchive();
@@ -114,9 +155,13 @@ function createOffer(array $meta,array $pdf,array $extra,bool $archiveTest=false
  if($archiveTest)$r['archive_test']=true;
  if(isset($meta['edit_source']))$r['supersedes']=$meta['edit_source']['id'];
  if($insurance){$insuranceToken=bin2hex(random_bytes(32));$r['state']='insurance_pending';$r['archive_mode']='full_package';$r['insurance']=['version'=>1,'state'=>'pending','definition'=>insuranceDefinition(),'token_hash'=>tokenId($insuranceToken),'customer_token_hash'=>null,'base_attachments'=>publicFiles($attachments)];}
+ if($insurance)saveOwnerLink($stage,'insurance',$insuranceToken);else saveOwnerLink($stage,'customer',$token);
+ $result=['token'=>$insurance?null:$token,'id'=>$id,'code'=>null,'expires'=>$r['expires'],'revision'=>$revision,'attachments'=>publicFiles($attachments)];if($insurance)$result['insurance_token']=$insuranceToken;
+ if($request!==null)saveJson($requestPath,['state'=>'pending','fingerprint'=>$requestFingerprint,'result'=>$result]);
  saveJson($stage.'/record.json',$r);if(!rename($stage,recordPath($id)))abortPortal('Das Angebot konnte nicht freigegeben werden.',503);saveJson($dataDir.'/scopes/'.$scope.'.json',['active_id'=>$id,'revision'=>$revision]);if($oldId&&$oldId!==$id){lockPortal('record:'.$oldId);$old=recordById($oldId);if(in_array($old['state'],['active','insurance_pending'],true)){$old['state']='replaced';$old['closed_at']=gmdate(DATE_ATOM);saveJson(recordPath($oldId).'/record.json',$old);}}
- if($insurance){saveJson(workflowLinkIndex('insurance',tokenId($insuranceToken)),['id'=>$id]);return ['token'=>null,'insurance_token'=>$insuranceToken,'id'=>$id,'code'=>null,'expires'=>$r['expires'],'revision'=>$revision,'attachments'=>publicFiles($attachments)];}
- return ['token'=>$token,'id'=>$id,'code'=>$requireCode?$code:null,'expires'=>$r['expires'],'revision'=>$revision,'attachments'=>publicFiles($attachments)];
+ if($insurance)saveJson(workflowLinkIndex('insurance',tokenId($insuranceToken)),['id'=>$id]);
+ if($request!==null)saveJson($requestPath,['state'=>'saved','fingerprint'=>$requestFingerprint,'result'=>$result]);
+ return $result;
 }
 function requireArchiveTestLegal(array $masters): void {
  global $dataDir;

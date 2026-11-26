@@ -22,7 +22,7 @@ function recordIdForCustomerToken(string $token): string {
     $hash=tokenId($token);$alias=readJson(workflowLinkIndex('customer',$hash));
     if(!$alias){$r=recordById($hash);if(!empty($r['insurance']))abortPortal('Dieser Kundenlink ist noch nicht freigegeben oder gesperrt.',410,'closed_link');return $hash;}
     $id=(string)($alias['id']??'');$r=recordById($id);
-    if(!hash_equals((string)($r['insurance']['customer_token_hash']??''),$hash))abortPortal('Dieser Kundenlink wurde ersetzt oder gesperrt.',410,'closed_link');
+    if(!hash_equals(ownerLinkHash($r,'customer'),$hash))abortPortal('Dieser Kundenlink wurde ersetzt oder gesperrt.',410,'closed_link');
     return $id;
 }
 function requireInsuranceCustomer(array $r,array $meta=[]): void {
@@ -103,6 +103,7 @@ function ownerWorkflowLink(string $id,string $role): array {
         if($r['insurance']['state']!=='accepted')abortPortal('Zuerst muss die Versicherung ihre Zahlungszusage bestätigen.',409,'insurance_pending');
         verifyInsurancePDF($r);$r['insurance']['customer_token_hash']=$hash;
     }
+    saveOwnerLink(recordPath($id),$role,$token);
     $r['access_revoked']=false;$r['expires']=time()+max(1,min(30,(int)($config['lifetime_days']??14)))*86400;
     saveJson(workflowLinkIndex($role,$hash),['id'=>$id]);saveJson(recordPath($id).'/record.json',$r);return ['id'=>$id,'token'=>$token,'role'=>$role,'expires'=>$r['expires']];
 }
@@ -145,6 +146,7 @@ function recordLifecycle(string $id,string $operation,array $input): array {
     if($operation!=='purge'||($input['retention_checked']??null)!==true)abortPortal('Bitte prüfen und bestätigen, dass keine Aufbewahrungspflicht oder offene Klärung der endgültigen Löschung entgegensteht.');
     $path=recordPath($id);if(is_link($path))abortPortal('Der Vorgang konnte nicht sicher gelöscht werden.',503);
     $scopePath=$dataDir.'/scopes/'.$r['scope'].'.json';$scope=readJson($scopePath);if(($scope['active_id']??'')===$id){$scope['active_id']=null;saveJson($scopePath,$scope);}
+    foreach(glob($dataDir.'/create-requests/*.json')?:[] as $requestPath)if(!is_link($requestPath)&&((readJson($requestPath)['result']['id']??'')===$id)&&!unlink($requestPath))abortPortal('Die Speicherbestätigung konnte nicht gelöscht werden.',503);
     removePrivateRecordTree($path);return ['ok'=>true,'external_archive_unchanged'=>archiveProvider($r)==='drive'];
 }
 function removePrivateRecordTree(string $path): void {
