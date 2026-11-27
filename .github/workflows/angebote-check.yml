@@ -29,6 +29,8 @@ jobs:
         run: node angebote-tests/attachments.mjs
       - name: Verlorene Speicherantwort ohne zweiten Upload pruefen
         run: node angebote-tests/upload-recovery.mjs
+      - name: Vorgangsübersicht, Wartefrist und Feiertage prüfen
+        run: node angebote-tests/record-overview.mjs
       - name: PDF-Ruecksendung und E-Mail-Ersatzweg pruefen
         run: node angebote-tests/return.mjs
       - name: Smartphone-Unterschrift und Scrollfreigabe pruefen

@@ -143,3 +143,35 @@ textarea,select{font:inherit;width:100%;padding:14px;border:2px solid #93a4aa;bo
 }
 
 .record-link{border-top:1px solid var(--line);margin-top:14px;padding-top:4px}.record-link label{font-size:16px;margin-top:12px}.record-link input{font-size:16px;font-weight:400;width:100%;margin-top:8px}.record-link button{width:100%}
+
+/* Owner's separate workspaces, compact expandable record list. */
+.owner-workspaces{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 24px}
+.owner-workspaces button{width:100%;min-height:52px;font-size:16px;padding:10px}
+.showing-records #archive-test-admin{display:none}
+.records-overview{margin-top:16px}
+.record-filters{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.record-filters label{margin:0;font-size:15px;min-width:0}
+.record-filters input,.record-filters select{font-size:16px;min-height:46px;margin:5px 0 0}
+.records-search{grid-column:1/-1}
+.record-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}
+.record-list-toolbar .check{margin:0;flex:1;font-size:15px}
+.record-list-toolbar button{min-height:44px;font-size:15px}
+#records-count{margin:12px 0;color:var(--muted)}
+.record-row{border:1px solid var(--line);border-radius:12px;margin:8px 0;background:#fff;overflow:hidden}
+.record-row > summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 12px;align-items:center;padding:13px 15px;position:relative;min-height:75px}
+.record-row > summary::-webkit-details-marker{display:none}
+.record-row > summary::after{content:'›';grid-column:2;grid-row:1;justify-self:end;font-size:27px;font-weight:bold;color:var(--brand);line-height:1}
+.record-row[open] > summary{background:#f0f4f6;border-bottom:1px solid var(--line)}
+.record-row[open] > summary::after{transform:rotate(90deg)}
+.record-identity{min-width:0;display:flex;flex-direction:column;line-height:1.35;grid-column:1;grid-row:1}
+.record-identity strong{font-size:17px;overflow-wrap:anywhere}
+.record-commission{font-size:14px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.record-status{grid-column:1;font-size:14px;color:var(--brand);font-weight:700}
+.record-wait{grid-column:2;grid-row:2;border-radius:8px;background:#edf1f3;color:#334653;font-size:14px;font-weight:700;padding:5px 8px;text-align:right;max-width:190px}
+.record-wait[data-wait-kind="waiting"]{background:#fff0d4;color:#704100}
+.record-wait[data-wait-kind="elapsed"]{background:#e5f4e9;color:#155531}
+.record-wait[data-wait-kind="ordered"]{background:#e7f0f5;color:#153d4b}
+.record-row .record-card{border:0;margin:0;padding:16px 15px 20px;border-radius:0}
+.record-wait-panel{background:#f5f7f9;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px;font-size:16px}
+.record-wait-panel p{margin:6px 0 0}
+@media(max-width:480px){.record-filters{grid-template-columns:1fr}.records-search{grid-column:1}.record-row>summary{gap:6px 8px;padding:12px}.record-wait{grid-column:1/-1;grid-row:auto;justify-self:start;text-align:left;max-width:100%}.record-row .record-card{padding:12px}.owner-workspaces button{font-size:15px}}

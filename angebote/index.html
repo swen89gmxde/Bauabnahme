@@ -4,9 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2d39"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <title>Angebot unterschreiben · Sichtwerk – Neubauer</title>
-<link rel="stylesheet" href="style.css?v=20261126-links-2">
+<link rel="stylesheet" href="style.css?v=20261127-vorgaenge-1">
 <script defer src="vendor/pdf-lib.min.js"></script><script defer src="vendor/signature_pad.umd.min.js"></script>
-<script type="module" src="app.mjs?v=20261126-links-2"></script>
+<script type="module" src="app.mjs?v=20261127-vorgaenge-1"></script>
 </head>
 <body>
 <header class="brand"><a href="./" aria-label="Startseite"><span class="brandmark" aria-hidden="true">S</span><span>SICHTWERK <b>NEUBAUER</b><small>Ihr Angebot. Einfach unterschreiben.</small></span></a></header>
@@ -94,10 +94,12 @@
 </section>
 </div>
 <section id="owner" class="card" hidden>
-<p class="eyebrow">Vorbereitung · nur für Sichtwerk</p><h1>Angebot vorbereiten</h1><p>Lexware-PDF auswählen, Unterschriftsstelle prüfen und einen Kundenlink erstellen.</p>
+<p class="eyebrow">Verwaltung · nur für Sichtwerk</p><h1 id="owner-heading">Angebot vorbereiten</h1><p id="owner-intro">Lexware-PDF auswählen, Unterschriftsstelle prüfen und einen Kundenlink erstellen.</p>
 <div id="server-note" class="notice" hidden>Testbetrieb: Die Vorbereitung und PDF-Erstellung funktionieren lokal. Echte Kundenlinks sind erst nach Einrichtung der geschützten STRATO-Ablage verfügbar.</div>
 <div id="login-area"><label for="password">Zugang für Sichtwerk</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary wide">Anmelden</button></div>
 <div id="prepare-area" hidden>
+<nav id="owner-workspaces" class="owner-workspaces" aria-label="Sichtwerk Verwaltung" hidden><button id="open-preparation" type="button" class="primary" aria-pressed="true">Angebot vorbereiten</button><button id="open-records" type="button" class="secondary" aria-pressed="false">Alle Vorgänge</button></nav>
+<div id="preparation-view">
 <a id="change-password" class="secondary wide" href="server/password.php" hidden>Passwort ändern</a>
 <section id="edit-offer-note" class="notice" hidden><h2>Vorgang bearbeiten</h2><p id="edit-offer-description"></p><button id="cancel-offer-edit" type="button" class="secondary">Bearbeitung abbrechen</button></section>
 <label for="pdf-file">1. Angebots-PDF aus Lexware auswählen</label><input id="pdf-file" type="file" accept="application/pdf,.pdf">
@@ -140,7 +142,15 @@
 <section id="notification-admin" class="owner-details"><h2>E-Mail nach dem Abschluss</h2><p id="notification-status" class="hint">Der Benachrichtigungsstatus wird nach Anmeldung geprüft.</p><p class="hint">Erst nach bestätigter STRATO-Archivierung wird die Benachrichtigung an Sichtwerk versendet. Der Kunde muss die PDF nicht zurückschicken. Den Versandstatus sehen Sie bei den Vorgängen.</p></section>
 <p class="notice">Ausstehende Sicherungen regelmäßig unter „Meine Vorgänge anzeigen“ kontrollieren. Bei „Archivierung ausstehend“ denselben Vorgang erneut sichern; keinen neuen Link erstellen und nicht erneut unterschreiben lassen.</p>
 <section id="withdrawals-admin" class="owner-details"><h2>Eingegangene Widerrufserklärungen</h2><button id="load-withdrawals" class="secondary wide">Widerrufserklärungen anzeigen</button><div id="withdrawal-list"></div></section>
-<section id="records-admin" class="owner-details"><h2>Meine Vorgänge</h2><label class="check"><input id="records-trash" type="checkbox"><span>Papierkorb anzeigen</span></label><button id="load-records" class="secondary wide">Meine Vorgänge anzeigen</button><div id="record-list"></div></section>
+</div>
+<section id="records-admin" class="records-overview" hidden>
+<p class="hint">Wähle einen Vorgang aus, um Kundenlink, Unterlagen und Auftragsstatus zu öffnen.</p>
+<div class="record-filters"><label class="records-search">Suchen<input id="records-search" type="search" placeholder="Kunde, Kommission oder Angebotsnummer" autocomplete="off"></label>
+<label>Sortierung<select id="records-sort"><option value="customer">Kunde A–Z</option><option value="commission">Kommission (neueste zuerst)</option><option value="newest">Zuletzt erstellt</option><option value="deadline">Wartezeit endet zuerst</option></select></label>
+<label>Anzeige<select id="records-filter"><option value="all">Alle Vorgänge</option><option value="open">Offene Angebote</option><option value="signed">Unterschrieben</option><option value="waiting">Wartezeit läuft</option><option value="elapsed">Wartezeit abgelaufen</option><option value="closed">Abgeschlossen / gesperrt</option></select></label></div>
+<div class="record-list-toolbar"><label class="check"><input id="records-trash" type="checkbox"><span>Papierkorb anzeigen</span></label><button id="load-records" type="button" class="secondary compact">Aktualisieren</button></div>
+<p id="records-count" class="small" role="status" aria-live="polite"></p><div id="record-list"></div>
+<p class="hint">Die Bestellwartezeit ist eine interne Übersicht nach AGB. Der Ablauf allein erteilt keine Bestellfreigabe.</p></section>
 <template id="order-status-editor">
 <details class="owner-details order-status-editor">
   <summary>Auftragsstatus</summary>

@@ -127,7 +127,7 @@ function appendText(parent, name, text, className = '') {
   return el;
 }
 
-export function mountOrderStatusEditor(card, record, api) {
+export function mountOrderStatusEditor(card, record, api, onUpdate = () => {}) {
   const template = card.ownerDocument.getElementById('order-status-editor');
   if (!template || !record.order_status_available) return;
   const editor = template.content.firstElementChild.cloneNode(true);
@@ -145,6 +145,7 @@ export function mountOrderStatusEditor(card, record, api) {
   function render(data, keepDraft) {
     const scheduleUnchanged = JSON.stringify(view?.schedule) === JSON.stringify(data.schedule);
     view = data;
+    onUpdate(data);
     $('active').hidden = !view.active;
     $('closed').hidden = !view.closed;
     $('inactive').hidden = view.closed || view.active;

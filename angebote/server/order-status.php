@@ -86,6 +86,27 @@ function orderStatusVisibleToOwner(array $record): bool {
     return orderStatusCurrent($record) || is_file(recordPath($record['id']).'/order-status/status.json');
 }
 
+// Read-only owner summary: acceptance is recorded when the signed acceptance reaches
+// the portal, independently of later archival. Only verified AGB editions qualify.
+function recordOverviewFields(array $record): array {
+    $agb = null;
+    foreach ($record['attachments'] ?? [] as $file) if (($file['role'] ?? '') === 'agb') { $agb = $file; break; }
+    $known = [
+        '737d9629aca0f4b8f0a8fd0bf879bab39e56e7e00768a9a8eaa921bf9f4279ce',
+        'afe488f3da5b9835adf8c5cc27e5b8b1a53f072667b3ee975a80e9fb596fda8a',
+        'd43d3b6dfb9d2d2ec0c92eb0bc4ee9d60afd041f8b3570c8edfc2ce52cf0d3f2',
+    ];
+    $status = orderStatusVisibleToOwner($record) ? loadOrderStatus($record['id']) : [];
+    return [
+        'accepted_at' => $record['completion']['accepted_at'] ?? null,
+        'signature_date' => $record['completion']['date'] ?? null,
+        'archive_test' => !empty($record['archive_test']),
+        'minimum_wait_days' => in_array($agb['sha256'] ?? '', $known, true) ? 14 : null,
+        'ordered_on' => $status['schedule']['ordered_on'] ?? '',
+        'order_status_closed' => !empty($status['closed_at']),
+    ];
+}
+
 function orderStatusHasInsurer(array $record): bool {
     return !empty($record['insurance']['receipt']);
 }
